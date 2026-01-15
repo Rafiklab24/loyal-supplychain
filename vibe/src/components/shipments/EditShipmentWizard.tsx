@@ -193,8 +193,6 @@ function convertShipmentToFormData(shipment: Shipment): ShipmentFormData {
     eta: formatDateForInput(shipment.eta),
     free_time_days: toNumberOrEmpty(shipment.free_time_days),
     customs_clearance_date: formatDateForInput(shipment.customs_clearance_date),
-    shipping_line_id: shipment.shipping_line_id || '',
-    shipping_line_name: (shipment as any).shipping_line_name || '',
     booking_no: shipment.booking_no || '',
     bl_no: shipment.bl_no || '',
     transportation_cost: toNumberOrEmpty(shipment.transportation_cost),
