@@ -13,10 +13,16 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is required');
 }
 
-// Configure SSL for production databases (e.g., DigitalOcean, AWS RDS)
-// In production, managed databases use self-signed certificates
-const sslConfig = process.env.NODE_ENV === 'production' 
-  ? { rejectUnauthorized: false }  // Accept self-signed certs in production
+// Configure SSL for managed databases (DigitalOcean, AWS RDS, Supabase, etc.)
+// These services use self-signed certificates that require rejectUnauthorized: false
+const databaseUrl = process.env.DATABASE_URL.toLowerCase();
+const isLocalDatabase = databaseUrl.includes('localhost') || 
+                        databaseUrl.includes('127.0.0.1') ||
+                        databaseUrl.includes('host.docker.internal');
+
+// Enable SSL for all non-local databases (managed cloud databases)
+const sslConfig = !isLocalDatabase 
+  ? { rejectUnauthorized: false }  // Accept self-signed certs from managed DBs
   : undefined;  // No SSL for local development
 
 export const pool = new Pool({
