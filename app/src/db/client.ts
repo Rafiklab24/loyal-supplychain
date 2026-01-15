@@ -13,11 +13,18 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is required');
 }
 
+// Configure SSL for production databases (e.g., DigitalOcean, AWS RDS)
+// In production, managed databases use self-signed certificates
+const sslConfig = process.env.NODE_ENV === 'production' 
+  ? { rejectUnauthorized: false }  // Accept self-signed certs in production
+  : undefined;  // No SSL for local development
+
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   max: DB_POOL.MAX_CONNECTIONS,
   idleTimeoutMillis: DB_POOL.IDLE_TIMEOUT_MS,
   connectionTimeoutMillis: DB_POOL.CONNECTION_TIMEOUT_MS,
+  ssl: sslConfig,
 });
 
 // Pool event listeners for monitoring
