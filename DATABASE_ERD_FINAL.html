@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loyal Supply Chain - ERD Diagram (Dec 2025)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f0f23, #1a1a2e);
+            min-height: 100vh;
+            color: #e0e0e0;
+            overflow-x: auto;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 30px;
+            background: rgba(0, 212, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        
+        h1 {
+            color: #00d4ff;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle { color: #888; }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #888;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+        
+        .master { background: #4ecdc4; }
+        .logistics { background: #ff6b6b; }
+        .finance { background: #ffd93d; }
+        .security { background: #9b59b6; }
+        .archive { background: #6bcb77; }
+        .system { background: #e74c3c; }
+        
+        .diagram-container {
+            padding: 30px;
+            overflow-x: auto;
+        }
+        
+        svg {
+            display: block;
+            margin: 0 auto;
+        }
+        
+        /* Table styles */
+        .table-box {
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+        }
+        
+        .table-header {
+            font-weight: bold;
+            font-size: 13px;
+        }
+        
+        .column-name {
+            font-size: 11px;
+        }
+        
+        .pk { fill: #ffd700; }
+        .fk { fill: #00bfff; }
+        .new { fill: #00ff88; }
+        
+        .relationship-line {
+            stroke: #666;
+            stroke-width: 1.5;
+            fill: none;
+        }
+        
+        .relationship-label {
+            font-size: 9px;
+            fill: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🗄️ Loyal Supply Chain - Database ERD</h1>
+        <p class="subtitle">Updated December 2025 - Post Migration 039-047</p>
+        
+        <div class="stats">
+            <div class="stat"><div class="stat-value">40</div><div class="stat-label">Tables</div></div>
+            <div class="stat"><div class="stat-value">7</div><div class="stat-label">Schemas</div></div>
+            <div class="stat"><div class="stat-value">62</div><div class="stat-label">Foreign Keys</div></div>
+            <div class="stat"><div class="stat-value">29</div><div class="stat-label">Audit Triggers</div></div>
+            <div class="stat"><div class="stat-value">12</div><div class="stat-label">ENUMs</div></div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item"><div class="legend-color master"></div> master_data</div>
+            <div class="legend-item"><div class="legend-color logistics"></div> logistics</div>
+            <div class="legend-item"><div class="legend-color finance"></div> finance</div>
+            <div class="legend-item"><div class="legend-color security"></div> security</div>
+            <div class="legend-item"><div class="legend-color archive"></div> archive</div>
+            <div class="legend-item"><div class="legend-color system"></div> system</div>
+        </div>
+    </div>
+    
+    <div class="diagram-container">
+        <svg width="1600" height="1400" viewBox="0 0 1600 1400">
+            <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#666"/>
+                </marker>
+                <marker id="crow" viewBox="0 0 10 10" refX="0" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+                    <path d="M 10 0 L 0 5 L 10 10 M 10 0 L 10 10" stroke="#666" fill="none" stroke-width="1.5"/>
+                </marker>
+            </defs>
+            
+            <!-- ============ MASTER_DATA SCHEMA (LEFT) ============ -->
+            
+            <!-- COMPANIES -->
+            <g class="table-box" transform="translate(50, 50)">
+                <rect width="180" height="200" rx="8" fill="#1e3a4c" stroke="#4ecdc4" stroke-width="2"/>
+                <rect width="180" height="30" rx="8" fill="#4ecdc4"/>
+                <rect y="22" width="180" height="8" fill="#4ecdc4"/>
+                <text x="90" y="20" text-anchor="middle" class="table-header" fill="#000">companies</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name" fill="#fff">name</text>
+                <text x="10" y="86" class="column-name" fill="#fff">country</text>
+                <text x="10" y="104" class="column-name" fill="#fff">is_supplier</text>
+                <text x="10" y="122" class="column-name" fill="#fff">is_customer</text>
+                <text x="10" y="140" class="column-name" fill="#fff">is_shipping_line</text>
+                <text x="10" y="158" class="column-name" fill="#fff">is_bank</text>
+                <text x="10" y="176" class="column-name" fill="#fff">extra_json (JSONB)</text>
+                <text x="10" y="194" class="column-name" fill="#888">is_deleted</text>
+            </g>
+            
+            <!-- PORTS -->
+            <g class="table-box" transform="translate(50, 280)">
+                <rect width="180" height="130" rx="8" fill="#1e3a4c" stroke="#4ecdc4" stroke-width="2"/>
+                <rect width="180" height="30" rx="8" fill="#4ecdc4"/>
+                <rect y="22" width="180" height="8" fill="#4ecdc4"/>
+                <text x="90" y="20" text-anchor="middle" class="table-header" fill="#000">ports</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name" fill="#fff">name</text>
+                <text x="10" y="86" class="column-name" fill="#fff">country</text>
+                <text x="10" y="104" class="column-name" fill="#fff">unlocode</text>
+                <text x="10" y="122" class="column-name new">is_deleted ✨</text>
+            </g>
+            
+            <!-- PRODUCTS -->
+            <g class="table-box" transform="translate(50, 440)">
+                <rect width="180" height="150" rx="8" fill="#1e3a4c" stroke="#4ecdc4" stroke-width="2"/>
+                <rect width="180" height="30" rx="8" fill="#4ecdc4"/>
+                <rect y="22" width="180" height="8" fill="#4ecdc4"/>
+                <text x="90" y="20" text-anchor="middle" class="table-header" fill="#000">products</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name" fill="#fff">name</text>
+                <text x="10" y="86" class="column-name" fill="#fff">hs_code</text>
+                <text x="10" y="104" class="column-name" fill="#fff">category_type</text>
+                <text x="10" y="122" class="column-name" fill="#fff">is_active</text>
+                <text x="10" y="140" class="column-name new">is_deleted ✨</text>
+            </g>
+            
+            <!-- TRANSPORT COMPANIES -->
+            <g class="table-box" transform="translate(50, 620)">
+                <rect width="180" height="120" rx="8" fill="#1e3a4c" stroke="#4ecdc4" stroke-width="2"/>
+                <rect width="180" height="30" rx="8" fill="#4ecdc4"/>
+                <rect y="22" width="180" height="8" fill="#4ecdc4"/>
+                <text x="90" y="20" text-anchor="middle" class="table-header" fill="#000">transport_companies</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name" fill="#fff">name</text>
+                <text x="10" y="86" class="column-name" fill="#fff">vehicle_types (JSONB)</text>
+                <text x="10" y="104" class="column-name" fill="#fff">service_areas</text>
+            </g>
+            
+            <!-- ============ LOGISTICS SCHEMA (CENTER) ============ -->
+            
+            <!-- CONTRACTS -->
+            <g class="table-box" transform="translate(320, 50)">
+                <rect width="200" height="220" rx="8" fill="#2d1f1f" stroke="#ff6b6b" stroke-width="2"/>
+                <rect width="200" height="30" rx="8" fill="#ff6b6b"/>
+                <rect y="22" width="200" height="8" fill="#ff6b6b"/>
+                <text x="100" y="20" text-anchor="middle" class="table-header" fill="#fff">contracts</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name" fill="#fff">contract_no</text>
+                <text x="10" y="86" class="column-name" fill="#fff">status</text>
+                <text x="10" y="104" class="column-name fk">→ seller_company_id</text>
+                <text x="10" y="122" class="column-name fk">→ buyer_company_id</text>
+                <text x="10" y="140" class="column-name" fill="#fff">incoterm_code</text>
+                <text x="10" y="158" class="column-name" fill="#fff">currency_code</text>
+                <text x="10" y="176" class="column-name new">→ created_by_user_id ✨</text>
+                <text x="10" y="194" class="column-name new">→ updated_by_user_id ✨</text>
+            </g>
+            
+            <!-- CONTRACT LINES -->
+            <g class="table-box" transform="translate(320, 300)">
+                <rect width="200" height="140" rx="8" fill="#2d1f1f" stroke="#ff6b6b" stroke-width="2"/>
+                <rect width="200" height="30" rx="8" fill="#ff6b6b"/>
+                <rect y="22" width="200" height="8" fill="#ff6b6b"/>
+                <text x="100" y="20" text-anchor="middle" class="table-header" fill="#fff">contract_lines</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name fk">→ contract_id</text>
+                <text x="10" y="86" class="column-name fk">→ product_id</text>
+                <text x="10" y="104" class="column-name" fill="#fff">quantity</text>
+                <text x="10" y="122" class="column-name" fill="#fff">unit_price</text>
+            </g>
+            
+            <!-- PROFORMA INVOICES -->
+            <g class="table-box" transform="translate(320, 470)">
+                <rect width="200" height="150" rx="8" fill="#2d1f1f" stroke="#ff6b6b" stroke-width="2"/>
+                <rect width="200" height="30" rx="8" fill="#ff6b6b"/>
+                <rect y="22" width="200" height="8" fill="#ff6b6b"/>
+                <text x="100" y="20" text-anchor="middle" class="table-header" fill="#fff">proforma_invoices</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name fk">→ contract_id</text>
+                <text x="10" y="86" class="column-name" fill="#fff">pi_number</text>
+                <text x="10" y="104" class="column-name" fill="#fff">status</text>
+                <text x="10" y="122" class="column-name new">→ created_by_user_id ✨</text>
+            </g>
+            
+            <!-- SHIPMENTS (MAIN) -->
+            <g class="table-box" transform="translate(580, 50)">
+                <rect width="220" height="340" rx="8" fill="#2d1f1f" stroke="#ff6b6b" stroke-width="3"/>
+                <rect width="220" height="30" rx="8" fill="#ff6b6b"/>
+                <rect y="22" width="220" height="8" fill="#ff6b6b"/>
+                <text x="110" y="20" text-anchor="middle" class="table-header" fill="#fff">shipments ⭐</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name" fill="#fff">sn (shipment no)</text>
+                <text x="10" y="86" class="column-name" fill="#fff">direction (IN/OUT)</text>
+                <text x="10" y="104" class="column-name" fill="#fff">status</text>
+                <text x="10" y="122" class="column-name fk">→ contract_id</text>
+                <text x="10" y="140" class="column-name fk">→ proforma_id</text>
+                <text x="10" y="158" class="column-name fk">→ supplier_id</text>
+                <text x="10" y="176" class="column-name fk">→ customer_id</text>
+                <text x="10" y="194" class="column-name fk">→ pol_id (port)</text>
+                <text x="10" y="212" class="column-name fk">→ pod_id (port)</text>
+                <text x="10" y="230" class="column-name" fill="#fff">weight_ton</text>
+                <text x="10" y="248" class="column-name" fill="#fff">total_value_usd</text>
+                <text x="10" y="266" class="column-name" fill="#fff">paid_value_usd</text>
+                <text x="10" y="284" class="column-name" fill="#fff">balance_value_usd</text>
+                <text x="10" y="302" class="column-name new">→ created_by_user_id ✨</text>
+                <text x="10" y="320" class="column-name" fill="#888">+ 80 more columns</text>
+            </g>
+            
+            <!-- MILESTONES -->
+            <g class="table-box" transform="translate(580, 420)">
+                <rect width="220" height="110" rx="8" fill="#2d1f1f" stroke="#ff6b6b" stroke-width="2"/>
+                <rect width="220" height="30" rx="8" fill="#ff6b6b"/>
+                <rect y="22" width="220" height="8" fill="#ff6b6b"/>
+                <text x="110" y="20" text-anchor="middle" class="table-header" fill="#fff">milestones</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name fk">→ shipment_id</text>
+                <text x="10" y="86" class="column-name" fill="#fff">code (ENUM)</text>
+                <text x="10" y="104" class="column-name" fill="#fff">recorded_at</text>
+            </g>
+            
+            <!-- OUTBOUND DELIVERIES -->
+            <g class="table-box" transform="translate(580, 560)">
+                <rect width="220" height="130" rx="8" fill="#2d1f1f" stroke="#ff6b6b" stroke-width="2"/>
+                <rect width="220" height="30" rx="8" fill="#ff6b6b"/>
+                <rect y="22" width="220" height="8" fill="#ff6b6b"/>
+                <text x="110" y="20" text-anchor="middle" class="table-header" fill="#fff">outbound_deliveries</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name" fill="#fff">delivery_number</text>
+                <text x="10" y="86" class="column-name fk">→ shipment_id</text>
+                <text x="10" y="104" class="column-name fk">→ transport_company_id</text>
+                <text x="10" y="122" class="column-name" fill="#fff">total_cost</text>
+            </g>
+            
+            <!-- NOTIFICATIONS -->
+            <g class="table-box" transform="translate(580, 720)">
+                <rect width="220" height="130" rx="8" fill="#2d1f1f" stroke="#ff6b6b" stroke-width="2"/>
+                <rect width="220" height="30" rx="8" fill="#ff6b6b"/>
+                <rect y="22" width="220" height="8" fill="#ff6b6b"/>
+                <text x="110" y="20" text-anchor="middle" class="table-header" fill="#fff">notifications</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name fk">→ shipment_id</text>
+                <text x="10" y="86" class="column-name fk">→ contract_id</text>
+                <text x="10" y="104" class="column-name" fill="#fff">type, title</text>
+                <text x="10" y="122" class="column-name" fill="#fff">is_read</text>
+            </g>
+            
+            <!-- ============ FINANCE SCHEMA (RIGHT) ============ -->
+            
+            <!-- TRANSACTIONS -->
+            <g class="table-box" transform="translate(860, 50)">
+                <rect width="210" height="230" rx="8" fill="#3d3520" stroke="#ffd93d" stroke-width="2"/>
+                <rect width="210" height="30" rx="8" fill="#ffd93d"/>
+                <rect y="22" width="210" height="8" fill="#ffd93d"/>
+                <text x="105" y="20" text-anchor="middle" class="table-header" fill="#000">transactions</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name" fill="#fff">transaction_date</text>
+                <text x="10" y="86" class="column-name" fill="#fff">amount_usd</text>
+                <text x="10" y="104" class="column-name" fill="#fff">direction (in/out)</text>
+                <text x="10" y="122" class="column-name fk">→ contract_id</text>
+                <text x="10" y="140" class="column-name fk">→ shipment_id</text>
+                <text x="10" y="158" class="column-name fk">→ fund_id</text>
+                <text x="10" y="176" class="column-name new">migrated_from ✨</text>
+                <text x="10" y="194" class="column-name new">migrated_from_id ✨</text>
+                <text x="10" y="212" class="column-name new">→ created_by_user_id ✨</text>
+            </g>
+            
+            <!-- EXCHANGE RATES (NEW) -->
+            <g class="table-box" transform="translate(860, 310)">
+                <rect width="210" height="140" rx="8" fill="#1a3d1a" stroke="#00ff88" stroke-width="3"/>
+                <rect width="210" height="30" rx="8" fill="#00ff88"/>
+                <rect y="22" width="210" height="8" fill="#00ff88"/>
+                <text x="105" y="20" text-anchor="middle" class="table-header" fill="#000">exchange_rates ✨ NEW</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name" fill="#fff">from_currency</text>
+                <text x="10" y="86" class="column-name" fill="#fff">to_currency</text>
+                <text x="10" y="104" class="column-name" fill="#fff">rate</text>
+                <text x="10" y="122" class="column-name" fill="#fff">effective_date</text>
+            </g>
+            
+            <!-- FUNDS -->
+            <g class="table-box" transform="translate(860, 480)">
+                <rect width="210" height="140" rx="8" fill="#3d3520" stroke="#ffd93d" stroke-width="2"/>
+                <rect width="210" height="30" rx="8" fill="#ffd93d"/>
+                <rect y="22" width="210" height="8" fill="#ffd93d"/>
+                <text x="105" y="20" text-anchor="middle" class="table-header" fill="#000">funds</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name" fill="#fff">name</text>
+                <text x="10" y="86" class="column-name" fill="#fff">type (bank/cash)</text>
+                <text x="10" y="104" class="column-name" fill="#fff">currency</text>
+                <text x="10" y="122" class="column-name new">is_active, is_deleted ✨</text>
+            </g>
+            
+            <!-- CUSTOMS CLEARING COSTS -->
+            <g class="table-box" transform="translate(860, 650)">
+                <rect width="210" height="180" rx="8" fill="#3d3520" stroke="#ffd93d" stroke-width="2"/>
+                <rect width="210" height="30" rx="8" fill="#ffd93d"/>
+                <rect y="22" width="210" height="8" fill="#ffd93d"/>
+                <text x="105" y="20" text-anchor="middle" class="table-header" fill="#000">customs_clearing_costs</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name" fill="#fff">file_number</text>
+                <text x="10" y="86" class="column-name fk">→ shipment_id</text>
+                <text x="10" y="104" class="column-name new">original_clearing_amount ✨</text>
+                <text x="10" y="122" class="column-name new">cost_responsibility ✨</text>
+                <text x="10" y="140" class="column-name" fill="#fff">extra_cost_amount</text>
+                <text x="10" y="158" class="column-name" fill="#fff">total_clearing_cost</text>
+            </g>
+            
+            <!-- ============ SECURITY SCHEMA (FAR RIGHT) ============ -->
+            
+            <!-- USERS -->
+            <g class="table-box" transform="translate(1130, 50)">
+                <rect width="190" height="200" rx="8" fill="#2d1f3d" stroke="#9b59b6" stroke-width="2"/>
+                <rect width="190" height="30" rx="8" fill="#9b59b6"/>
+                <rect y="22" width="190" height="8" fill="#9b59b6"/>
+                <text x="95" y="20" text-anchor="middle" class="table-header" fill="#fff">users</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name" fill="#fff">username</text>
+                <text x="10" y="86" class="column-name" fill="#fff">password_hash</text>
+                <text x="10" y="104" class="column-name" fill="#fff">role (CHECK)</text>
+                <text x="10" y="122" class="column-name" fill="#fff">is_locked</text>
+                <text x="10" y="140" class="column-name new">last_login_at ✨</text>
+                <text x="10" y="158" class="column-name new">failed_login_attempts ✨</text>
+                <text x="10" y="176" class="column-name new">locked_until ✨</text>
+            </g>
+            
+            <!-- AUDITS -->
+            <g class="table-box" transform="translate(1130, 280)">
+                <rect width="190" height="160" rx="8" fill="#2d1f3d" stroke="#9b59b6" stroke-width="2"/>
+                <rect width="190" height="30" rx="8" fill="#9b59b6"/>
+                <rect y="22" width="190" height="8" fill="#9b59b6"/>
+                <text x="95" y="20" text-anchor="middle" class="table-header" fill="#fff">audits</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (BIGSERIAL)</text>
+                <text x="10" y="68" class="column-name" fill="#fff">table_name</text>
+                <text x="10" y="86" class="column-name" fill="#fff">row_id</text>
+                <text x="10" y="104" class="column-name" fill="#fff">action (I/U/D)</text>
+                <text x="10" y="122" class="column-name" fill="#fff">old_json, new_json</text>
+                <text x="10" y="140" class="column-name new">actor (app user) ✨</text>
+            </g>
+            
+            <!-- DOCUMENTS (ARCHIVE) -->
+            <g class="table-box" transform="translate(1130, 470)">
+                <rect width="190" height="170" rx="8" fill="#1f2d1f" stroke="#6bcb77" stroke-width="2"/>
+                <rect width="190" height="30" rx="8" fill="#6bcb77"/>
+                <rect y="22" width="190" height="8" fill="#6bcb77"/>
+                <text x="95" y="20" text-anchor="middle" class="table-header" fill="#000">documents</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name fk">→ shipment_id</text>
+                <text x="10" y="86" class="column-name fk">→ contract_id</text>
+                <text x="10" y="104" class="column-name" fill="#fff">doc_type (ENUM)</text>
+                <text x="10" y="122" class="column-name" fill="#fff">filename, s3_key</text>
+                <text x="10" y="140" class="column-name new">→ uploaded_by_user_id ✨</text>
+                <text x="10" y="158" class="column-name new">is_deleted ✨</text>
+            </g>
+            
+            <!-- PAYMENT SCHEDULES -->
+            <g class="table-box" transform="translate(1130, 670)">
+                <rect width="190" height="130" rx="8" fill="#3d3520" stroke="#ffd93d" stroke-width="2"/>
+                <rect width="190" height="30" rx="8" fill="#ffd93d"/>
+                <rect y="22" width="190" height="8" fill="#ffd93d"/>
+                <text x="95" y="20" text-anchor="middle" class="table-header" fill="#000">payment_schedules</text>
+                <text x="10" y="50" class="column-name pk">🔑 id (UUID)</text>
+                <text x="10" y="68" class="column-name fk">→ contract_id</text>
+                <text x="10" y="86" class="column-name" fill="#fff">seq, basis</text>
+                <text x="10" y="104" class="column-name" fill="#fff">percent, amount</text>
+            </g>
+            
+            <!-- ============ RELATIONSHIP LINES ============ -->
+            
+            <!-- Companies → Contracts (seller) -->
+            <path d="M 230 130 Q 275 130 275 100 Q 275 70 320 70" class="relationship-line" marker-end="url(#arrow)"/>
+            <text x="275" y="60" class="relationship-label">sells</text>
+            
+            <!-- Companies → Contracts (buyer) -->
+            <path d="M 230 150 Q 275 150 275 140 Q 275 130 320 130" class="relationship-line" marker-end="url(#arrow)"/>
+            <text x="275" y="145" class="relationship-label">buys</text>
+            
+            <!-- Contracts → Contract Lines -->
+            <path d="M 420 270 L 420 300" class="relationship-line" marker-end="url(#crow)"/>
+            <text x="430" y="285" class="relationship-label">has</text>
+            
+            <!-- Contracts → Proformas -->
+            <path d="M 520 200 L 520 350 Q 520 400 470 450 L 470 470" class="relationship-line" marker-end="url(#crow)"/>
+            <text x="525" y="350" class="relationship-label">generates</text>
+            
+            <!-- Contracts → Shipments -->
+            <path d="M 520 130 L 580 130" class="relationship-line" marker-end="url(#crow)"/>
+            <text x="540" y="120" class="relationship-label">fulfills</text>
+            
+            <!-- Products → Contract Lines -->
+            <path d="M 230 500 Q 280 500 280 380 L 320 380" class="relationship-line" marker-end="url(#arrow)"/>
+            <text x="260" y="430" class="relationship-label">in</text>
+            
+            <!-- Ports → Shipments (POL) -->
+            <path d="M 230 330 Q 450 330 450 200 L 580 200" class="relationship-line" marker-end="url(#arrow)"/>
+            <text x="400" y="280" class="relationship-label">loads</text>
+            
+            <!-- Ports → Shipments (POD) -->
+            <path d="M 230 360 Q 500 360 500 220 L 580 220" class="relationship-line" marker-end="url(#arrow)"/>
+            <text x="420" y="350" class="relationship-label">discharges</text>
+            
+            <!-- Shipments → Milestones -->
+            <path d="M 690 390 L 690 420" class="relationship-line" marker-end="url(#crow)"/>
+            <text x="700" y="405" class="relationship-label">tracks</text>
+            
+            <!-- Shipments → Outbound Deliveries -->
+            <path d="M 690 530 L 690 560" class="relationship-line" marker-end="url(#crow)"/>
+            <text x="700" y="545" class="relationship-label">delivers</text>
+            
+            <!-- Shipments → Notifications -->
+            <path d="M 690 690 L 690 720" class="relationship-line" marker-end="url(#crow)"/>
+            <text x="700" y="705" class="relationship-label">notifies</text>
+            
+            <!-- Transport Companies → Outbound Deliveries -->
+            <path d="M 230 680 Q 400 680 400 630 L 580 630" class="relationship-line" marker-end="url(#arrow)"/>
+            <text x="350" y="645" class="relationship-label">transports</text>
+            
+            <!-- Shipments → Transactions -->
+            <path d="M 800 220 L 860 160" class="relationship-line" marker-end="url(#crow)"/>
+            <text x="820" y="180" class="relationship-label">pays</text>
+            
+            <!-- Shipments → Customs Clearing -->
+            <path d="M 800 350 Q 830 550 860 700" class="relationship-line" marker-end="url(#crow)"/>
+            <text x="815" y="550" class="relationship-label">incurs</text>
+            
+            <!-- Funds → Transactions -->
+            <path d="M 965 480 L 965 280" class="relationship-line" marker-end="url(#arrow)"/>
+            <text x="975" y="380" class="relationship-label">from</text>
+            
+            <!-- Users → All tables (created_by) -->
+            <path d="M 1130 150 L 1070 150" class="relationship-line" stroke-dasharray="5,5"/>
+            <text x="1085" y="140" class="relationship-label">creates</text>
+            
+            <!-- Contracts → Payment Schedules -->
+            <path d="M 520 270 Q 520 850 800 850 Q 1050 850 1050 750 L 1130 750" class="relationship-line" marker-end="url(#crow)"/>
+            <text x="750" y="865" class="relationship-label">schedules</text>
+            
+            <!-- Shipments → Documents -->
+            <path d="M 800 300 Q 1050 300 1050 500 L 1130 530" class="relationship-line" marker-end="url(#crow)"/>
+            <text x="950" y="400" class="relationship-label">has docs</text>
+            
+            <!-- LEGEND BOX -->
+            <g transform="translate(1380, 50)">
+                <rect width="180" height="200" rx="8" fill="rgba(0,0,0,0.5)" stroke="#444"/>
+                <text x="90" y="25" text-anchor="middle" fill="#00d4ff" font-weight="bold">Legend</text>
+                <text x="15" y="50" fill="#ffd700" font-size="11">🔑 = Primary Key</text>
+                <text x="15" y="70" fill="#00bfff" font-size="11">→ = Foreign Key</text>
+                <text x="15" y="90" fill="#00ff88" font-size="11">✨ = New (039-047)</text>
+                <line x1="15" y1="110" x2="60" y2="110" stroke="#666" stroke-width="2"/>
+                <text x="70" y="114" fill="#888" font-size="11">= Relationship</text>
+                <line x1="15" y1="130" x2="60" y2="130" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+                <text x="70" y="134" fill="#888" font-size="11">= User creates</text>
+                <text x="15" y="160" fill="#ff6b6b" font-size="11">⭐ = Central table</text>
+                <text x="15" y="180" fill="#888" font-size="10">(shipments has 102 cols)</text>
+            </g>
+            
+            <!-- SCHEMA LABELS -->
+            <text x="130" y="30" fill="#4ecdc4" font-size="14" font-weight="bold">master_data</text>
+            <text x="460" y="30" fill="#ff6b6b" font-size="14" font-weight="bold">logistics</text>
+            <text x="920" y="30" fill="#ffd93d" font-size="14" font-weight="bold">finance</text>
+            <text x="1180" y="30" fill="#9b59b6" font-size="14" font-weight="bold">security</text>
+        </svg>
+    </div>
+    
+    <div style="text-align: center; padding: 30px; color: #666;">
+        <p>Generated: December 2025 | Loyal Supply Chain Management System</p>
+        <p style="margin-top: 10px;">File: <code>/Users/rafik/loyal-supplychain/DATABASE_ERD_FINAL.html</code></p>
+    </div>
+</body>
+</html>
+

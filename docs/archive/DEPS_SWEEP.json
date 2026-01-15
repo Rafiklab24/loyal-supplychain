@@ -1,0 +1,278 @@
+{
+  "generated": "2025-01-13",
+  "codebase_root": "/Users/rafik/loyal-supplychain",
+  "runtime": {
+    "node": "20.x",
+    "package_manager": "npm",
+    "module_systems": {
+      "backend": "commonjs",
+      "frontend": "esm",
+      "etl": "commonjs"
+    }
+  },
+  "workspaces": {
+    "backend": {
+      "path": "app/",
+      "name": "loyal-supplychain-app",
+      "version": "1.0.0",
+      "typescript": "^5.0.0",
+      "scripts": {
+        "start": "node dist/index.js",
+        "dev": "ts-node src/index.ts",
+        "build": "tsc",
+        "db:up": "ts-node src/db/migrate.ts up"
+      },
+      "dependencies": {
+        "production": [
+          { "name": "express", "version": "^4.18.2", "category": "framework" },
+          { "name": "cors", "version": "^2.8.5", "category": "middleware" },
+          { "name": "dotenv", "version": "^17.2.3", "category": "config" },
+          { "name": "pg", "version": "^8.11.3", "category": "database" }
+        ],
+        "development": [
+          { "name": "typescript", "version": "^5.0.0", "category": "language" },
+          { "name": "ts-node", "version": "^10.9.0", "category": "runtime" },
+          { "name": "@types/node", "version": "^20.0.0", "category": "types" },
+          { "name": "@types/express", "version": "^4.17.17", "category": "types" },
+          { "name": "@types/cors", "version": "^2.8.13", "category": "types" },
+          { "name": "@types/pg", "version": "^8.10.0", "category": "types" }
+        ]
+      }
+    },
+    "frontend": {
+      "path": "vibe/",
+      "name": "vibe",
+      "version": "0.0.0",
+      "typescript": "~5.9.3",
+      "module_type": "module",
+      "scripts": {
+        "dev": "vite",
+        "build": "tsc -b && vite build",
+        "lint": "eslint .",
+        "preview": "vite preview"
+      },
+      "dependencies": {
+        "production": [
+          { "name": "react", "version": "^19.1.1", "category": "framework" },
+          { "name": "react-dom", "version": "^19.1.1", "category": "framework" },
+          { "name": "react-router-dom", "version": "^7.9.4", "category": "routing" },
+          { "name": "@tanstack/react-query", "version": "^5.90.5", "category": "state" },
+          { "name": "axios", "version": "^1.12.2", "category": "http" },
+          { "name": "i18next", "version": "^25.6.0", "category": "i18n" },
+          { "name": "react-i18next", "version": "^16.2.1", "category": "i18n" },
+          { "name": "i18next-browser-languagedetector", "version": "^8.2.0", "category": "i18n" },
+          { "name": "@headlessui/react", "version": "^2.2.9", "category": "ui" },
+          { "name": "@heroicons/react", "version": "^2.2.0", "category": "icons" },
+          { "name": "clsx", "version": "^2.1.1", "category": "utility" },
+          { "name": "tailwind-merge", "version": "^3.3.1", "category": "utility" },
+          { "name": "date-fns", "version": "^4.1.0", "category": "date" }
+        ],
+        "development": [
+          { "name": "vite", "version": "^7.1.7", "category": "build" },
+          { "name": "@vitejs/plugin-react", "version": "^5.0.4", "category": "build" },
+          { "name": "tailwindcss", "version": "^4.1.16", "category": "css" },
+          { "name": "@tailwindcss/postcss", "version": "^4.1.16", "category": "css" },
+          { "name": "tailwindcss-rtl", "version": "^0.9.0", "category": "css" },
+          { "name": "postcss", "version": "^8.5.6", "category": "css" },
+          { "name": "autoprefixer", "version": "^10.4.21", "category": "css" },
+          { "name": "eslint", "version": "^9.36.0", "category": "lint" },
+          { "name": "@eslint/js", "version": "^9.36.0", "category": "lint" },
+          { "name": "typescript-eslint", "version": "^8.45.0", "category": "lint" },
+          { "name": "eslint-plugin-react-hooks", "version": "^5.2.0", "category": "lint" },
+          { "name": "eslint-plugin-react-refresh", "version": "^0.4.22", "category": "lint" },
+          { "name": "typescript", "version": "~5.9.3", "category": "language" },
+          { "name": "@types/node", "version": "^24.9.1", "category": "types" },
+          { "name": "@types/react", "version": "^19.1.16", "category": "types" },
+          { "name": "@types/react-dom", "version": "^19.1.9", "category": "types" },
+          { "name": "globals", "version": "^16.4.0", "category": "config" }
+        ]
+      }
+    },
+    "etl": {
+      "path": "./",
+      "name": "loyal-supplychain",
+      "version": "1.0.0",
+      "typescript": "^5.0.0",
+      "scripts": {
+        "etl:excel": "ts-node etl/excel-loader.ts",
+        "etl:suppliers": "ts-node etl/suppliers-loader.ts",
+        "etl:transfers": "ts-node etl/transfers-loader.ts",
+        "etl:qa": "ts-node etl/qa-checks.ts"
+      },
+      "dependencies": {
+        "production": [
+          { "name": "pg", "version": "^8.11.3", "category": "database" },
+          { "name": "xlsx", "version": "^0.18.5", "category": "excel" }
+        ],
+        "development": [
+          { "name": "typescript", "version": "^5.0.0", "category": "language" },
+          { "name": "ts-node", "version": "^10.9.0", "category": "runtime" },
+          { "name": "@types/node", "version": "^20.0.0", "category": "types" },
+          { "name": "@types/pg", "version": "^8.10.0", "category": "types" }
+        ]
+      }
+    }
+  },
+  "deps_by_category": {
+    "framework": [
+      { "name": "express", "version": "^4.18.2", "workspace": "backend" },
+      { "name": "react", "version": "^19.1.1", "workspace": "frontend" },
+      { "name": "react-dom", "version": "^19.1.1", "workspace": "frontend" }
+    ],
+    "database": [
+      { "name": "pg", "version": "^8.11.3", "workspace": "backend,etl" }
+    ],
+    "build": [
+      { "name": "vite", "version": "^7.1.7", "workspace": "frontend" },
+      { "name": "@vitejs/plugin-react", "version": "^5.0.4", "workspace": "frontend" }
+    ],
+    "routing": [
+      { "name": "react-router-dom", "version": "^7.9.4", "workspace": "frontend" }
+    ],
+    "state": [
+      { "name": "@tanstack/react-query", "version": "^5.90.5", "workspace": "frontend" }
+    ],
+    "http": [
+      { "name": "axios", "version": "^1.12.2", "workspace": "frontend" }
+    ],
+    "i18n": [
+      { "name": "i18next", "version": "^25.6.0", "workspace": "frontend" },
+      { "name": "react-i18next", "version": "^16.2.1", "workspace": "frontend" },
+      { "name": "i18next-browser-languagedetector", "version": "^8.2.0", "workspace": "frontend" }
+    ],
+    "ui": [
+      { "name": "@headlessui/react", "version": "^2.2.9", "workspace": "frontend" },
+      { "name": "@heroicons/react", "version": "^2.2.0", "workspace": "frontend" }
+    ],
+    "styling": [
+      { "name": "tailwindcss", "version": "^4.1.16", "workspace": "frontend" },
+      { "name": "@tailwindcss/postcss", "version": "^4.1.16", "workspace": "frontend" },
+      { "name": "tailwindcss-rtl", "version": "^0.9.0", "workspace": "frontend" },
+      { "name": "postcss", "version": "^8.5.6", "workspace": "frontend" },
+      { "name": "autoprefixer", "version": "^10.4.21", "workspace": "frontend" },
+      { "name": "clsx", "version": "^2.1.1", "workspace": "frontend" },
+      { "name": "tailwind-merge", "version": "^3.3.1", "workspace": "frontend" }
+    ],
+    "middleware": [
+      { "name": "cors", "version": "^2.8.5", "workspace": "backend" },
+      { "name": "dotenv", "version": "^17.2.3", "workspace": "backend" }
+    ],
+    "excel": [
+      { "name": "xlsx", "version": "^0.18.5", "workspace": "etl" }
+    ],
+    "date": [
+      { "name": "date-fns", "version": "^4.1.0", "workspace": "frontend" }
+    ],
+    "language": [
+      { "name": "typescript", "version": "^5.0.0", "workspace": "backend,etl" },
+      { "name": "typescript", "version": "~5.9.3", "workspace": "frontend" }
+    ],
+    "lint": [
+      { "name": "eslint", "version": "^9.36.0", "workspace": "frontend" },
+      { "name": "@eslint/js", "version": "^9.36.0", "workspace": "frontend" },
+      { "name": "typescript-eslint", "version": "^8.45.0", "workspace": "frontend" },
+      { "name": "eslint-plugin-react-hooks", "version": "^5.2.0", "workspace": "frontend" },
+      { "name": "eslint-plugin-react-refresh", "version": "^0.4.22", "workspace": "frontend" }
+    ]
+  },
+  "missing": {
+    "orm": {
+      "status": "none",
+      "impact": "high",
+      "note": "Raw SQL everywhere, no type safety",
+      "recommendations": ["prisma", "drizzle-orm", "typeorm"]
+    },
+    "auth": {
+      "status": "mock",
+      "impact": "critical",
+      "note": "localStorage only, no security",
+      "recommendations": ["jsonwebtoken", "bcrypt", "passport"]
+    },
+    "validation": {
+      "status": "none",
+      "impact": "high",
+      "note": "Manual validation only",
+      "recommendations": ["zod", "yup", "joi"]
+    },
+    "testing": {
+      "status": "none",
+      "impact": "high",
+      "note": "Zero test coverage",
+      "recommendations": {
+        "backend": ["jest", "supertest"],
+        "frontend": ["vitest", "@testing-library/react"]
+      }
+    },
+    "pdf": {
+      "status": "none",
+      "impact": "medium",
+      "note": "Cannot generate or view PDFs",
+      "recommendations": ["pdfkit", "pdf-lib", "react-pdf"]
+    },
+    "file_upload": {
+      "status": "none",
+      "impact": "high",
+      "note": "No file upload capability",
+      "recommendations": ["multer", "@aws-sdk/client-s3"]
+    },
+    "ocr_ai": {
+      "status": "none",
+      "impact": "low",
+      "note": "No OCR or AI integration",
+      "recommendations": ["tesseract.js", "openai", "@anthropic-ai/sdk"]
+    },
+    "email_sms": {
+      "status": "none",
+      "impact": "medium",
+      "note": "No notification services",
+      "recommendations": ["nodemailer", "sendgrid", "twilio"]
+    },
+    "monitoring": {
+      "status": "none",
+      "impact": "high",
+      "note": "No error tracking or logging",
+      "recommendations": ["@sentry/node", "winston", "pino"]
+    },
+    "rate_limiting": {
+      "status": "none",
+      "impact": "medium",
+      "note": "API vulnerable to abuse",
+      "recommendations": ["express-rate-limit"]
+    },
+    "job_queue": {
+      "status": "none",
+      "impact": "low",
+      "note": "No background job processing",
+      "recommendations": ["bullmq", "bull", "agenda"]
+    },
+    "caching": {
+      "status": "none",
+      "impact": "medium",
+      "note": "No caching layer",
+      "recommendations": ["ioredis", "node-cache"]
+    }
+  },
+  "version_compatibility": [
+    { "package": "react", "current": "19.1.1", "latest": "19.1.x", "status": "up_to_date" },
+    { "package": "vite", "current": "7.1.7", "latest": "7.1.x", "status": "up_to_date" },
+    { "package": "express", "current": "4.18.2", "latest": "4.21.x", "status": "minor_update" },
+    { "package": "axios", "current": "1.12.2", "latest": "1.7.x", "status": "several_versions_behind" },
+    { "package": "pg", "current": "8.11.3", "latest": "8.13.x", "status": "minor_update" },
+    { "package": "tailwindcss", "current": "4.1.16", "latest": "4.1.x", "status": "up_to_date" },
+    { "package": "typescript (BE)", "current": "5.0.0", "latest": "5.7.x", "status": "outdated" },
+    { "package": "typescript (FE)", "current": "5.9.3", "latest": "5.7.x", "status": "up_to_date" },
+    { "package": "i18next", "current": "25.6.0", "latest": "25.x", "status": "up_to_date" },
+    { "package": "date-fns", "current": "4.1.0", "latest": "4.1.x", "status": "up_to_date" }
+  ],
+  "summary": {
+    "total_workspaces": 3,
+    "total_unique_deps": 44,
+    "production_deps": 17,
+    "dev_deps": 27,
+    "typescript_enabled": true,
+    "testing_present": false,
+    "linting_present": true,
+    "orm_present": false
+  }
+}
+

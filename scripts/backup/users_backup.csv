@@ -1,0 +1,4 @@
+id,username,name,phone,email,role,created_at,is_locked,updated_at,last_login_at,failed_login_attempts,locked_until
+70b06d6a-57a9-4b2f-99bf-30286fe8aa00,test_logistics,Test Logistics User,,test@example.com,Logistics,2025-12-03 17:47:30.931412+03,f,2025-12-03 17:47:30.931412+03,,0,
+3eafe930-5c7d-4d7f-8370-e6eb28e02ec4,TEST_SARMADA,Sarmada123,,,Accounting,2025-12-03 17:57:53.220906+03,f,2025-12-03 22:39:21.188227+03,2025-12-03 22:39:21.188227+03,0,
+4d309b81-cf68-4547-be1c-aef517550e98,admin,Administrator,,,Admin,2025-11-25 12:19:34.380213+03,f,2025-12-05 10:10:53.513222+03,2025-12-05 10:10:53.513222+03,0,

@@ -1,0 +1,52 @@
+{
+  "dashboard": {
+    "title": "Kontrol Paneli",
+    "totalShipments": "Toplam Sevkiyat",
+    "totalValue": "Toplam Değer",
+    "totalWeight": "Toplam Ağırlık",
+    "suppliers": "Tedarikçiler",
+    "shippingLines": "Deniz Taşıma Şirketleri",
+    "ports": "Limanlar",
+    "topOrigins": "En Çok Yükleme Limanları",
+    "topDestinations": "En Çok Varış Limanları",
+    "shipmentCount": "sevkiyat",
+    "priorityTasks": "Öncelikli Görevler",
+    "viewAllTasks": "Tümünü Gör",
+    "noTasks": "Bekleyen görev yok",
+    "allCaughtUp": "Her şey güncel!"
+  },
+  "notifications": {
+    "title": "Bildirimler",
+    "markAllRead": "Tümünü okundu işaretle",
+    "empty": "Bildirim yok",
+    "justNow": "Az önce",
+    "minutesAgo": "{{count}} dk önce",
+    "hoursAgo": "{{count}} sa önce",
+    "daysAgo": "{{count}} gün önce",
+    "shipment": "Sevkiyat",
+    "actionRequired": "İşlem Gerekli:",
+    "markComplete": "Tamamlandı İşaretle",
+    "completed": "Tamamlandı",
+    "refresh": "Yenile",
+    "overdue": "Gecikmiş",
+    "dueToday": "Bugün bitiyor",
+    "dueTomorrow": "Yarın bitiyor",
+    "daysLeft": "gün kaldı"
+  },
+  "tasks": {
+    "title": "Bekleyen Görevler",
+    "description": "Tüm aksiyon öğelerini takip edin ve tamamlayın",
+    "all": "Tümü",
+    "critical": "Kritik",
+    "warning": "Uyarı",
+    "info": "Bilgi",
+    "noTasks": "Bekleyen görev yok",
+    "allCaughtUp": "Her şey güncel!",
+    "error": "Görevler yüklenemedi",
+    "overdue": "Gecikmiş",
+    "dueToday": "Bugün bitiyor",
+    "dueTomorrow": "Yarın bitiyor",
+    "daysLeft": "gün kaldı"
+  }
+}
+

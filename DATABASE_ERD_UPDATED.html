@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loyal Supply Chain - Database ERD (Updated Dec 2025)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .new-badge {
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .schema-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        
+        .schema {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .schema-title {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid;
+        }
+        
+        /* Schema Colors */
+        .master_data .schema-title { color: #4ecdc4; border-color: #4ecdc4; }
+        .master_data .legend-color { background: #4ecdc4; }
+        
+        .logistics .schema-title { color: #ff6b6b; border-color: #ff6b6b; }
+        .logistics .legend-color { background: #ff6b6b; }
+        
+        .finance .schema-title { color: #ffd93d; border-color: #ffd93d; }
+        .finance .legend-color { background: #ffd93d; }
+        
+        .archive .schema-title { color: #6bcb77; border-color: #6bcb77; }
+        .archive .legend-color { background: #6bcb77; }
+        
+        .security .schema-title { color: #9b59b6; border-color: #9b59b6; }
+        .security .legend-color { background: #9b59b6; }
+        
+        .system .schema-title { color: #e74c3c; border-color: #e74c3c; }
+        .system .legend-color { background: #e74c3c; }
+        
+        .comm .schema-title { color: #3498db; border-color: #3498db; }
+        .comm .legend-color { background: #3498db; }
+        
+        .table {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .table.new-table {
+            border: 2px solid #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+        }
+        
+        .table-header {
+            padding: 12px 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .master_data .table-header { background: rgba(78, 205, 196, 0.2); color: #4ecdc4; }
+        .logistics .table-header { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+        .finance .table-header { background: rgba(255, 217, 61, 0.2); color: #ffd93d; }
+        .archive .table-header { background: rgba(107, 203, 119, 0.2); color: #6bcb77; }
+        .security .table-header { background: rgba(155, 89, 182, 0.2); color: #9b59b6; }
+        .system .table-header { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+        .comm .table-header { background: rgba(52, 152, 219, 0.2); color: #3498db; }
+        
+        .table-header .column-count {
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+        
+        .table-content {
+            padding: 10px 15px;
+            font-size: 0.85em;
+        }
+        
+        .column {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .column:last-child {
+            border-bottom: none;
+        }
+        
+        .column-name {
+            color: #fff;
+        }
+        
+        .column-name.pk {
+            color: #ffd700;
+        }
+        
+        .column-name.pk::before {
+            content: '🔑 ';
+        }
+        
+        .column-name.fk {
+            color: #00bfff;
+        }
+        
+        .column-name.fk::before {
+            content: '→ ';
+        }
+        
+        .column-name.new-col {
+            color: #00ff88;
+        }
+        
+        .column-name.new-col::after {
+            content: ' ✨';
+        }
+        
+        .column-type {
+            color: #888;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+        
+        .fk-reference {
+            font-size: 0.75em;
+            color: #00bfff;
+            margin-left: 10px;
+        }
+        
+        .relationships {
+            margin-top: 40px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .relationships h2 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .rel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 15px;
+        }
+        
+        .rel-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .rel-from {
+            color: #ff6b6b;
+        }
+        
+        .rel-arrow {
+            color: #00d4ff;
+        }
+        
+        .rel-to {
+            color: #4ecdc4;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        
+        .stat-label {
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .deprecated {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+        
+        .migration-notes {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 212, 255, 0.1));
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .migration-notes h3 {
+            color: #00ff88;
+            margin-bottom: 15px;
+        }
+        
+        .migration-notes ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .migration-notes li {
+            padding: 5px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .migration-notes li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #00ff88;
+        }
+    </style>
+</head>
+<body>
+    <h1>🗄️ Loyal Supply Chain Database ERD</h1>
+    <p class="subtitle">Updated December 2025 - Post Migration 039-047</p>
+    
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-value">40</div>
+            <div class="stat-label">Tables</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">7</div>
+            <div class="stat-label">Schemas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">62</div>
+            <div class="stat-label">Foreign Keys</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">29</div>
+            <div class="stat-label">Audit Triggers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">12</div>
+            <div class="stat-label">ENUM Types</div>
+        </div>
+    </div>
+    
+    <div class="migration-notes">
+        <h3>🚀 Recent Migration Changes (039-047)</h3>
+        <ul>
+            <li>Added audit triggers to 18 additional tables</li>
+            <li>Created <code>finance.exchange_rates</code> table with conversion functions</li>
+            <li>Merged <code>transfers</code> → <code>transactions</code> with balance triggers</li>
+            <li>Added user FK columns (*_user_id) to 6 tables</li>
+            <li>Created 7 new ENUM types for validation</li>
+            <li>Added login tracking columns to users</li>
+            <li>Consolidated customs cost fields (original_clearing_amount + cost_responsibility)</li>
+        </ul>
+    </div>
+    
+    <div class="legend">
+        <div class="legend-item master_data"><div class="legend-color"></div> master_data</div>
+        <div class="legend-item logistics"><div class="legend-color"></div> logistics</div>
+        <div class="legend-item finance"><div class="legend-color"></div> finance</div>
+        <div class="legend-item archive"><div class="legend-color"></div> archive</div>
+        <div class="legend-item security"><div class="legend-color"></div> security</div>
+        <div class="legend-item system"><div class="legend-color"></div> system</div>
+        <div class="legend-item comm"><div class="legend-color"></div> comm</div>
+    </div>
+    
+    <div class="schema-container">
+        <!-- MASTER_DATA SCHEMA -->
+        <div class="schema master_data">
+            <h2 class="schema-title">📦 master_data</h2>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>companies</span>
+                    <span class="column-count">19 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">name</span><span class="column-type">TEXT</span></div>
+                    <div class="column"><span class="column-name">country, city, address</span><span class="column-type">TEXT</span></div>
+                    <div class="column"><span class="column-name">is_supplier, is_customer, is_shipping_line, is_forwarder, is_bank</span><span class="column-type">BOOLEAN</span></div>
+                    <div class="column"><span class="column-name">extra_json</span><span class="column-type">JSONB</span></div>
+                    <div class="column"><span class="column-name">is_deleted</span><span class="column-type">BOOLEAN</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>ports</span>
+                    <span class="column-count">10 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">name, country, unlocode, code</span><span class="column-type">TEXT</span></div>
+                    <div class="column"><span class="column-name new-col">is_deleted</span><span class="column-type">BOOLEAN</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>products</span>
+                    <span class="column-count">21 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">sku, name, hs_code</span><span class="column-type">TEXT</span></div>
+                    <div class="column"><span class="column-name deprecated">category</span><span class="column-type">TEXT (deprecated)</span></div>
+                    <div class="column"><span class="column-name">category_type</span><span class="column-type">TEXT (use this)</span></div>
+                    <div class="column"><span class="column-name">is_seasonal, is_active</span><span class="column-type">BOOLEAN</span></div>
+                    <div class="column"><span class="column-name new-col">is_deleted</span><span class="column-type">BOOLEAN</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>product_specs</span>
+                    <span class="column-count">23 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name fk">product_id</span><span class="column-type">UUID → products</span></div>
+                    <div class="column"><span class="column-name">grade, moisture_pct, purity_pct</span><span class="column-type">TEXT/NUMERIC</span></div>
+                    <div class="column"><span class="column-name">custom_specs</span><span class="column-type">JSONB</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>transport_companies</span>
+                    <span class="column-count">16 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">name, phone, service_areas</span><span class="column-type">TEXT/JSONB</span></div>
+                    <div class="column"><span class="column-name">vehicle_types</span><span class="column-type">JSONB</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- LOGISTICS SCHEMA -->
+        <div class="schema logistics">
+            <h2 class="schema-title">🚢 logistics</h2>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>shipments</span>
+                    <span class="column-count">102 cols ⚠️</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">sn, direction, status</span><span class="column-type">TEXT/ENUM</span></div>
+                    <div class="column"><span class="column-name fk">contract_id, proforma_id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name fk">supplier_id, customer_id</span><span class="column-type">UUID → companies</span></div>
+                    <div class="column"><span class="column-name fk">pol_id, pod_id</span><span class="column-type">UUID → ports</span></div>
+                    <div class="column"><span class="column-name">weight_ton, container_count</span><span class="column-type">NUMERIC</span></div>
+                    <div class="column"><span class="column-name">total_value_usd, paid_value_usd, balance_value_usd</span><span class="column-type">NUMERIC</span></div>
+                    <div class="column"><span class="column-name">lines, containers</span><span class="column-type">JSONB</span></div>
+                    <div class="column"><span class="column-name new-col">created_by_user_id, updated_by_user_id</span><span class="column-type">UUID → users</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>contracts</span>
+                    <span class="column-count">29 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">contract_no, status</span><span class="column-type">TEXT</span></div>
+                    <div class="column"><span class="column-name fk">seller_company_id, buyer_company_id</span><span class="column-type">UUID → companies</span></div>
+                    <div class="column"><span class="column-name">incoterm_code, currency_code</span><span class="column-type">TEXT (CHECK)</span></div>
+                    <div class="column"><span class="column-name new-col">created_by_user_id, updated_by_user_id</span><span class="column-type">UUID → users</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>contract_lines</span>
+                    <span class="column-count">12 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name fk">contract_id</span><span class="column-type">UUID → contracts</span></div>
+                    <div class="column"><span class="column-name fk">product_id</span><span class="column-type">UUID → products</span></div>
+                    <div class="column"><span class="column-name">quantity, unit_price</span><span class="column-type">NUMERIC</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>proforma_invoices</span>
+                    <span class="column-count">16 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name fk">contract_id</span><span class="column-type">UUID → contracts</span></div>
+                    <div class="column"><span class="column-name">pi_number, status</span><span class="column-type">TEXT</span></div>
+                    <div class="column"><span class="column-name new-col">created_by_user_id</span><span class="column-type">UUID → users</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>outbound_deliveries</span>
+                    <span class="column-count">34 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">delivery_number</span><span class="column-type">TEXT (auto)</span></div>
+                    <div class="column"><span class="column-name fk">shipment_id</span><span class="column-type">UUID → shipments</span></div>
+                    <div class="column"><span class="column-name fk">transport_company_id</span><span class="column-type">UUID → transport_companies</span></div>
+                    <div class="column"><span class="column-name">total_cost</span><span class="column-type">NUMERIC (computed)</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>notifications</span>
+                    <span class="column-count">17 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name fk">shipment_id, contract_id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">type, title, message</span><span class="column-type">TEXT</span></div>
+                    <div class="column"><span class="column-name">is_read, action_required</span><span class="column-type">BOOLEAN</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>milestones</span>
+                    <span class="column-count">7 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name fk">shipment_id</span><span class="column-type">UUID → shipments</span></div>
+                    <div class="column"><span class="column-name">code</span><span class="column-type">milestone_code_enum</span></div>
+                    <div class="column"><span class="column-name">recorded_at</span><span class="column-type">TIMESTAMPTZ</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>ai_extraction_logs</span>
+                    <span class="column-count">18 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">document_type, extraction_model</span><span class="column-type">TEXT</span></div>
+                    <div class="column"><span class="column-name">confidence_score, processing_time_ms</span><span class="column-type">NUMERIC</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- FINANCE SCHEMA -->
+        <div class="schema finance">
+            <h2 class="schema-title">💰 finance</h2>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>transactions</span>
+                    <span class="column-count">22 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">transaction_date, amount_usd</span><span class="column-type">DATE/NUMERIC</span></div>
+                    <div class="column"><span class="column-name">direction</span><span class="column-type">TEXT ('in'/'out')</span></div>
+                    <div class="column"><span class="column-name fk">contract_id, shipment_id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name fk">fund_id</span><span class="column-type">UUID → funds</span></div>
+                    <div class="column"><span class="column-name new-col">migrated_from, migrated_from_id</span><span class="column-type">TEXT/UUID</span></div>
+                    <div class="column"><span class="column-name new-col">created_by_user_id</span><span class="column-type">UUID → users</span></div>
+                </div>
+            </div>
+            
+            <div class="table new-table">
+                <div class="table-header">
+                    <span>exchange_rates<span class="new-badge">NEW</span></span>
+                    <span class="column-count">11 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">from_currency, to_currency</span><span class="column-type">VARCHAR(10)</span></div>
+                    <div class="column"><span class="column-name">rate</span><span class="column-type">NUMERIC(18,8)</span></div>
+                    <div class="column"><span class="column-name">effective_date</span><span class="column-type">DATE</span></div>
+                    <div class="column"><span class="column-name">source</span><span class="column-type">TEXT</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>customs_clearing_costs</span>
+                    <span class="column-count">34 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">file_number</span><span class="column-type">TEXT</span></div>
+                    <div class="column"><span class="column-name fk">shipment_id</span><span class="column-type">UUID → shipments</span></div>
+                    <div class="column"><span class="column-name new-col">original_clearing_amount</span><span class="column-type">NUMERIC (use this)</span></div>
+                    <div class="column"><span class="column-name new-col">cost_responsibility</span><span class="column-type">TEXT (who pays)</span></div>
+                    <div class="column"><span class="column-name deprecated">cost_paid_by_company</span><span class="column-type">NUMERIC (deprecated)</span></div>
+                    <div class="column"><span class="column-name deprecated">cost_paid_by_fb</span><span class="column-type">NUMERIC (deprecated)</span></div>
+                    <div class="column"><span class="column-name">extra_cost_amount</span><span class="column-type">NUMERIC</span></div>
+                    <div class="column"><span class="column-name">total_clearing_cost</span><span class="column-type">NUMERIC</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>customs_clearing_batches</span>
+                    <span class="column-count">14 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">batch_number, status</span><span class="column-type">TEXT</span></div>
+                    <div class="column"><span class="column-name">total_clearing_cost, item_count</span><span class="column-type">NUMERIC/INT</span></div>
+                    <div class="column"><span class="column-name new-col">created_by_user_id, reviewed_by_user_id</span><span class="column-type">UUID → users</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>funds</span>
+                    <span class="column-count">15 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">name, type, currency</span><span class="column-type">TEXT</span></div>
+                    <div class="column"><span class="column-name new-col">is_active, is_deleted</span><span class="column-type">BOOLEAN</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>payment_schedules</span>
+                    <span class="column-count">16 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name fk">contract_id</span><span class="column-type">UUID → contracts</span></div>
+                    <div class="column"><span class="column-name">seq, basis</span><span class="column-type">INT/TEXT (CHECK)</span></div>
+                    <div class="column"><span class="column-name">percent, amount</span><span class="column-type">NUMERIC</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span class="deprecated">transfers (DEPRECATED)</span>
+                    <span class="column-count">15 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name deprecated">Use transactions instead</span><span class="column-type">—</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SECURITY SCHEMA -->
+        <div class="schema security">
+            <h2 class="schema-title">🔐 security</h2>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>users</span>
+                    <span class="column-count">13 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">username, password_hash</span><span class="column-type">TEXT</span></div>
+                    <div class="column"><span class="column-name">role</span><span class="column-type">TEXT (CHECK)</span></div>
+                    <div class="column"><span class="column-name">is_locked</span><span class="column-type">BOOLEAN</span></div>
+                    <div class="column"><span class="column-name new-col">last_login_at</span><span class="column-type">TIMESTAMPTZ</span></div>
+                    <div class="column"><span class="column-name new-col">failed_login_attempts</span><span class="column-type">INTEGER</span></div>
+                    <div class="column"><span class="column-name new-col">locked_until</span><span class="column-type">TIMESTAMPTZ</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>audits</span>
+                    <span class="column-count">8 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">BIGSERIAL</span></div>
+                    <div class="column"><span class="column-name">table_name, row_id</span><span class="column-type">TEXT/UUID</span></div>
+                    <div class="column"><span class="column-name">action</span><span class="column-type">TEXT (CHECK)</span></div>
+                    <div class="column"><span class="column-name">old_json, new_json</span><span class="column-type">JSONB</span></div>
+                    <div class="column"><span class="column-name">actor, ts</span><span class="column-type">TEXT/TIMESTAMPTZ</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>migrations</span>
+                    <span class="column-count">3 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">SERIAL</span></div>
+                    <div class="column"><span class="column-name">filename, applied_at</span><span class="column-type">TEXT/TIMESTAMPTZ</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ARCHIVE SCHEMA -->
+        <div class="schema archive">
+            <h2 class="schema-title">📁 archive</h2>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>documents</span>
+                    <span class="column-count">13 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name fk">shipment_id, contract_id, proforma_id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">doc_type</span><span class="column-type">doc_type_enum</span></div>
+                    <div class="column"><span class="column-name">filename, s3_key</span><span class="column-type">TEXT</span></div>
+                    <div class="column"><span class="column-name new-col">uploaded_by_user_id</span><span class="column-type">UUID → users</span></div>
+                    <div class="column"><span class="column-name new-col">is_deleted, updated_at</span><span class="column-type">BOOLEAN/TIMESTAMPTZ</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SYSTEM SCHEMA -->
+        <div class="schema system">
+            <h2 class="schema-title">⚙️ system</h2>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>maintenance_mode</span>
+                    <span class="column-count">4 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">SERIAL</span></div>
+                    <div class="column"><span class="column-name">enabled</span><span class="column-type">BOOLEAN</span></div>
+                    <div class="column"><span class="column-name">updated_at, updated_by</span><span class="column-type">TIMESTAMPTZ/TEXT</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>blackday_shutdowns</span>
+                    <span class="column-count">9 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">triggered_by, ip</span><span class="column-type">TEXT</span></div>
+                    <div class="column"><span class="column-name">is_active, recovered_at</span><span class="column-type">BOOLEAN/TIMESTAMPTZ</span></div>
+                </div>
+            </div>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>security_events</span>
+                    <span class="column-count">4 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">event_type, details</span><span class="column-type">TEXT/JSONB</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- COMM SCHEMA -->
+        <div class="schema comm">
+            <h2 class="schema-title">💬 comm</h2>
+            
+            <div class="table">
+                <div class="table-header">
+                    <span>wa_messages</span>
+                    <span class="column-count">10 cols</span>
+                </div>
+                <div class="table-content">
+                    <div class="column"><span class="column-name pk">id</span><span class="column-type">UUID</span></div>
+                    <div class="column"><span class="column-name">direction</span><span class="column-type">TEXT ('in'/'out')</span></div>
+                    <div class="column"><span class="column-name">wa_from, wa_to</span><span class="column-type">TEXT</span></div>
+                    <div class="column"><span class="column-name">status</span><span class="column-type">TEXT (CHECK)</span></div>
+                    <div class="column"><span class="column-name">payload_json</span><span class="column-type">JSONB</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="relationships">
+        <h2>🔗 Key Relationships (62 Foreign Keys)</h2>
+        <div class="rel-grid">
+            <div class="rel-item"><span class="rel-from">shipments</span><span class="rel-arrow">→</span><span class="rel-to">contracts, proforma_invoices</span></div>
+            <div class="rel-item"><span class="rel-from">shipments</span><span class="rel-arrow">→</span><span class="rel-to">companies (supplier, customer, shipping_line)</span></div>
+            <div class="rel-item"><span class="rel-from">shipments</span><span class="rel-arrow">→</span><span class="rel-to">ports (pol, pod)</span></div>
+            <div class="rel-item"><span class="rel-from">contracts</span><span class="rel-arrow">→</span><span class="rel-to">companies (seller, buyer, final_beneficiary)</span></div>
+            <div class="rel-item"><span class="rel-from">contract_lines</span><span class="rel-arrow">→</span><span class="rel-to">contracts, products</span></div>
+            <div class="rel-item"><span class="rel-from">proforma_invoices</span><span class="rel-arrow">→</span><span class="rel-to">contracts</span></div>
+            <div class="rel-item"><span class="rel-from">proforma_lines</span><span class="rel-arrow">→</span><span class="rel-to">proforma_invoices, products</span></div>
+            <div class="rel-item"><span class="rel-from">transactions</span><span class="rel-arrow">→</span><span class="rel-to">contracts, shipments, funds, companies</span></div>
+            <div class="rel-item"><span class="rel-from">customs_clearing_costs</span><span class="rel-arrow">→</span><span class="rel-to">shipments</span></div>
+            <div class="rel-item"><span class="rel-from">payment_schedules</span><span class="rel-arrow">→</span><span class="rel-to">contracts, funds</span></div>
+            <div class="rel-item"><span class="rel-from">outbound_deliveries</span><span class="rel-arrow">→</span><span class="rel-to">shipments, transport_companies</span></div>
+            <div class="rel-item"><span class="rel-from">documents</span><span class="rel-arrow">→</span><span class="rel-to">shipments, contracts, proforma_invoices</span></div>
+            <div class="rel-item"><span class="rel-from">milestones</span><span class="rel-arrow">→</span><span class="rel-to">shipments</span></div>
+            <div class="rel-item"><span class="rel-from">notifications</span><span class="rel-arrow">→</span><span class="rel-to">shipments, contracts</span></div>
+            <div class="rel-item"><span class="rel-from">product_specs/seasons/benchmarks</span><span class="rel-arrow">→</span><span class="rel-to">products</span></div>
+            <div class="rel-item"><span class="rel-from">Many tables</span><span class="rel-arrow">→</span><span class="rel-to">security.users (*_user_id)</span></div>
+        </div>
+    </div>
+    
+    <footer style="text-align: center; margin-top: 40px; color: #666; padding-bottom: 40px;">
+        <p>Generated: December 2025 | Post-Migration 039-047</p>
+        <p>Loyal Supply Chain Management System</p>
+    </footer>
+</body>
+</html>
+

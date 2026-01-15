@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loyal Supply Chain - Complete Database ERD (Dec 2025)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0a0a1a, #1a1a3a);
+            min-height: 100vh;
+            color: #e0e0e0;
+            overflow-x: auto;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 212, 255, 0.15));
+            border-bottom: 2px solid rgba(0, 255, 136, 0.4);
+        }
+        
+        h1 {
+            color: #00ff88;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            color: #000;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+        
+        .badge.phase1 { background: linear-gradient(135deg, #00d4ff, #0099cc); }
+        .badge.phase2 { background: linear-gradient(135deg, #00ff88, #00cc6a); }
+        .badge.fixes { background: linear-gradient(135deg, #ffd93d, #cc9900); color: #000; }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            text-align: center;
+            background: rgba(0, 212, 255, 0.1);
+            padding: 15px 25px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #888;
+        }
+        
+        .section {
+            margin: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .section h2 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+        
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        th {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+        }
+        
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .ok { color: #00ff88; }
+        .warn { color: #ffd93d; }
+        .dep { color: #888; text-decoration: line-through; }
+        .new { color: #00ff88; font-weight: bold; }
+        
+        .schema-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .schema-master { background: #4ecdc4; color: #000; }
+        .schema-logistics { background: #ff6b6b; color: #fff; }
+        .schema-finance { background: #ffd93d; color: #000; }
+        .schema-archive { background: #6bcb77; color: #000; }
+        .schema-security { background: #9b59b6; color: #fff; }
+        .schema-system { background: #e74c3c; color: #fff; }
+        .schema-comm { background: #3498db; color: #fff; }
+        
+        .migration-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .migration-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #00ff88;
+        }
+        
+        .migration-card h4 {
+            color: #00ff88;
+            margin-bottom: 8px;
+        }
+        
+        .migration-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .migration-card li {
+            padding: 3px 0;
+            color: #ccc;
+        }
+        
+        .migration-card li::before {
+            content: '✓ ';
+            color: #00ff88;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🗄️ Loyal Supply Chain - Complete Database ERD</h1>
+        <p style="color: #888;">December 2025 - Production Ready</p>
+        
+        <div>
+            <span class="badge phase1">Phase 1: Core Fixes (039-047)</span>
+            <span class="badge phase2">Phase 2: Shipments Split (048-051)</span>
+            <span class="badge fixes">Phase 3: Cleanup (052-056)</span>
+        </div>
+        
+        <div class="stats">
+            <div class="stat"><div class="stat-value">45</div><div class="stat-label">Tables</div></div>
+            <div class="stat"><div class="stat-value">7</div><div class="stat-label">Schemas</div></div>
+            <div class="stat"><div class="stat-value">73</div><div class="stat-label">Foreign Keys</div></div>
+            <div class="stat"><div class="stat-value">37</div><div class="stat-label">Audit Triggers</div></div>
+            <div class="stat"><div class="stat-value">13</div><div class="stat-label">ENUMs</div></div>
+            <div class="stat"><div class="stat-value">24</div><div class="stat-label">CHECK Constraints</div></div>
+            <div class="stat"><div class="stat-value">6</div><div class="stat-label">Views</div></div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>📦 Schema Overview</h2>
+        <table>
+            <tr>
+                <th>Schema</th>
+                <th>Tables</th>
+                <th>Purpose</th>
+            </tr>
+            <tr>
+                <td><span class="schema-badge schema-master">master_data</span></td>
+                <td>8</td>
+                <td>Reference data: companies, ports, products, transport companies</td>
+            </tr>
+            <tr>
+                <td><span class="schema-badge schema-logistics">logistics</span></td>
+                <td>18</td>
+                <td>Core business: shipments (normalized), contracts, proformas, deliveries</td>
+            </tr>
+            <tr>
+                <td><span class="schema-badge schema-finance">finance</span></td>
+                <td>10</td>
+                <td>Financial: transactions, funds, customs costs, payment schedules</td>
+            </tr>
+            <tr>
+                <td><span class="schema-badge schema-archive">archive</span></td>
+                <td>1</td>
+                <td>Document storage and metadata</td>
+            </tr>
+            <tr>
+                <td><span class="schema-badge schema-security">security</span></td>
+                <td>4</td>
+                <td>Auth: users, audits, migrations, import logs</td>
+            </tr>
+            <tr>
+                <td><span class="schema-badge schema-system">system</span></td>
+                <td>3</td>
+                <td>Emergency: maintenance mode, blackday shutdowns</td>
+            </tr>
+            <tr>
+                <td><span class="schema-badge schema-comm">comm</span></td>
+                <td>1</td>
+                <td>Communications: WhatsApp messages (future)</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="section">
+        <h2>📊 All Tables (45 Total)</h2>
+        <table>
+            <tr>
+                <th>Table</th>
+                <th>Cols</th>
+                <th>FKs</th>
+                <th>Audit</th>
+                <th>is_deleted</th>
+                <th>Notes</th>
+            </tr>
+            <!-- master_data -->
+            <tr><td><span class="schema-badge schema-master">master_data</span>.companies</td><td>19</td><td>0</td><td class="ok">✓</td><td class="ok">✓</td><td>Multi-role flags</td></tr>
+            <tr><td><span class="schema-badge schema-master">master_data</span>.ports</td><td>10</td><td>0</td><td class="ok">✓</td><td class="ok">✓</td><td>UNLOCODE support</td></tr>
+            <tr><td><span class="schema-badge schema-master">master_data</span>.products</td><td>21</td><td>0</td><td class="ok">✓</td><td class="ok">✓</td><td>category deprecated</td></tr>
+            <tr><td><span class="schema-badge schema-master">master_data</span>.product_specs</td><td>23</td><td>1</td><td class="ok">✓</td><td>-</td><td></td></tr>
+            <tr><td><span class="schema-badge schema-master">master_data</span>.product_price_benchmarks</td><td>10</td><td>1</td><td class="ok">✓</td><td>-</td><td></td></tr>
+            <tr><td><span class="schema-badge schema-master">master_data</span>.product_seasons</td><td>16</td><td>1</td><td class="ok">✓</td><td>-</td><td>Month CHECK constraints</td></tr>
+            <tr><td><span class="schema-badge schema-master">master_data</span>.product_categories</td><td>9</td><td>0</td><td class="ok">✓</td><td class="ok">✓</td><td></td></tr>
+            <tr><td><span class="schema-badge schema-master">master_data</span>.transport_companies</td><td>16</td><td>0</td><td class="ok">✓</td><td>-</td><td></td></tr>
+            <!-- logistics -->
+            <tr><td><span class="schema-badge schema-logistics">logistics</span>.shipments</td><td>102</td><td>10</td><td class="ok">✓</td><td class="ok">✓</td><td>Master table, 27 deprecated cols</td></tr>
+            <tr><td class="new"><span class="schema-badge schema-logistics">logistics</span>.shipment_parties</td><td>16</td><td>5</td><td class="ok">✓</td><td>-</td><td class="new">NEW - Trading entities</td></tr>
+            <tr><td class="new"><span class="schema-badge schema-logistics">logistics</span>.shipment_cargo</td><td>19</td><td>1</td><td class="ok">✓</td><td>-</td><td class="new">NEW - Cargo details</td></tr>
+            <tr><td class="new"><span class="schema-badge schema-logistics">logistics</span>.shipment_logistics</td><td>25</td><td>3</td><td class="ok">✓</td><td>-</td><td class="new">NEW - Ports & tracking</td></tr>
+            <tr><td class="new"><span class="schema-badge schema-logistics">logistics</span>.shipment_financials</td><td>29</td><td>1</td><td class="ok">✓</td><td>-</td><td class="new">NEW - Money & payments</td></tr>
+            <tr><td class="new"><span class="schema-badge schema-logistics">logistics</span>.shipment_documents</td><td>15</td><td>1</td><td class="ok">✓</td><td>-</td><td class="new">NEW - Doc tracking</td></tr>
+            <tr><td><span class="schema-badge schema-logistics">logistics</span>.contracts</td><td>29</td><td>5</td><td class="ok">✓</td><td>-</td><td>ENUM + CHECK constraints</td></tr>
+            <tr><td><span class="schema-badge schema-logistics">logistics</span>.contract_lines</td><td>12</td><td>2</td><td class="ok">✓</td><td>-</td><td></td></tr>
+            <tr><td><span class="schema-badge schema-logistics">logistics</span>.contract_update_requests</td><td>14</td><td>2</td><td class="ok">✓</td><td class="ok">✓</td><td>Audit added in 052</td></tr>
+            <tr><td><span class="schema-badge schema-logistics">logistics</span>.proforma_invoices</td><td>16</td><td>3</td><td class="ok">✓</td><td>-</td><td></td></tr>
+            <tr><td><span class="schema-badge schema-logistics">logistics</span>.proforma_lines</td><td>10</td><td>2</td><td class="ok">✓</td><td>-</td><td></td></tr>
+            <tr><td><span class="schema-badge schema-logistics">logistics</span>.shipment_lines</td><td>16</td><td>3</td><td class="ok">✓</td><td>-</td><td></td></tr>
+            <tr><td><span class="schema-badge schema-logistics">logistics</span>.shipment_containers</td><td>12</td><td>1</td><td class="ok">✓</td><td>-</td><td></td></tr>
+            <tr><td><span class="schema-badge schema-logistics">logistics</span>.milestones</td><td>8</td><td>1</td><td class="ok">✓</td><td class="ok">✓</td><td>is_deleted added in 054</td></tr>
+            <tr><td><span class="schema-badge schema-logistics">logistics</span>.notifications</td><td>18</td><td>2</td><td class="ok">✓</td><td class="ok">✓</td><td>is_deleted added in 054</td></tr>
+            <tr><td><span class="schema-badge schema-logistics">logistics</span>.outbound_deliveries</td><td>34</td><td>4</td><td class="ok">✓</td><td>-</td><td>Auto delivery_number</td></tr>
+            <tr><td><span class="schema-badge schema-logistics">logistics</span>.stakeholders</td><td>11</td><td>0</td><td class="ok">✓</td><td class="ok">✓</td><td>is_deleted added in 054</td></tr>
+            <tr><td><span class="schema-badge schema-logistics">logistics</span>.ai_extraction_logs</td><td>18</td><td>2</td><td class="ok">✓</td><td>-</td><td></td></tr>
+            <tr><td><span class="schema-badge schema-logistics">logistics</span>.change_audit_log</td><td>13</td><td>2</td><td>-</td><td>-</td><td>Is an audit table itself</td></tr>
+            <!-- finance -->
+            <tr><td><span class="schema-badge schema-finance">finance</span>.transactions</td><td>23</td><td>5</td><td class="ok">✓</td><td class="ok">✓</td><td>Main financial table</td></tr>
+            <tr><td class="dep"><span class="schema-badge schema-finance">finance</span>.transfers_archived</td><td>15</td><td>1</td><td class="ok">✓</td><td>-</td><td class="dep">ARCHIVED in 056</td></tr>
+            <tr><td><span class="schema-badge schema-finance">finance</span>.funds</td><td>15</td><td>0</td><td class="ok">✓</td><td class="ok">✓</td><td>5 indexes added in 055</td></tr>
+            <tr><td><span class="schema-badge schema-finance">finance</span>.financial_parties</td><td>8</td><td>0</td><td class="ok">✓</td><td class="ok">✓</td><td></td></tr>
+            <tr><td><span class="schema-badge schema-finance">finance</span>.payment_schedules</td><td>16</td><td>3</td><td class="ok">✓</td><td>-</td><td></td></tr>
+            <tr><td><span class="schema-badge schema-finance">finance</span>.customs_clearing_costs</td><td>34</td><td>3</td><td class="ok">✓</td><td>-</td><td>3 deprecated cols</td></tr>
+            <tr><td><span class="schema-badge schema-finance">finance</span>.customs_clearing_batches</td><td>14</td><td>2</td><td class="ok">✓</td><td>-</td><td></td></tr>
+            <tr><td><span class="schema-badge schema-finance">finance</span>.customs_clearing_batch_items</td><td>4</td><td>2</td><td class="ok">✓</td><td>-</td><td>Audit added in 052</td></tr>
+            <tr><td class="new"><span class="schema-badge schema-finance">finance</span>.exchange_rates</td><td>11</td><td>0</td><td class="ok">✓</td><td>-</td><td class="new">NEW in 042</td></tr>
+            <!-- archive -->
+            <tr><td><span class="schema-badge schema-archive">archive</span>.documents</td><td>13</td><td>4</td><td class="ok">✓</td><td class="ok">✓</td><td></td></tr>
+            <!-- security -->
+            <tr><td><span class="schema-badge schema-security">security</span>.users</td><td>13</td><td>0</td><td class="ok">✓</td><td>-</td><td>Audit added in 052</td></tr>
+            <tr><td><span class="schema-badge schema-security">security</span>.audits</td><td>8</td><td>0</td><td>-</td><td>-</td><td>Is the audit table</td></tr>
+            <tr><td><span class="schema-badge schema-security">security</span>.migrations</td><td>3</td><td>0</td><td>-</td><td>-</td><td>System table</td></tr>
+            <tr><td><span class="schema-badge schema-security">security</span>.import_log</td><td>9</td><td>0</td><td>-</td><td>-</td><td></td></tr>
+            <!-- system -->
+            <tr><td><span class="schema-badge schema-system">system</span>.maintenance_mode</td><td>4</td><td>0</td><td>-</td><td>-</td><td>Simple flag</td></tr>
+            <tr><td><span class="schema-badge schema-system">system</span>.blackday_shutdowns</td><td>9</td><td>0</td><td class="ok">✓</td><td>-</td><td>Audit added in 052</td></tr>
+            <tr><td><span class="schema-badge schema-system">system</span>.security_events</td><td>4</td><td>0</td><td>-</td><td>-</td><td>Is a log table</td></tr>
+            <!-- comm -->
+            <tr><td><span class="schema-badge schema-comm">comm</span>.wa_messages</td><td>10</td><td>0</td><td>-</td><td>-</td><td>Future integration</td></tr>
+        </table>
+    </div>
+    
+    <div class="section">
+        <h2>🔧 Migration Summary (17 Migrations: 039-056)</h2>
+        <div class="migration-list">
+            <div class="migration-card">
+                <h4>Phase 1: Core Fixes (039-047)</h4>
+                <ul>
+                    <li>Added 18 audit triggers</li>
+                    <li>Created exchange_rates table</li>
+                    <li>Merged transfers → transactions</li>
+                    <li>Added user FK columns</li>
+                    <li>Created 7 ENUMs</li>
+                    <li>Fixed audit actor tracking</li>
+                    <li>Consolidated customs cost fields</li>
+                </ul>
+            </div>
+            <div class="migration-card">
+                <h4>Phase 2: Shipments Split (048-051)</h4>
+                <ul>
+                    <li>Created 5 normalized tables</li>
+                    <li>Migrated 196 shipments</li>
+                    <li>Created unified view</li>
+                    <li>Created slim view</li>
+                    <li>Added sync triggers</li>
+                </ul>
+            </div>
+            <div class="migration-card">
+                <h4>Phase 3: Cleanup (052-056)</h4>
+                <ul>
+                    <li>Added 4 missing audit triggers</li>
+                    <li>Cleaned up 8 duplicate triggers</li>
+                    <li>Standardized 4 trigger names</li>
+                    <li>Added is_deleted to 5 tables</li>
+                    <li>Added 5 indexes to funds</li>
+                    <li>Archived transfers table</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>📋 Data Quality Notes</h2>
+        <table>
+            <tr>
+                <th>Issue</th>
+                <th>Status</th>
+                <th>Notes</th>
+            </tr>
+            <tr>
+                <td>All 196 shipments have NULL supplier_id/customer_id</td>
+                <td class="warn">Known</td>
+                <td>Legacy data from Excel import - contracts have the party data</td>
+            </tr>
+            <tr>
+                <td>28 deprecated columns marked</td>
+                <td class="ok">Documented</td>
+                <td>Will be dropped after app migration complete</td>
+            </tr>
+            <tr>
+                <td>transfers table archived</td>
+                <td class="ok">Complete</td>
+                <td>Renamed to transfers_archived, view created for compatibility</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div style="text-align: center; padding: 30px; color: #666;">
+        <p>Generated: December 2025 | Loyal Supply Chain Management System</p>
+        <p style="margin-top: 10px; color: #00ff88;">✅ Database Ready for Production</p>
+    </div>
+</body>
+</html>
+

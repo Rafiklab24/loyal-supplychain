@@ -1,0 +1,122 @@
+-- =========================================================
+-- Migration 010: Batch/Split Shipments Feature
+-- Tables: shipment_batches OR add batches JSONB column
+-- =========================================================
+
+-- OPTION 1: JSONB Column Approach (Simpler, Recommended)
+-- Uncomment this section if you choose JSONB approach
+
+-- ALTER TABLE logistics.shipments
+-- ADD COLUMN IF NOT EXISTS is_split_shipment BOOLEAN DEFAULT FALSE,
+-- ADD COLUMN IF NOT EXISTS batches JSONB;
+
+-- CREATE INDEX IF NOT EXISTS shipments_split_idx 
+--   ON logistics.shipments USING gin (batches);
+
+-- COMMENT ON COLUMN logistics.shipments.is_split_shipment IS 'Indicates if this shipment is split into multiple batches';
+-- COMMENT ON COLUMN logistics.shipments.batches IS 'Array of batch objects with logistics details (JSONB)';
+
+
+-- =========================================================
+-- OPTION 2: Separate Table Approach (Relational)
+-- Uncomment this section if you choose separate table approach
+-- =========================================================
+
+-- Add flag to parent shipments table
+ALTER TABLE logistics.shipments
+ADD COLUMN IF NOT EXISTS is_split_shipment BOOLEAN DEFAULT FALSE;
+
+COMMENT ON COLUMN logistics.shipments.is_split_shipment IS 'Indicates if this shipment is split into multiple batches';
+
+-- Create shipment_batches table
+CREATE TABLE IF NOT EXISTS logistics.shipment_batches (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  shipment_id UUID NOT NULL REFERENCES logistics.shipments(id) ON DELETE CASCADE,
+  
+  -- Batch identification
+  batch_number TEXT NOT NULL,
+  batch_name TEXT,
+  
+  -- Quantities (per batch)
+  weight_ton NUMERIC(18,3),
+  container_count INTEGER,
+  barrels NUMERIC(18,2), -- For crude oil tankers
+  
+  -- Logistics details (per batch)
+  pol_id UUID REFERENCES master_data.ports(id),
+  pod_id UUID REFERENCES master_data.ports(id),
+  etd DATE,
+  eta DATE,
+  shipping_line_id UUID REFERENCES master_data.companies(id),
+  booking_no TEXT,
+  bl_no TEXT,
+  bol_numbers TEXT[], -- Array of BOL numbers
+  
+  -- Cargo-specific tracking fields (per batch)
+  container_number TEXT,
+  vessel_name TEXT,
+  vessel_imo TEXT,
+  truck_plate_number TEXT,
+  cmr TEXT, -- For trucks
+  tanker_name TEXT,
+  tanker_imo TEXT,
+  
+  -- Status tracking
+  status logistics.shipment_status_enum DEFAULT 'planning',
+  notes TEXT,
+  
+  -- Audit fields
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_by TEXT,
+  updated_by TEXT,
+  is_deleted BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS shipment_batches_shipment_idx 
+  ON logistics.shipment_batches (shipment_id);
+
+CREATE INDEX IF NOT EXISTS shipment_batches_eta_idx 
+  ON logistics.shipment_batches (eta);
+
+CREATE INDEX IF NOT EXISTS shipment_batches_status_idx 
+  ON logistics.shipment_batches (status);
+
+CREATE INDEX IF NOT EXISTS shipment_batches_lookup_idx
+  ON logistics.shipment_batches (lower(booking_no), lower(bl_no));
+
+-- Comments for documentation
+COMMENT ON TABLE logistics.shipment_batches IS 'Tracks individual batches when a shipment is split into multiple deliveries';
+COMMENT ON COLUMN logistics.shipment_batches.shipment_id IS 'References parent shipment';
+COMMENT ON COLUMN logistics.shipment_batches.batch_number IS 'Sequential batch number (1, 2, 3, etc.)';
+COMMENT ON COLUMN logistics.shipment_batches.batch_name IS 'Optional descriptive name for the batch';
+COMMENT ON COLUMN logistics.shipment_batches.weight_ton IS 'Weight in tons for this specific batch';
+COMMENT ON COLUMN logistics.shipment_batches.container_count IS 'Number of containers/units in this batch';
+COMMENT ON COLUMN logistics.shipment_batches.barrels IS 'Number of barrels (for crude oil shipments)';
+COMMENT ON COLUMN logistics.shipment_batches.bol_numbers IS 'Array of Bill of Lading numbers for this batch';
+COMMENT ON COLUMN logistics.shipment_batches.status IS 'Status of this specific batch (can differ from parent shipment)';
+
+-- Optional: Create a view to aggregate batch data with parent shipment
+CREATE OR REPLACE VIEW logistics.shipments_with_batches AS
+SELECT 
+  s.*,
+  CASE 
+    WHEN s.is_split_shipment THEN 
+      (SELECT COUNT(*) FROM logistics.shipment_batches WHERE shipment_id = s.id AND is_deleted = FALSE)
+    ELSE 0
+  END as batch_count,
+  CASE 
+    WHEN s.is_split_shipment THEN 
+      (SELECT SUM(weight_ton) FROM logistics.shipment_batches WHERE shipment_id = s.id AND is_deleted = FALSE)
+    ELSE s.weight_ton
+  END as total_weight_all_batches,
+  CASE 
+    WHEN s.is_split_shipment THEN 
+      (SELECT SUM(container_count) FROM logistics.shipment_batches WHERE shipment_id = s.id AND is_deleted = FALSE)
+    ELSE s.container_count
+  END as total_containers_all_batches
+FROM logistics.shipments s;
+
+COMMENT ON VIEW logistics.shipments_with_batches IS 'Shipments enriched with batch aggregation data';
+

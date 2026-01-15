@@ -1,0 +1,19 @@
+id,name,name_ar,parent_id,branch_type,country,city,is_active,sort_order,created_at,updated_at
+8d395d1a-b5da-40dd-a90d-9b9a5a2b4de0,Aleppo Warehouse 1,مستودع حلب 1,5c111ac7-32d9-4177-bb34-d02a24f5aac2,warehouse,Syria,Aleppo,t,24,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+6889d703-0864-4e48-8123-fbd176daccc2,Aleppo Warehouse 2,مستودع حلب 2,5c111ac7-32d9-4177-bb34-d02a24f5aac2,warehouse,Syria,Aleppo,t,25,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+0c6dead9-7768-4a22-acc1-f0424004bd0a,Antrepo,أنتريبو,69c774c2-6912-49c7-b65f-3aee1fd154e2,warehouse,,,t,11,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+3a270f08-8c92-4335-9389-e0d881556c74,International Sales,المبيعات الدولية,69c774c2-6912-49c7-b65f-3aee1fd154e2,office,,,t,12,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+56a4db61-2561-44c7-9129-34aad6c90155,Lattakia Warehouse,مستودع اللاذقية,3be9877e-0815-45e3-bca9-c10e8249173f,warehouse,Syria,Lattakia,t,31,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+3be9877e-0815-45e3-bca9-c10e8249173f,Loyal Coast (Freezone & Ports),لويال الساحل (المنطقة الحرة والموانئ),8541b2b6-425a-44a6-aed3-91c21d5bbc05,region,Syria,,t,30,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+a73aa71d-4b23-4134-93c4-fdf295e12b71,Loyal Damascus (Tenders & Investments),لويال دمشق (المناقصات والاستثمارات),8541b2b6-425a-44a6-aed3-91c21d5bbc05,region,Syria,Damascus,t,40,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+8541b2b6-425a-44a6-aed3-91c21d5bbc05,Loyal Holding,لويال القابضة,,holding,,,t,1,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+69c774c2-6912-49c7-b65f-3aee1fd154e2,Loyal HQ,لويال المقر الرئيسي,8541b2b6-425a-44a6-aed3-91c21d5bbc05,region,,,t,10,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+5c111ac7-32d9-4177-bb34-d02a24f5aac2,Loyal Syria North (Mahmut),لويال سوريا الشمال (محموت),8541b2b6-425a-44a6-aed3-91c21d5bbc05,region,Syria,,t,20,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+5392e93b-3ff8-4ad4-b513-ce5a2e1bf5a5,Loyal Turkey,لويال تركيا,8541b2b6-425a-44a6-aed3-91c21d5bbc05,region,Turkey,,t,50,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+e765b024-86f8-4863-bc5a-cf0af0c30ae9,Sarmada Warehouse 1,مستودع سرمدا 1,5c111ac7-32d9-4177-bb34-d02a24f5aac2,warehouse,Syria,Sarmada,t,21,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+3c5776eb-17a8-48fc-b597-764ad163fce1,Sarmada Warehouse 2,مستودع سرمدا 2,5c111ac7-32d9-4177-bb34-d02a24f5aac2,warehouse,Syria,Sarmada,t,22,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+f132ea58-e428-4ad4-bec1-090bedbeae7e,Sarmada Warehouse 3,مستودع سرمدا 3,5c111ac7-32d9-4177-bb34-d02a24f5aac2,warehouse,Syria,Sarmada,t,23,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+03041bcf-a72c-4c6a-beb7-b85d03f3a12c,Tartous Freezone 1,منطقة طرطوس الحرة 1,3be9877e-0815-45e3-bca9-c10e8249173f,warehouse,Syria,Tartous,t,33,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+23ae2c5b-b9df-412d-9d52-4ef425233ce1,Tartous Freezone 2,منطقة طرطوس الحرة 2,3be9877e-0815-45e3-bca9-c10e8249173f,warehouse,Syria,Tartous,t,34,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+afb385bf-1daa-48e4-b290-7d6ba9ef0a76,Tartous Local Warehouse,مستودع طرطوس المحلي,3be9877e-0815-45e3-bca9-c10e8249173f,warehouse,Syria,Tartous,t,32,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03
+9bdc3dde-14eb-4664-b3d7-8341d0e9ab0c,Turkey Internal Warehouse,مستودع تركيا الداخلي,5392e93b-3ff8-4ad4-b513-ce5a2e1bf5a5,warehouse,Turkey,,t,51,2025-12-03 17:09:56.98576+03,2025-12-03 17:09:56.98576+03

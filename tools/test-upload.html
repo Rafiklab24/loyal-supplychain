@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test File Upload</title>
+</head>
+<body>
+    <h1>Test AI Extraction</h1>
+    <form id="uploadForm">
+        <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" />
+        <button type="submit">Upload</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a file');
+                return;
+            }
+
+            console.log('File selected:', file.name, file.type, file.size);
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            document.getElementById('result').innerHTML = 'Uploading...';
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/contracts/extract-from-proforma', {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = 'Error: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>
+

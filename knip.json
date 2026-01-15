@@ -1,0 +1,58 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": [
+        "etl/*.ts",
+        "tools/*.ts",
+        "tools/*.js"
+      ],
+      "project": [
+        "etl/**/*.ts",
+        "tools/**/*.ts",
+        "tools/**/*.js"
+      ],
+      "ignore": [
+        "node_modules/**",
+        "**/*.d.ts"
+      ]
+    },
+    "app": {
+      "entry": [
+        "src/index.ts",
+        "src/db/migrate.ts"
+      ],
+      "project": [
+        "src/**/*.ts"
+      ],
+      "ignore": [
+        "node_modules/**",
+        "dist/**",
+        "**/*.d.ts",
+        "src/db/migrations/**"
+      ]
+    },
+    "vibe": {
+      "entry": [
+        "src/main.tsx"
+      ],
+      "project": [
+        "src/**/*.ts",
+        "src/**/*.tsx"
+      ],
+      "ignore": [
+        "node_modules/**",
+        "dist/**",
+        "**/*.d.ts"
+      ]
+    }
+  },
+  "ignoreWorkspaces": [],
+  "ignoreDependencies": [],
+  "ignoreExportsUsedInFile": true
+}
+
+
+
+
+

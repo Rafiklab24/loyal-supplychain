@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loyal Supply Chain - Visual ERD (Dec 2025)</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #1a1a2e;
+            min-height: 100vh;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        
+        .tab:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .tab.active {
+            background: #00d4ff;
+            color: #000;
+        }
+        
+        .diagram-container {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 0 auto;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        
+        .diagram {
+            display: none;
+        }
+        
+        .diagram.active {
+            display: block;
+        }
+        
+        .mermaid {
+            text-align: center;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .new { background: #00ff88; }
+        .master { background: #4ecdc4; }
+        .logistics { background: #ff6b6b; }
+        .finance { background: #ffd93d; }
+        .security { background: #9b59b6; }
+    </style>
+</head>
+<body>
+    <h1>🗄️ Loyal Supply Chain - Visual ERD</h1>
+    <p class="subtitle">Updated December 2025 - Post Migration 039-047</p>
+    
+    <div class="legend">
+        <div class="legend-item"><div class="legend-color master"></div> master_data</div>
+        <div class="legend-item"><div class="legend-color logistics"></div> logistics</div>
+        <div class="legend-item"><div class="legend-color finance"></div> finance</div>
+        <div class="legend-item"><div class="legend-color security"></div> security</div>
+        <div class="legend-item"><div class="legend-color new"></div> NEW (Migration 039-047)</div>
+    </div>
+    
+    <div class="tabs">
+        <button class="tab active" onclick="showDiagram('full')">📊 Full ERD</button>
+        <button class="tab" onclick="showDiagram('core')">🚢 Core Business</button>
+        <button class="tab" onclick="showDiagram('finance')">💰 Finance</button>
+        <button class="tab" onclick="showDiagram('master')">📦 Master Data</button>
+    </div>
+    
+    <div class="diagram-container">
+        <!-- FULL ERD -->
+        <div id="full" class="diagram active">
+            <div class="mermaid">
+erDiagram
+    %% ========== MASTER DATA ==========
+    companies {
+        uuid id PK
+        text name
+        text country
+        boolean is_supplier
+        boolean is_customer
+        boolean is_shipping_line
+        boolean is_bank
+        jsonb extra_json
+    }
+    
+    ports {
+        uuid id PK
+        text name
+        text country
+        text unlocode
+        boolean is_deleted
+    }
+    
+    products {
+        uuid id PK
+        text name
+        text hs_code
+        text category_type
+        boolean is_active
+        boolean is_deleted
+    }
+    
+    transport_companies {
+        uuid id PK
+        text name
+        jsonb vehicle_types
+        jsonb service_areas
+    }
+    
+    %% ========== LOGISTICS CORE ==========
+    contracts {
+        uuid id PK
+        text contract_no
+        text status
+        uuid seller_company_id FK
+        uuid buyer_company_id FK
+        text incoterm_code
+        text currency_code
+        uuid created_by_user_id FK
+    }
+    
+    contract_lines {
+        uuid id PK
+        uuid contract_id FK
+        uuid product_id FK
+        numeric quantity
+        numeric unit_price
+    }
+    
+    proforma_invoices {
+        uuid id PK
+        uuid contract_id FK
+        text pi_number
+        text status
+        uuid created_by_user_id FK
+    }
+    
+    shipments {
+        uuid id PK
+        text sn
+        text direction
+        text status
+        uuid contract_id FK
+        uuid proforma_id FK
+        uuid supplier_id FK
+        uuid customer_id FK
+        uuid pol_id FK
+        uuid pod_id FK
+        numeric weight_ton
+        numeric total_value_usd
+        numeric paid_value_usd
+        numeric balance_value_usd
+        uuid created_by_user_id FK
+    }
+    
+    shipment_lines {
+        uuid id PK
+        uuid shipment_id FK
+        uuid product_id FK
+        uuid contract_line_id FK
+    }
+    
+    milestones {
+        uuid id PK
+        uuid shipment_id FK
+        text code
+        timestamptz recorded_at
+    }
+    
+    outbound_deliveries {
+        uuid id PK
+        text delivery_number
+        uuid shipment_id FK
+        uuid transport_company_id FK
+        numeric total_cost
+    }
+    
+    notifications {
+        uuid id PK
+        uuid shipment_id FK
+        uuid contract_id FK
+        text type
+        boolean is_read
+    }
+    
+    %% ========== FINANCE ==========
+    transactions {
+        uuid id PK
+        date transaction_date
+        numeric amount_usd
+        text direction
+        uuid contract_id FK
+        uuid shipment_id FK
+        uuid fund_id FK
+        text migrated_from
+        uuid created_by_user_id FK
+    }
+    
+    exchange_rates {
+        uuid id PK
+        varchar from_currency
+        varchar to_currency
+        numeric rate
+        date effective_date
+    }
+    
+    funds {
+        uuid id PK
+        text name
+        text type
+        text currency
+        boolean is_active
+    }
+    
+    customs_clearing_costs {
+        uuid id PK
+        text file_number
+        uuid shipment_id FK
+        numeric original_clearing_amount
+        text cost_responsibility
+        numeric total_clearing_cost
+        uuid created_by_user_id FK
+    }
+    
+    payment_schedules {
+        uuid id PK
+        uuid contract_id FK
+        int seq
+        text basis
+        numeric percent
+    }
+    
+    %% ========== SECURITY ==========
+    users {
+        uuid id PK
+        text username
+        text password_hash
+        text role
+        boolean is_locked
+        timestamptz last_login_at
+        int failed_login_attempts
+    }
+    
+    audits {
+        bigserial id PK
+        text table_name
+        uuid row_id
+        text action
+        jsonb old_json
+        jsonb new_json
+        text actor
+    }
+    
+    %% ========== ARCHIVE ==========
+    documents {
+        uuid id PK
+        uuid shipment_id FK
+        uuid contract_id FK
+        text doc_type
+        text filename
+        text s3_key
+        uuid uploaded_by_user_id FK
+    }
+    
+    %% ========== RELATIONSHIPS ==========
+    contracts ||--o{ contract_lines : "has"
+    contracts ||--o{ proforma_invoices : "generates"
+    contracts ||--o{ shipments : "fulfills"
+    contracts ||--o{ payment_schedules : "has"
+    contracts ||--o{ notifications : "triggers"
+    contracts ||--o{ documents : "has"
+    
+    contract_lines }o--|| products : "for"
+    
+    proforma_invoices ||--o{ shipments : "books"
+    proforma_invoices ||--o{ documents : "has"
+    
+    shipments ||--o{ shipment_lines : "contains"
+    shipments ||--o{ milestones : "tracks"
+    shipments ||--o{ outbound_deliveries : "delivers"
+    shipments ||--o{ notifications : "triggers"
+    shipments ||--o{ documents : "has"
+    shipments ||--o{ customs_clearing_costs : "incurs"
+    shipments ||--o{ transactions : "pays"
+    
+    shipment_lines }o--|| products : "for"
+    shipment_lines }o--o| contract_lines : "from"
+    
+    companies ||--o{ contracts : "sells"
+    companies ||--o{ contracts : "buys"
+    companies ||--o{ shipments : "supplies"
+    companies ||--o{ shipments : "receives"
+    companies ||--o{ transactions : "with"
+    
+    ports ||--o{ shipments : "loads_at"
+    ports ||--o{ shipments : "discharges_at"
+    
+    transport_companies ||--o{ outbound_deliveries : "transports"
+    
+    products ||--o{ contract_lines : "in"
+    products ||--o{ shipment_lines : "in"
+    
+    funds ||--o{ transactions : "from"
+    funds ||--o{ payment_schedules : "to"
+    
+    users ||--o{ contracts : "creates"
+    users ||--o{ shipments : "creates"
+    users ||--o{ transactions : "creates"
+    users ||--o{ documents : "uploads"
+    users ||--o{ customs_clearing_costs : "creates"
+            </div>
+        </div>
+        
+        <!-- CORE BUSINESS -->
+        <div id="core" class="diagram">
+            <div class="mermaid">
+erDiagram
+    contracts {
+        uuid id PK
+        text contract_no
+        text status
+        uuid seller_company_id FK
+        uuid buyer_company_id FK
+    }
+    
+    contract_lines {
+        uuid id PK
+        uuid contract_id FK
+        uuid product_id FK
+        numeric quantity
+    }
+    
+    proforma_invoices {
+        uuid id PK
+        uuid contract_id FK
+        text pi_number
+        text status
+    }
+    
+    shipments {
+        uuid id PK
+        text sn
+        text status
+        uuid contract_id FK
+        uuid proforma_id FK
+        numeric weight_ton
+    }
+    
+    shipment_lines {
+        uuid id PK
+        uuid shipment_id FK
+        uuid product_id FK
+    }
+    
+    milestones {
+        uuid id PK
+        uuid shipment_id FK
+        text code
+    }
+    
+    outbound_deliveries {
+        uuid id PK
+        uuid shipment_id FK
+        text delivery_number
+    }
+    
+    contracts ||--o{ contract_lines : "has lines"
+    contracts ||--o{ proforma_invoices : "generates PI"
+    contracts ||--o{ shipments : "fulfilled by"
+    
+    proforma_invoices ||--o{ shipments : "books"
+    
+    shipments ||--o{ shipment_lines : "contains"
+    shipments ||--o{ milestones : "tracks"
+    shipments ||--o{ outbound_deliveries : "delivers via"
+            </div>
+        </div>
+        
+        <!-- FINANCE -->
+        <div id="finance" class="diagram">
+            <div class="mermaid">
+erDiagram
+    transactions {
+        uuid id PK
+        date transaction_date
+        numeric amount_usd
+        text direction
+        uuid contract_id FK
+        uuid shipment_id FK
+        uuid fund_id FK
+        text migrated_from
+    }
+    
+    exchange_rates {
+        uuid id PK
+        varchar from_currency
+        varchar to_currency
+        numeric rate
+        date effective_date
+    }
+    
+    funds {
+        uuid id PK
+        text name
+        text type
+        text currency
+    }
+    
+    customs_clearing_costs {
+        uuid id PK
+        text file_number
+        uuid shipment_id FK
+        numeric original_clearing_amount
+        text cost_responsibility
+        numeric total_clearing_cost
+    }
+    
+    customs_clearing_batches {
+        uuid id PK
+        text batch_number
+        text status
+        numeric total_clearing_cost
+    }
+    
+    payment_schedules {
+        uuid id PK
+        uuid contract_id FK
+        text basis
+        numeric percent
+    }
+    
+    contracts {
+        uuid id PK
+        text contract_no
+    }
+    
+    shipments {
+        uuid id PK
+        text sn
+        numeric paid_value_usd
+        numeric balance_value_usd
+    }
+    
+    transactions }o--|| funds : "from fund"
+    transactions }o--o| contracts : "for contract"
+    transactions }o--o| shipments : "for shipment"
+    
+    customs_clearing_costs }o--o| shipments : "for shipment"
+    customs_clearing_costs }o--o{ customs_clearing_batches : "in batch"
+    
+    payment_schedules }o--|| contracts : "for contract"
+    payment_schedules }o--o| funds : "paid via"
+            </div>
+        </div>
+        
+        <!-- MASTER DATA -->
+        <div id="master" class="diagram">
+            <div class="mermaid">
+erDiagram
+    companies {
+        uuid id PK
+        text name
+        text country
+        boolean is_supplier
+        boolean is_customer
+        boolean is_shipping_line
+        boolean is_forwarder
+        boolean is_bank
+    }
+    
+    ports {
+        uuid id PK
+        text name
+        text country
+        text unlocode
+    }
+    
+    products {
+        uuid id PK
+        text name
+        text hs_code
+        text category_type
+    }
+    
+    product_specs {
+        uuid id PK
+        uuid product_id FK
+        text grade
+        numeric moisture_pct
+        jsonb custom_specs
+    }
+    
+    product_price_benchmarks {
+        uuid id PK
+        uuid product_id FK
+        numeric price_usd
+        date price_date
+    }
+    
+    product_seasons {
+        uuid id PK
+        uuid product_id FK
+        text origin_country
+        int harvest_start_month
+    }
+    
+    transport_companies {
+        uuid id PK
+        text name
+        text phone
+        jsonb vehicle_types
+    }
+    
+    products ||--o| product_specs : "has specs"
+    products ||--o{ product_price_benchmarks : "has prices"
+    products ||--o{ product_seasons : "has seasons"
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            er: {
+                layoutDirection: 'TB',
+                minEntityWidth: 100,
+                minEntityHeight: 75,
+                entityPadding: 15,
+                stroke: '#333',
+                fill: '#f9f9f9',
+                fontSize: 12
+            }
+        });
+        
+        function showDiagram(id) {
+            // Hide all diagrams
+            document.querySelectorAll('.diagram').forEach(d => d.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            
+            // Show selected diagram
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Re-render mermaid
+            mermaid.init(undefined, document.querySelectorAll('#' + id + ' .mermaid'));
+        }
+    </script>
+    
+    <div style="margin-top: 30px; text-align: center; color: #666;">
+        <p>Generated: December 2025 | Loyal Supply Chain Management System</p>
+        <p style="margin-top: 10px; font-size: 0.9em;">
+            📊 40 Tables | 🔗 62 Foreign Keys | ✅ 29 Audit Triggers | 🆕 12 ENUMs
+        </p>
+    </div>
+</body>
+</html>

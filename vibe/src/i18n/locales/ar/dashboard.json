@@ -1,0 +1,52 @@
+{
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "totalShipments": "إجمالي الشحنات",
+    "totalValue": "القيمة الإجمالية",
+    "totalWeight": "الوزن الإجمالي",
+    "suppliers": "الموردين",
+    "shippingLines": "شركات الشحن",
+    "ports": "الموانئ",
+    "topOrigins": "أهم موانئ الشحن",
+    "topDestinations": "أهم موانئ الوصول",
+    "shipmentCount": "شحنة",
+    "priorityTasks": "المهام ذات الأولوية",
+    "viewAllTasks": "عرض الكل",
+    "noTasks": "لا توجد مهام معلقة",
+    "allCaughtUp": "أنت على اطلاع بكل شيء!"
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "markAllRead": "تعليم الكل كمقروء",
+    "empty": "لا توجد إشعارات",
+    "justNow": "الآن",
+    "minutesAgo": "منذ {{count}} د",
+    "hoursAgo": "منذ {{count}} س",
+    "daysAgo": "منذ {{count}} يوم",
+    "shipment": "الشحنة",
+    "actionRequired": "إجراء مطلوب:",
+    "markComplete": "تعليم كمكتمل",
+    "completed": "مكتمل",
+    "refresh": "تحديث",
+    "overdue": "متأخر",
+    "dueToday": "مستحق اليوم",
+    "dueTomorrow": "مستحق غدًا",
+    "daysLeft": "أيام متبقية"
+  },
+  "tasks": {
+    "title": "المهام المعلقة",
+    "description": "تتبع وإكمال جميع العناصر المطلوب اتخاذ إجراء بشأنها",
+    "all": "الكل",
+    "critical": "حرج",
+    "warning": "تحذير",
+    "info": "معلومات",
+    "noTasks": "لا توجد مهام معلقة",
+    "allCaughtUp": "أنت على اطلاع بكل شيء!",
+    "error": "فشل تحميل المهام",
+    "overdue": "متأخر",
+    "dueToday": "مستحق اليوم",
+    "dueTomorrow": "مستحق غداً",
+    "daysLeft": "يوم متبقي"
+  }
+}
+

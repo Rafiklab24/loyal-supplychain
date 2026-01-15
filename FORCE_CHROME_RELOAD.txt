@@ -1,0 +1,20 @@
+CRITICAL: Chrome Cache Won't Clear - Do This NOW:
+
+1. QUIT Chrome completely (Cmd+Q, not just close window)
+2. Wait 5 seconds
+3. Reopen Chrome
+4. Go to localhost:5173/contracts/new
+5. Open DevTools FIRST (F12)
+6. Go to Network tab
+7. Check "Disable cache" checkbox
+8. Hard refresh: Cmd+Shift+R
+9. Try changing pricing method
+
+If STILL fails:
+1. Open Chrome
+2. Type in address bar: chrome://settings/clearBrowserData
+3. Select "Cached images and files"
+4. Time range: "All time"
+5. Click "Clear data"
+6. Close ALL Chrome windows
+7. Reopen and try again

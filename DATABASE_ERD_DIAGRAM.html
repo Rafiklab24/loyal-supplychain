@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loyal Supply Chain - Database ERD Diagram</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0d1117;
+            min-height: 100vh;
+            overflow: auto;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(13, 17, 23, 0.95);
+            padding: 15px 30px;
+            z-index: 100;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            color: #58a6ff;
+            font-size: 1.4em;
+        }
+        .stats {
+            display: flex;
+            gap: 20px;
+        }
+        .stat {
+            color: #8b949e;
+            font-size: 0.9em;
+        }
+        .stat strong {
+            color: #58a6ff;
+        }
+        .legend {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: rgba(22, 27, 34, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            z-index: 100;
+            font-size: 12px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 5px 0;
+            color: #c9d1d9;
+        }
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+        }
+        .canvas {
+            padding-top: 80px;
+            min-width: 2400px;
+            min-height: 1800px;
+        }
+        svg {
+            display: block;
+        }
+        .table-box {
+            cursor: pointer;
+        }
+        .table-box:hover rect:first-child {
+            stroke-width: 3;
+            filter: drop-shadow(0 0 10px rgba(88, 166, 255, 0.5));
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🗄️ Loyal Supply Chain - Database ERD</h1>
+        <div class="stats">
+            <div class="stat"><strong>45</strong> Tables</div>
+            <div class="stat"><strong>73</strong> Foreign Keys</div>
+            <div class="stat"><strong>37</strong> Audit Triggers</div>
+            <div class="stat"><strong>7</strong> Schemas</div>
+        </div>
+    </div>
+    
+    <div class="legend">
+        <div style="color: #58a6ff; font-weight: bold; margin-bottom: 10px;">Schemas</div>
+        <div class="legend-item"><div class="legend-color" style="background: #3fb950;"></div> master_data</div>
+        <div class="legend-item"><div class="legend-color" style="background: #f85149;"></div> logistics</div>
+        <div class="legend-item"><div class="legend-color" style="background: #d29922;"></div> finance</div>
+        <div class="legend-item"><div class="legend-color" style="background: #a371f7;"></div> security</div>
+        <div class="legend-item"><div class="legend-color" style="background: #39d353;"></div> archive</div>
+        <div class="legend-item"><div class="legend-color" style="background: #f778ba;"></div> system</div>
+        <div class="legend-item"><div class="legend-color" style="background: #79c0ff;"></div> comm</div>
+        <div style="border-top: 1px solid #30363d; margin: 10px 0; padding-top: 10px;">
+            <div class="legend-item">🔑 Primary Key</div>
+            <div class="legend-item">→ Foreign Key</div>
+            <div class="legend-item">── Relationship</div>
+        </div>
+    </div>
+    
+    <div class="canvas">
+        <svg width="2400" height="1800" viewBox="0 0 2400 1800">
+            <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#6e7681"/>
+                </marker>
+                <marker id="crowfoot" viewBox="0 0 12 12" refX="0" refY="6" markerWidth="8" markerHeight="8" orient="auto">
+                    <path d="M 12 0 L 0 6 L 12 12 M 12 0 L 12 12" stroke="#6e7681" fill="none" stroke-width="1.5"/>
+                </marker>
+            </defs>
+            
+            <!-- ==================== MASTER_DATA SCHEMA (LEFT) ==================== -->
+            
+            <!-- COMPANIES -->
+            <g class="table-box" transform="translate(50, 100)">
+                <rect width="200" height="180" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
+                <rect width="200" height="28" rx="6" fill="#238636"/>
+                <rect y="22" width="200" height="6" fill="#238636"/>
+                <text x="100" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">companies</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#c9d1d9" font-size="10">name, country</text>
+                <text x="10" y="75" fill="#c9d1d9" font-size="10">is_supplier</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">is_customer</text>
+                <text x="10" y="105" fill="#c9d1d9" font-size="10">is_shipping_line</text>
+                <text x="10" y="120" fill="#c9d1d9" font-size="10">is_bank</text>
+                <text x="10" y="135" fill="#8b949e" font-size="10">extra_json</text>
+                <text x="100" y="170" text-anchor="middle" fill="#3fb950" font-size="9">19 cols</text>
+            </g>
+            
+            <!-- PORTS -->
+            <g class="table-box" transform="translate(50, 310)">
+                <rect width="200" height="120" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
+                <rect width="200" height="28" rx="6" fill="#238636"/>
+                <rect y="22" width="200" height="6" fill="#238636"/>
+                <text x="100" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">ports</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#c9d1d9" font-size="10">name, country</text>
+                <text x="10" y="75" fill="#c9d1d9" font-size="10">unlocode</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">is_deleted</text>
+                <text x="100" y="110" text-anchor="middle" fill="#3fb950" font-size="9">10 cols</text>
+            </g>
+            
+            <!-- PRODUCTS -->
+            <g class="table-box" transform="translate(50, 460)">
+                <rect width="200" height="140" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
+                <rect width="200" height="28" rx="6" fill="#238636"/>
+                <rect y="22" width="200" height="6" fill="#238636"/>
+                <text x="100" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">products</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#c9d1d9" font-size="10">name, sku</text>
+                <text x="10" y="75" fill="#c9d1d9" font-size="10">hs_code</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">category_type</text>
+                <text x="10" y="105" fill="#c9d1d9" font-size="10">is_active, is_deleted</text>
+                <text x="100" y="130" text-anchor="middle" fill="#3fb950" font-size="9">21 cols</text>
+            </g>
+            
+            <!-- TRANSPORT_COMPANIES -->
+            <g class="table-box" transform="translate(50, 630)">
+                <rect width="200" height="100" rx="6" fill="#161b22" stroke="#3fb950" stroke-width="2"/>
+                <rect width="200" height="28" rx="6" fill="#238636"/>
+                <rect y="22" width="200" height="6" fill="#238636"/>
+                <text x="100" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">transport_companies</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#c9d1d9" font-size="10">name, phone</text>
+                <text x="10" y="75" fill="#c9d1d9" font-size="10">vehicle_types</text>
+                <text x="100" y="90" text-anchor="middle" fill="#3fb950" font-size="9">16 cols</text>
+            </g>
+            
+            <!-- ==================== LOGISTICS SCHEMA - CONTRACTS (CENTER-LEFT) ==================== -->
+            
+            <!-- CONTRACTS -->
+            <g class="table-box" transform="translate(320, 100)">
+                <rect width="220" height="200" rx="6" fill="#161b22" stroke="#f85149" stroke-width="2"/>
+                <rect width="220" height="28" rx="6" fill="#da3633"/>
+                <rect y="22" width="220" height="6" fill="#da3633"/>
+                <text x="110" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">contracts</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#c9d1d9" font-size="10">contract_no, status</text>
+                <text x="10" y="75" fill="#79c0ff" font-size="10">→ seller_company_id</text>
+                <text x="10" y="90" fill="#79c0ff" font-size="10">→ buyer_company_id</text>
+                <text x="10" y="105" fill="#c9d1d9" font-size="10">incoterm_code</text>
+                <text x="10" y="120" fill="#c9d1d9" font-size="10">currency_code</text>
+                <text x="10" y="135" fill="#79c0ff" font-size="10">→ created_by_user_id</text>
+                <text x="10" y="150" fill="#c9d1d9" font-size="10">total_value</text>
+                <text x="110" y="190" text-anchor="middle" fill="#f85149" font-size="9">29 cols</text>
+            </g>
+            
+            <!-- CONTRACT_LINES -->
+            <g class="table-box" transform="translate(320, 330)">
+                <rect width="220" height="110" rx="6" fill="#161b22" stroke="#f85149" stroke-width="2"/>
+                <rect width="220" height="28" rx="6" fill="#da3633"/>
+                <rect y="22" width="220" height="6" fill="#da3633"/>
+                <text x="110" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">contract_lines</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#79c0ff" font-size="10">→ contract_id</text>
+                <text x="10" y="75" fill="#79c0ff" font-size="10">→ product_id</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">quantity, unit_price</text>
+                <text x="110" y="105" text-anchor="middle" fill="#f85149" font-size="9">12 cols</text>
+            </g>
+            
+            <!-- PROFORMA_INVOICES -->
+            <g class="table-box" transform="translate(320, 470)">
+                <rect width="220" height="130" rx="6" fill="#161b22" stroke="#f85149" stroke-width="2"/>
+                <rect width="220" height="28" rx="6" fill="#da3633"/>
+                <rect y="22" width="220" height="6" fill="#da3633"/>
+                <text x="110" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">proforma_invoices</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#79c0ff" font-size="10">→ contract_id</text>
+                <text x="10" y="75" fill="#c9d1d9" font-size="10">pi_number, status</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">total_amount</text>
+                <text x="10" y="105" fill="#79c0ff" font-size="10">→ created_by_user_id</text>
+                <text x="110" y="125" text-anchor="middle" fill="#f85149" font-size="9">16 cols</text>
+            </g>
+            
+            <!-- ==================== LOGISTICS SCHEMA - SHIPMENTS (CENTER) ==================== -->
+            
+            <!-- SHIPMENTS (MASTER) -->
+            <g class="table-box" transform="translate(600, 100)">
+                <rect width="240" height="280" rx="6" fill="#161b22" stroke="#f85149" stroke-width="3"/>
+                <rect width="240" height="28" rx="6" fill="#da3633"/>
+                <rect y="22" width="240" height="6" fill="#da3633"/>
+                <text x="120" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="13">⭐ shipments</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#c9d1d9" font-size="10">sn, direction, status</text>
+                <text x="10" y="75" fill="#79c0ff" font-size="10">→ contract_id</text>
+                <text x="10" y="90" fill="#79c0ff" font-size="10">→ proforma_id</text>
+                <text x="10" y="105" fill="#79c0ff" font-size="10">→ supplier_id (deprecated)</text>
+                <text x="10" y="120" fill="#79c0ff" font-size="10">→ customer_id (deprecated)</text>
+                <text x="10" y="135" fill="#79c0ff" font-size="10">→ pol_id (deprecated)</text>
+                <text x="10" y="150" fill="#79c0ff" font-size="10">→ pod_id (deprecated)</text>
+                <text x="10" y="165" fill="#c9d1d9" font-size="10">subject, notes</text>
+                <text x="10" y="180" fill="#c9d1d9" font-size="10">created_at, updated_at</text>
+                <text x="10" y="195" fill="#79c0ff" font-size="10">→ created_by_user_id</text>
+                <text x="10" y="210" fill="#8b949e" font-size="10">+ 85 deprecated cols</text>
+                <text x="120" y="230" text-anchor="middle" fill="#8b949e" font-size="9">(Use normalized tables below)</text>
+                <text x="120" y="270" text-anchor="middle" fill="#f85149" font-size="10">102 cols (MASTER)</text>
+            </g>
+            
+            <!-- SHIPMENT_PARTIES -->
+            <g class="table-box" transform="translate(600, 410)">
+                <rect width="180" height="140" rx="6" fill="#161b22" stroke="#39d353" stroke-width="2"/>
+                <rect width="180" height="28" rx="6" fill="#238636"/>
+                <rect y="22" width="180" height="6" fill="#238636"/>
+                <text x="90" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">shipment_parties ✨</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#79c0ff" font-size="10">→ shipment_id</text>
+                <text x="10" y="75" fill="#79c0ff" font-size="10">→ supplier_id</text>
+                <text x="10" y="90" fill="#79c0ff" font-size="10">→ customer_id</text>
+                <text x="10" y="105" fill="#c9d1d9" font-size="10">final_beneficiary_*</text>
+                <text x="90" y="130" text-anchor="middle" fill="#39d353" font-size="9">16 cols (NEW)</text>
+            </g>
+            
+            <!-- SHIPMENT_CARGO -->
+            <g class="table-box" transform="translate(800, 410)">
+                <rect width="180" height="140" rx="6" fill="#161b22" stroke="#39d353" stroke-width="2"/>
+                <rect width="180" height="28" rx="6" fill="#238636"/>
+                <rect y="22" width="180" height="6" fill="#238636"/>
+                <text x="90" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">shipment_cargo ✨</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#79c0ff" font-size="10">→ shipment_id</text>
+                <text x="10" y="75" fill="#c9d1d9" font-size="10">product_text, weight_ton</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">container_count</text>
+                <text x="10" y="105" fill="#8b949e" font-size="10">lines, containers (JSONB)</text>
+                <text x="90" y="130" text-anchor="middle" fill="#39d353" font-size="9">19 cols (NEW)</text>
+            </g>
+            
+            <!-- SHIPMENT_LOGISTICS -->
+            <g class="table-box" transform="translate(600, 580)">
+                <rect width="180" height="140" rx="6" fill="#161b22" stroke="#39d353" stroke-width="2"/>
+                <rect width="180" height="28" rx="6" fill="#238636"/>
+                <rect y="22" width="180" height="6" fill="#238636"/>
+                <text x="90" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">shipment_logistics ✨</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#79c0ff" font-size="10">→ shipment_id</text>
+                <text x="10" y="75" fill="#79c0ff" font-size="10">→ pol_id, → pod_id</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">eta, etd, bl_no</text>
+                <text x="10" y="105" fill="#c9d1d9" font-size="10">vessel_name</text>
+                <text x="90" y="130" text-anchor="middle" fill="#39d353" font-size="9">25 cols (NEW)</text>
+            </g>
+            
+            <!-- SHIPMENT_FINANCIALS -->
+            <g class="table-box" transform="translate(800, 580)">
+                <rect width="180" height="140" rx="6" fill="#161b22" stroke="#39d353" stroke-width="2"/>
+                <rect width="180" height="28" rx="6" fill="#238636"/>
+                <rect y="22" width="180" height="6" fill="#238636"/>
+                <text x="90" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">shipment_financials ✨</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#79c0ff" font-size="10">→ shipment_id</text>
+                <text x="10" y="75" fill="#c9d1d9" font-size="10">total_value_usd</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">paid_value_usd</text>
+                <text x="10" y="105" fill="#c9d1d9" font-size="10">balance_value_usd</text>
+                <text x="90" y="130" text-anchor="middle" fill="#39d353" font-size="9">29 cols (NEW)</text>
+            </g>
+            
+            <!-- SHIPMENT_DOCUMENTS -->
+            <g class="table-box" transform="translate(700, 750)">
+                <rect width="180" height="120" rx="6" fill="#161b22" stroke="#39d353" stroke-width="2"/>
+                <rect width="180" height="28" rx="6" fill="#238636"/>
+                <rect y="22" width="180" height="6" fill="#238636"/>
+                <text x="90" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">shipment_documents ✨</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#79c0ff" font-size="10">→ shipment_id</text>
+                <text x="10" y="75" fill="#c9d1d9" font-size="10">documents (JSONB)</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">quality_feedback</text>
+                <text x="90" y="110" text-anchor="middle" fill="#39d353" font-size="9">15 cols (NEW)</text>
+            </g>
+            
+            <!-- ==================== LOGISTICS - OTHER TABLES ==================== -->
+            
+            <!-- MILESTONES -->
+            <g class="table-box" transform="translate(1000, 100)">
+                <rect width="160" height="100" rx="6" fill="#161b22" stroke="#f85149" stroke-width="2"/>
+                <rect width="160" height="28" rx="6" fill="#da3633"/>
+                <rect y="22" width="160" height="6" fill="#da3633"/>
+                <text x="80" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">milestones</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#79c0ff" font-size="10">→ shipment_id</text>
+                <text x="10" y="75" fill="#c9d1d9" font-size="10">code, recorded_at</text>
+                <text x="80" y="95" text-anchor="middle" fill="#f85149" font-size="9">8 cols</text>
+            </g>
+            
+            <!-- NOTIFICATIONS -->
+            <g class="table-box" transform="translate(1000, 230)">
+                <rect width="160" height="110" rx="6" fill="#161b22" stroke="#f85149" stroke-width="2"/>
+                <rect width="160" height="28" rx="6" fill="#da3633"/>
+                <rect y="22" width="160" height="6" fill="#da3633"/>
+                <text x="80" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">notifications</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#79c0ff" font-size="10">→ shipment_id</text>
+                <text x="10" y="75" fill="#79c0ff" font-size="10">→ contract_id</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">type, title, is_read</text>
+                <text x="80" y="105" text-anchor="middle" fill="#f85149" font-size="9">18 cols</text>
+            </g>
+            
+            <!-- OUTBOUND_DELIVERIES -->
+            <g class="table-box" transform="translate(1000, 370)">
+                <rect width="160" height="110" rx="6" fill="#161b22" stroke="#f85149" stroke-width="2"/>
+                <rect width="160" height="28" rx="6" fill="#da3633"/>
+                <rect y="22" width="160" height="6" fill="#da3633"/>
+                <text x="80" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">outbound_deliveries</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#79c0ff" font-size="10">→ shipment_id</text>
+                <text x="10" y="75" fill="#79c0ff" font-size="10">→ transport_company_id</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">delivery_number</text>
+                <text x="80" y="105" text-anchor="middle" fill="#f85149" font-size="9">34 cols</text>
+            </g>
+            
+            <!-- ==================== FINANCE SCHEMA (RIGHT) ==================== -->
+            
+            <!-- TRANSACTIONS -->
+            <g class="table-box" transform="translate(1220, 100)">
+                <rect width="200" height="180" rx="6" fill="#161b22" stroke="#d29922" stroke-width="2"/>
+                <rect width="200" height="28" rx="6" fill="#9e6a03"/>
+                <rect y="22" width="200" height="6" fill="#9e6a03"/>
+                <text x="100" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">transactions</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#c9d1d9" font-size="10">transaction_date</text>
+                <text x="10" y="75" fill="#c9d1d9" font-size="10">amount_usd, direction</text>
+                <text x="10" y="90" fill="#79c0ff" font-size="10">→ contract_id</text>
+                <text x="10" y="105" fill="#79c0ff" font-size="10">→ shipment_id</text>
+                <text x="10" y="120" fill="#79c0ff" font-size="10">→ fund_id</text>
+                <text x="10" y="135" fill="#c9d1d9" font-size="10">migrated_from</text>
+                <text x="10" y="150" fill="#79c0ff" font-size="10">→ created_by_user_id</text>
+                <text x="100" y="175" text-anchor="middle" fill="#d29922" font-size="9">23 cols</text>
+            </g>
+            
+            <!-- FUNDS -->
+            <g class="table-box" transform="translate(1220, 310)">
+                <rect width="200" height="120" rx="6" fill="#161b22" stroke="#d29922" stroke-width="2"/>
+                <rect width="200" height="28" rx="6" fill="#9e6a03"/>
+                <rect y="22" width="200" height="6" fill="#9e6a03"/>
+                <text x="100" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">funds</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#c9d1d9" font-size="10">fund_name, fund_type</text>
+                <text x="10" y="75" fill="#c9d1d9" font-size="10">currency_code</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">current_balance</text>
+                <text x="100" y="115" text-anchor="middle" fill="#d29922" font-size="9">15 cols</text>
+            </g>
+            
+            <!-- EXCHANGE_RATES -->
+            <g class="table-box" transform="translate(1220, 460)">
+                <rect width="200" height="110" rx="6" fill="#161b22" stroke="#39d353" stroke-width="2"/>
+                <rect width="200" height="28" rx="6" fill="#238636"/>
+                <rect y="22" width="200" height="6" fill="#238636"/>
+                <text x="100" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">exchange_rates ✨</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#c9d1d9" font-size="10">from_currency, to_currency</text>
+                <text x="10" y="75" fill="#c9d1d9" font-size="10">rate, effective_date</text>
+                <text x="100" y="100" text-anchor="middle" fill="#39d353" font-size="9">11 cols (NEW)</text>
+            </g>
+            
+            <!-- CUSTOMS_CLEARING_COSTS -->
+            <g class="table-box" transform="translate(1220, 600)">
+                <rect width="200" height="130" rx="6" fill="#161b22" stroke="#d29922" stroke-width="2"/>
+                <rect width="200" height="28" rx="6" fill="#9e6a03"/>
+                <rect y="22" width="200" height="6" fill="#9e6a03"/>
+                <text x="100" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">customs_clearing_costs</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#79c0ff" font-size="10">→ shipment_id</text>
+                <text x="10" y="75" fill="#c9d1d9" font-size="10">file_number</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">original_clearing_amount</text>
+                <text x="10" y="105" fill="#c9d1d9" font-size="10">total_clearing_cost</text>
+                <text x="100" y="125" text-anchor="middle" fill="#d29922" font-size="9">34 cols</text>
+            </g>
+            
+            <!-- PAYMENT_SCHEDULES -->
+            <g class="table-box" transform="translate(1450, 100)">
+                <rect width="180" height="120" rx="6" fill="#161b22" stroke="#d29922" stroke-width="2"/>
+                <rect width="180" height="28" rx="6" fill="#9e6a03"/>
+                <rect y="22" width="180" height="6" fill="#9e6a03"/>
+                <text x="90" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="11">payment_schedules</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#79c0ff" font-size="10">→ contract_id</text>
+                <text x="10" y="75" fill="#c9d1d9" font-size="10">seq, basis</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">percent, amount</text>
+                <text x="90" y="115" text-anchor="middle" fill="#d29922" font-size="9">16 cols</text>
+            </g>
+            
+            <!-- ==================== SECURITY SCHEMA (FAR RIGHT) ==================== -->
+            
+            <!-- USERS -->
+            <g class="table-box" transform="translate(1680, 100)">
+                <rect width="180" height="150" rx="6" fill="#161b22" stroke="#a371f7" stroke-width="2"/>
+                <rect width="180" height="28" rx="6" fill="#8957e5"/>
+                <rect y="22" width="180" height="6" fill="#8957e5"/>
+                <text x="90" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">users</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#c9d1d9" font-size="10">username</text>
+                <text x="10" y="75" fill="#c9d1d9" font-size="10">password_hash</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">role</text>
+                <text x="10" y="105" fill="#c9d1d9" font-size="10">is_locked</text>
+                <text x="10" y="120" fill="#c9d1d9" font-size="10">last_login_at</text>
+                <text x="90" y="145" text-anchor="middle" fill="#a371f7" font-size="9">13 cols</text>
+            </g>
+            
+            <!-- AUDITS -->
+            <g class="table-box" transform="translate(1680, 280)">
+                <rect width="180" height="130" rx="6" fill="#161b22" stroke="#a371f7" stroke-width="2"/>
+                <rect width="180" height="28" rx="6" fill="#8957e5"/>
+                <rect y="22" width="180" height="6" fill="#8957e5"/>
+                <text x="90" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">audits</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#c9d1d9" font-size="10">table_name, row_id</text>
+                <text x="10" y="75" fill="#c9d1d9" font-size="10">action</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">old_json, new_json</text>
+                <text x="10" y="105" fill="#c9d1d9" font-size="10">actor, ts</text>
+                <text x="90" y="125" text-anchor="middle" fill="#a371f7" font-size="9">8 cols</text>
+            </g>
+            
+            <!-- ARCHIVE.DOCUMENTS -->
+            <g class="table-box" transform="translate(1680, 440)">
+                <rect width="180" height="130" rx="6" fill="#161b22" stroke="#39d353" stroke-width="2"/>
+                <rect width="180" height="28" rx="6" fill="#238636"/>
+                <rect y="22" width="180" height="6" fill="#238636"/>
+                <text x="90" y="19" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">documents</text>
+                <text x="10" y="45" fill="#f0883e" font-size="10">🔑 id</text>
+                <text x="10" y="60" fill="#79c0ff" font-size="10">→ shipment_id</text>
+                <text x="10" y="75" fill="#79c0ff" font-size="10">→ contract_id</text>
+                <text x="10" y="90" fill="#c9d1d9" font-size="10">doc_type, filename</text>
+                <text x="10" y="105" fill="#c9d1d9" font-size="10">s3_key</text>
+                <text x="90" y="125" text-anchor="middle" fill="#39d353" font-size="9">13 cols (archive)</text>
+            </g>
+            
+            <!-- ==================== RELATIONSHIP LINES ==================== -->
+            
+            <!-- Companies → Contracts (seller) -->
+            <path d="M 250 150 L 320 150" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+            
+            <!-- Companies → Contracts (buyer) -->
+            <path d="M 250 180 L 280 180 L 280 165 L 320 165" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+            
+            <!-- Contracts → Contract Lines -->
+            <path d="M 430 300 L 430 330" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#crowfoot)"/>
+            
+            <!-- Contracts → Proformas -->
+            <path d="M 430 300 L 430 470" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#crowfoot)"/>
+            
+            <!-- Products → Contract Lines -->
+            <path d="M 250 520 L 290 520 L 290 380 L 320 380" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+            
+            <!-- Contracts → Shipments -->
+            <path d="M 540 200 L 600 200" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#crowfoot)"/>
+            
+            <!-- Proformas → Shipments -->
+            <path d="M 540 535 L 560 535 L 560 250 L 600 250" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#crowfoot)"/>
+            
+            <!-- Ports → Shipment Logistics (POL) -->
+            <path d="M 250 370 L 580 370 L 580 630 L 600 630" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+            
+            <!-- Shipments → Normalized Tables -->
+            <path d="M 720 380 L 720 410" stroke="#39d353" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+            <path d="M 750 380 L 890 410" stroke="#39d353" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+            <path d="M 690 380 L 690 580" stroke="#39d353" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+            <path d="M 800 380 L 890 580" stroke="#39d353" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+            <path d="M 720 380 L 790 750" stroke="#39d353" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+            
+            <!-- Shipments → Milestones -->
+            <path d="M 840 200 L 1000 150" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#crowfoot)"/>
+            
+            <!-- Shipments → Notifications -->
+            <path d="M 840 250 L 1000 280" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#crowfoot)"/>
+            
+            <!-- Shipments → Outbound Deliveries -->
+            <path d="M 840 300 L 920 400 L 1000 420" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#crowfoot)"/>
+            
+            <!-- Transport Companies → Outbound Deliveries -->
+            <path d="M 250 680 L 280 680 L 280 800 L 950 800 L 950 440 L 1000 440" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+            
+            <!-- Shipments → Transactions -->
+            <path d="M 840 180 L 1100 180 L 1100 180 L 1220 180" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#crowfoot)"/>
+            
+            <!-- Shipments → Customs Costs -->
+            <path d="M 840 320 L 1100 600 L 1220 660" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#crowfoot)"/>
+            
+            <!-- Contracts → Payment Schedules -->
+            <path d="M 540 150 L 1450 150" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#crowfoot)"/>
+            
+            <!-- Funds → Transactions -->
+            <path d="M 1320 310 L 1320 280" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+            
+            <!-- Users → Many Tables (created_by) -->
+            <path d="M 1680 175 L 1650 175 L 1650 50 L 540 50 L 540 145 L 540 145" stroke="#a371f7" stroke-width="1" stroke-dasharray="4,4" fill="none"/>
+            <text x="1100" y="45" fill="#a371f7" font-size="10">created_by_user_id</text>
+            
+            <!-- Shipments → Documents -->
+            <path d="M 840 280 L 1660 500 L 1680 520" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#crowfoot)"/>
+            
+            <!-- Contracts → Documents -->
+            <path d="M 540 250 L 1640 250 L 1640 510 L 1680 510" stroke="#6e7681" stroke-width="1.5" fill="none" marker-end="url(#crowfoot)"/>
+            
+            <!-- ==================== LABELS ==================== -->
+            <text x="140" y="85" fill="#3fb950" font-size="14" font-weight="bold">master_data</text>
+            <text x="400" y="85" fill="#f85149" font-size="14" font-weight="bold">logistics</text>
+            <text x="1280" y="85" fill="#d29922" font-size="14" font-weight="bold">finance</text>
+            <text x="1730" y="85" fill="#a371f7" font-size="14" font-weight="bold">security</text>
+            
+            <!-- Phase 2 Label -->
+            <rect x="650" y="895" width="180" height="30" rx="4" fill="#238636"/>
+            <text x="740" y="915" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">Phase 2: Normalized ✨</text>
+        </svg>
+    </div>
+</body>
+</html>
+

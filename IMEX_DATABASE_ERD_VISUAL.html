@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loyal Supply Chain - Database ERD</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;600;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0d0d1a 100%);
+      min-height: 100vh;
+      color: #e0e0e0;
+    }
+    
+    .header {
+      background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+      border-bottom: 1px solid rgba(139, 92, 246, 0.3);
+      padding: 1.5rem 2rem;
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .header .subtitle {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      margin-top: 0.25rem;
+    }
+    
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    .schema-legend {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    
+    .legend-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+    }
+    
+    .legend-dot.master { background: linear-gradient(135deg, #10b981, #059669); }
+    .legend-dot.logistics { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .legend-dot.finance { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .legend-dot.archive { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+    .legend-dot.comm { background: linear-gradient(135deg, #ec4899, #db2777); }
+    .legend-dot.security { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    
+    .diagram-section {
+      margin-bottom: 3rem;
+    }
+    
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .section-title::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+      border-radius: 2px;
+    }
+    
+    .mermaid-container {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 2rem;
+      overflow-x: auto;
+    }
+    
+    .mermaid {
+      display: flex;
+      justify-content: center;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .stat-label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 0.25rem;
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .tab {
+      padding: 0.75rem 1.25rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: #94a3b8;
+      transition: all 0.2s;
+    }
+    
+    .tab:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e0e0e0;
+    }
+    
+    .tab.active {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+      border-color: rgba(139, 92, 246, 0.5);
+      color: #fff;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .table-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1rem;
+    }
+    
+    .table-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .table-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .table-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+    
+    .table-icon.master { background: linear-gradient(135deg, #10b981, #059669); }
+    .table-icon.logistics { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .table-icon.finance { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .table-icon.archive { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+    .table-icon.comm { background: linear-gradient(135deg, #ec4899, #db2777); }
+    .table-icon.security { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    
+    .table-name {
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+    }
+    
+    .table-body {
+      padding: 1rem 1.25rem;
+    }
+    
+    .table-desc {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 0.75rem;
+      line-height: 1.5;
+    }
+    
+    .column-list {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: #64748b;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    
+    .column-tag {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+    }
+    
+    .column-tag.pk {
+      background: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+    }
+    
+    .column-tag.fk {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #64748b;
+      font-size: 0.85rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🏭 Loyal Supply Chain - Database ERD</h1>
+    <p class="subtitle">PostgreSQL 16+ • 6 Schemas • 22 Tables • Complete Entity Relationship Diagram</p>
+  </div>
+  
+  <div class="container">
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">6</div>
+        <div class="stat-label">Schemas</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">22</div>
+        <div class="stat-label">Tables</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">25+</div>
+        <div class="stat-label">Relationships</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">8</div>
+        <div class="stat-label">User Roles</div>
+      </div>
+    </div>
+    
+    <!-- Schema Legend -->
+    <div class="schema-legend">
+      <div class="legend-item"><div class="legend-dot master"></div> master_data</div>
+      <div class="legend-item"><div class="legend-dot logistics"></div> logistics</div>
+      <div class="legend-item"><div class="legend-dot finance"></div> finance</div>
+      <div class="legend-item"><div class="legend-dot archive"></div> archive</div>
+      <div class="legend-item"><div class="legend-dot comm"></div> comm</div>
+      <div class="legend-item"><div class="legend-dot security"></div> security</div>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="overview">📊 Full ERD</button>
+      <button class="tab" data-tab="core">🚢 Core Flow</button>
+      <button class="tab" data-tab="finance">💰 Finance</button>
+      <button class="tab" data-tab="tables">📋 Table Details</button>
+    </div>
+    
+    <!-- Full ERD Tab -->
+    <div id="overview" class="tab-content active">
+      <div class="diagram-section">
+        <div class="section-title">Complete Database Structure</div>
+        <div class="mermaid-container">
+          <div class="mermaid">
+erDiagram
+    COMPANIES {
+        uuid id
+        text name
+        text country
+        bool is_supplier
+        bool is_customer
+        bool is_shipping_line
+        jsonb extra_json
+    }
+    
+    PORTS {
+        uuid id
+        text name
+        text country
+        text unlocode
+    }
+    
+    PRODUCTS {
+        uuid id
+        text sku
+        text name
+        text hs_code
+        text category
+    }
+    
+    CONTRACTS {
+        uuid id
+        text contract_no
+        uuid buyer_company_id
+        uuid seller_company_id
+        text incoterm_code
+        text status
+    }
+    
+    CONTRACT_LINES {
+        uuid id
+        uuid contract_id
+        uuid product_id
+        numeric planned_qty
+        numeric unit_price
+    }
+    
+    PROFORMA_INVOICES {
+        uuid id
+        text number
+        uuid contract_id
+        date issued_at
+        text status
+    }
+    
+    PROFORMA_LINES {
+        uuid id
+        uuid proforma_id
+        uuid product_id
+        numeric qty
+        numeric unit_price
+    }
+    
+    SHIPMENTS {
+        uuid id
+        text sn
+        text direction
+        uuid contract_id
+        uuid proforma_id
+        uuid supplier_id
+        uuid customer_id
+        uuid pol_id
+        uuid pod_id
+        date eta
+        text status
+    }
+    
+    SHIPMENT_LINES {
+        uuid id
+        uuid shipment_id
+        uuid product_id
+        numeric qty
+    }
+    
+    SHIPMENT_CONTAINERS {
+        uuid id
+        uuid shipment_id
+        text container_no
+        text size_code
+    }
+    
+    MILESTONES {
+        uuid id
+        uuid shipment_id
+        text code
+        timestamp ts
+    }
+    
+    TRANSFERS {
+        uuid id
+        uuid shipment_id
+        text direction
+        numeric amount
+        text currency
+    }
+    
+    FUNDS {
+        uuid id
+        text name
+        text type
+        text currency
+    }
+    
+    TRANSACTIONS {
+        uuid id
+        date transaction_date
+        numeric amount_usd
+        text direction
+        uuid contract_id
+        uuid shipment_id
+    }
+    
+    PAYMENT_SCHEDULES {
+        uuid id
+        uuid contract_id
+        int seq
+        text basis
+        numeric percent
+    }
+    
+    CUSTOMS_CLEARING_COSTS {
+        uuid id
+        text file_number
+        uuid shipment_id
+        text bol_number
+        numeric total_cost
+    }
+    
+    CUSTOMS_CLEARING_BATCHES {
+        uuid id
+        text batch_number
+        text status
+        numeric total_cost
+    }
+    
+    DOCUMENTS {
+        uuid id
+        uuid shipment_id
+        uuid contract_id
+        text doc_type
+        text filename
+    }
+    
+    WA_MESSAGES {
+        uuid id
+        text direction
+        text body
+        text status
+        text related_sn
+    }
+    
+    USERS {
+        uuid id
+        text username
+        text role
+        text name
+    }
+    
+    AUDITS {
+        bigint id
+        text table_name
+        uuid row_id
+        text action
+        text actor
+    }
+    
+    COMPANIES ||--o{ CONTRACTS : buyer_seller
+    COMPANIES ||--o{ SHIPMENTS : supplier_customer
+    PORTS ||--o{ SHIPMENTS : origin_dest
+    PRODUCTS ||--o{ CONTRACT_LINES : product
+    PRODUCTS ||--o{ PROFORMA_LINES : product
+    PRODUCTS ||--o{ SHIPMENT_LINES : product
+    CONTRACTS ||--o{ CONTRACT_LINES : has
+    CONTRACTS ||--o{ PROFORMA_INVOICES : generates
+    CONTRACTS ||--o{ SHIPMENTS : executes
+    CONTRACTS ||--o{ PAYMENT_SCHEDULES : defines
+    CONTRACTS ||--o{ TRANSACTIONS : tracks
+    CONTRACTS ||--o{ DOCUMENTS : stores
+    PROFORMA_INVOICES ||--o{ PROFORMA_LINES : contains
+    PROFORMA_INVOICES ||--o{ SHIPMENTS : triggers
+    SHIPMENTS ||--o{ SHIPMENT_LINES : contains
+    SHIPMENTS ||--o{ SHIPMENT_CONTAINERS : has
+    SHIPMENTS ||--o{ MILESTONES : tracks
+    SHIPMENTS ||--o{ TRANSFERS : payments
+    SHIPMENTS ||--o{ TRANSACTIONS : finances
+    SHIPMENTS ||--o{ DOCUMENTS : stores
+    SHIPMENTS ||--o{ CUSTOMS_CLEARING_COSTS : clears
+    CUSTOMS_CLEARING_BATCHES ||--o{ CUSTOMS_CLEARING_COSTS : groups
+    USERS ||--o{ AUDITS : performs
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Core Flow Tab -->
+    <div id="core" class="tab-content">
+      <div class="diagram-section">
+        <div class="section-title">Core Business Flow: Contract → Shipment</div>
+        <div class="mermaid-container">
+          <div style="display: flex; flex-direction: column; gap: 2rem; align-items: center; padding: 1rem;">
+            <!-- Main Flow -->
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; justify-content: center;">
+              <div style="background: linear-gradient(135deg, #10b981, #059669); padding: 1rem 1.5rem; border-radius: 10px; text-align: center; min-width: 140px;">
+                <div style="font-size: 1.5rem;">🏢</div>
+                <div style="font-weight: 600;">Companies</div>
+                <div style="font-size: 0.75rem; opacity: 0.8;">Buyer & Seller</div>
+              </div>
+              <div style="font-size: 2rem; color: #64748b;">→</div>
+              <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); padding: 1rem 1.5rem; border-radius: 10px; text-align: center; min-width: 140px;">
+                <div style="font-size: 1.5rem;">📝</div>
+                <div style="font-weight: 600;">Contracts</div>
+                <div style="font-size: 0.75rem; opacity: 0.8;">Agreement</div>
+              </div>
+              <div style="font-size: 2rem; color: #64748b;">→</div>
+              <div style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); padding: 1rem 1.5rem; border-radius: 10px; text-align: center; min-width: 140px;">
+                <div style="font-size: 1.5rem;">📄</div>
+                <div style="font-weight: 600;">Proforma</div>
+                <div style="font-size: 0.75rem; opacity: 0.8;">Invoice</div>
+              </div>
+              <div style="font-size: 2rem; color: #64748b;">→</div>
+              <div style="background: linear-gradient(135deg, #ec4899, #db2777); padding: 1rem 1.5rem; border-radius: 10px; text-align: center; min-width: 140px;">
+                <div style="font-size: 1.5rem;">🚢</div>
+                <div style="font-weight: 600;">Shipments</div>
+                <div style="font-size: 0.75rem; opacity: 0.8;">Execution</div>
+              </div>
+            </div>
+            <!-- Supporting Elements -->
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 1rem;">
+              <div style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; padding: 0.75rem 1rem; border-radius: 8px; text-align: center;">
+                <div>⚓ Ports</div>
+                <div style="font-size: 0.7rem; color: #94a3b8;">POL / POD</div>
+              </div>
+              <div style="background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; padding: 0.75rem 1rem; border-radius: 8px; text-align: center;">
+                <div>📦 Products</div>
+                <div style="font-size: 0.7rem; color: #94a3b8;">Line Items</div>
+              </div>
+              <div style="background: rgba(139, 92, 246, 0.2); border: 1px solid #8b5cf6; padding: 0.75rem 1rem; border-radius: 8px; text-align: center;">
+                <div>📍 Milestones</div>
+                <div style="font-size: 0.7rem; color: #94a3b8;">Tracking</div>
+              </div>
+              <div style="background: rgba(236, 72, 153, 0.2); border: 1px solid #ec4899; padding: 0.75rem 1rem; border-radius: 8px; text-align: center;">
+                <div>📦 Containers</div>
+                <div style="font-size: 0.7rem; color: #94a3b8;">Cargo</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="diagram-section">
+        <div class="section-title">Shipment Lifecycle (Status Flow)</div>
+        <div class="mermaid-container">
+          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; justify-content: center; padding: 1rem;">
+            <div style="background: linear-gradient(135deg, #6366f1, #4f46e5); padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 500;">📋 planning</div>
+            <div style="font-size: 1.5rem; color: #64748b;">→</div>
+            <div style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 500;">✅ booked</div>
+            <div style="font-size: 1.5rem; color: #64748b;">→</div>
+            <div style="background: linear-gradient(135deg, #a855f7, #9333ea); padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 500;">🚪 gate_in</div>
+            <div style="font-size: 1.5rem; color: #64748b;">→</div>
+            <div style="background: linear-gradient(135deg, #d946ef, #c026d3); padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 500;">📦 loaded</div>
+            <div style="font-size: 1.5rem; color: #64748b;">→</div>
+            <div style="background: linear-gradient(135deg, #ec4899, #db2777); padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 500;">⛵ sailed</div>
+            <div style="font-size: 1.5rem; color: #64748b;">→</div>
+            <div style="background: linear-gradient(135deg, #f43f5e, #e11d48); padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 500;">🏁 arrived</div>
+            <div style="font-size: 1.5rem; color: #64748b;">→</div>
+            <div style="background: linear-gradient(135deg, #10b981, #059669); padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 500;">✔️ delivered</div>
+            <div style="font-size: 1.5rem; color: #64748b;">→</div>
+            <div style="background: linear-gradient(135deg, #14b8a6, #0d9488); padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 500;">💵 invoiced</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Finance Tab -->
+    <div id="finance" class="tab-content">
+      <div class="diagram-section">
+        <div class="section-title">Financial Module Structure</div>
+        <div class="mermaid-container">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; padding: 1rem;">
+            <!-- Finance Tables -->
+            <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1)); border: 1px solid #f59e0b; border-radius: 10px; padding: 1rem;">
+              <div style="font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">🏦 funds</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">id, name, type, currency</div>
+            </div>
+            <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1)); border: 1px solid #f59e0b; border-radius: 10px; padding: 1rem;">
+              <div style="font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">💸 transfers</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">shipment_id → direction, amount</div>
+            </div>
+            <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1)); border: 1px solid #f59e0b; border-radius: 10px; padding: 1rem;">
+              <div style="font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">📊 transactions</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">contract_id, shipment_id → amounts</div>
+            </div>
+            <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1)); border: 1px solid #f59e0b; border-radius: 10px; padding: 1rem;">
+              <div style="font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">📅 payment_schedules</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">contract_id → seq, basis, percent</div>
+            </div>
+            <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1)); border: 1px solid #f59e0b; border-radius: 10px; padding: 1rem;">
+              <div style="font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">🛃 customs_clearing_costs</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">shipment_id → file_number, cost</div>
+            </div>
+            <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.1)); border: 1px solid #f59e0b; border-radius: 10px; padding: 1rem;">
+              <div style="font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">📦 customs_clearing_batches</div>
+              <div style="font-size: 0.75rem; color: #94a3b8;">batch_number, status, total_cost</div>
+            </div>
+          </div>
+          
+          <!-- Relationships -->
+          <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.02); border-radius: 10px;">
+            <div style="font-weight: 600; margin-bottom: 1rem; color: #fbbf24;">📎 Key Relationships:</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.85rem;">
+              <div style="background: rgba(59, 130, 246, 0.1); padding: 0.5rem 1rem; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                <span style="color: #60a5fa;">contracts</span> → <span style="color: #fbbf24;">payment_schedules</span>
+              </div>
+              <div style="background: rgba(59, 130, 246, 0.1); padding: 0.5rem 1rem; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                <span style="color: #60a5fa;">shipments</span> → <span style="color: #fbbf24;">transfers</span>
+              </div>
+              <div style="background: rgba(59, 130, 246, 0.1); padding: 0.5rem 1rem; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                <span style="color: #60a5fa;">shipments</span> → <span style="color: #fbbf24;">customs_clearing_costs</span>
+              </div>
+              <div style="background: rgba(59, 130, 246, 0.1); padding: 0.5rem 1rem; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                <span style="color: #fbbf24;">batches</span> → <span style="color: #fbbf24;">customs_costs</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="diagram-section">
+        <div class="section-title">Payment Flow</div>
+        <div class="mermaid-container">
+          <div style="display: flex; flex-direction: column; gap: 2rem; align-items: center; padding: 1.5rem;">
+            <!-- Money In -->
+            <div style="display: flex; gap: 2rem; align-items: center; flex-wrap: wrap; justify-content: center;">
+              <div style="text-align: center;">
+                <div style="font-size: 0.8rem; color: #10b981; margin-bottom: 0.5rem; font-weight: 600;">📥 MONEY IN</div>
+                <div style="display: flex; gap: 1rem;">
+                  <div style="background: linear-gradient(135deg, #10b981, #059669); padding: 0.75rem 1rem; border-radius: 8px;">💳 Customer Payment</div>
+                  <div style="background: linear-gradient(135deg, #10b981, #059669); padding: 0.75rem 1rem; border-radius: 8px;">🏦 Bank Transfer</div>
+                </div>
+              </div>
+            </div>
+            
+            <div style="font-size: 2rem; color: #64748b;">↓</div>
+            
+            <!-- System -->
+            <div style="display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; justify-content: center;">
+              <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); padding: 1rem 1.5rem; border-radius: 10px; text-align: center;">
+                <div style="font-size: 1.25rem;">📊</div>
+                <div style="font-weight: 600;">Transactions</div>
+              </div>
+              <div style="font-size: 1.5rem; color: #64748b;">↔</div>
+              <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); padding: 1rem 1.5rem; border-radius: 10px; text-align: center;">
+                <div style="font-size: 1.25rem;">🏦</div>
+                <div style="font-weight: 600;">Funds</div>
+              </div>
+              <div style="font-size: 1.5rem; color: #64748b;">↔</div>
+              <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); padding: 1rem 1.5rem; border-radius: 10px; text-align: center;">
+                <div style="font-size: 1.25rem;">💸</div>
+                <div style="font-weight: 600;">Transfers</div>
+              </div>
+            </div>
+            
+            <div style="font-size: 2rem; color: #64748b;">↓</div>
+            
+            <!-- Money Out -->
+            <div style="text-align: center;">
+              <div style="font-size: 0.8rem; color: #f59e0b; margin-bottom: 0.5rem; font-weight: 600;">📤 MONEY OUT</div>
+              <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                <div style="background: linear-gradient(135deg, #f59e0b, #d97706); padding: 0.75rem 1rem; border-radius: 8px;">🏭 Supplier Payment</div>
+                <div style="background: linear-gradient(135deg, #f59e0b, #d97706); padding: 0.75rem 1rem; border-radius: 8px;">🛃 Customs Costs</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Table Details Tab -->
+    <div id="tables" class="tab-content">
+      <div class="diagram-section">
+        <div class="section-title">All Tables by Schema</div>
+        
+        <div class="table-list">
+          <!-- Master Data -->
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-icon master">🏢</div>
+              <div class="table-name">master_data.companies</div>
+            </div>
+            <div class="table-body">
+              <p class="table-desc">Central registry of all business entities (suppliers, customers, shipping lines, banks, forwarders)</p>
+              <div class="column-list">
+                <span class="column-tag pk">id</span>
+                <span class="column-tag">name</span>
+                <span class="column-tag">country</span>
+                <span class="column-tag">is_supplier</span>
+                <span class="column-tag">is_customer</span>
+                <span class="column-tag">is_shipping_line</span>
+                <span class="column-tag">extra_json</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-icon master">⚓</div>
+              <div class="table-name">master_data.ports</div>
+            </div>
+            <div class="table-body">
+              <p class="table-desc">Global port registry for POL (Port of Loading) and POD (Port of Discharge)</p>
+              <div class="column-list">
+                <span class="column-tag pk">id</span>
+                <span class="column-tag">name</span>
+                <span class="column-tag">country</span>
+                <span class="column-tag">unlocode</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-icon master">📦</div>
+              <div class="table-name">master_data.products</div>
+            </div>
+            <div class="table-body">
+              <p class="table-desc">Product catalog with HS codes and specifications</p>
+              <div class="column-list">
+                <span class="column-tag pk">id</span>
+                <span class="column-tag">sku</span>
+                <span class="column-tag">name</span>
+                <span class="column-tag">hs_code</span>
+                <span class="column-tag">category</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Logistics -->
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-icon logistics">📝</div>
+              <div class="table-name">logistics.contracts</div>
+            </div>
+            <div class="table-body">
+              <p class="table-desc">Master contracts/agreements between buyer and seller</p>
+              <div class="column-list">
+                <span class="column-tag pk">id</span>
+                <span class="column-tag">contract_no</span>
+                <span class="column-tag fk">buyer_company_id</span>
+                <span class="column-tag fk">seller_company_id</span>
+                <span class="column-tag">incoterm_code</span>
+                <span class="column-tag">status</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-icon logistics">🚢</div>
+              <div class="table-name">logistics.shipments</div>
+            </div>
+            <div class="table-body">
+              <p class="table-desc">Core table tracking all incoming and outgoing shipments</p>
+              <div class="column-list">
+                <span class="column-tag pk">id</span>
+                <span class="column-tag">sn</span>
+                <span class="column-tag">direction</span>
+                <span class="column-tag fk">contract_id</span>
+                <span class="column-tag fk">supplier_id</span>
+                <span class="column-tag fk">pol_id</span>
+                <span class="column-tag fk">pod_id</span>
+                <span class="column-tag">eta</span>
+                <span class="column-tag">status</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-icon logistics">📄</div>
+              <div class="table-name">logistics.proforma_invoices</div>
+            </div>
+            <div class="table-body">
+              <p class="table-desc">Proforma invoices issued against contracts</p>
+              <div class="column-list">
+                <span class="column-tag pk">id</span>
+                <span class="column-tag">number</span>
+                <span class="column-tag fk">contract_id</span>
+                <span class="column-tag">issued_at</span>
+                <span class="column-tag">status</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-icon logistics">📍</div>
+              <div class="table-name">logistics.milestones</div>
+            </div>
+            <div class="table-body">
+              <p class="table-desc">Timestamped lifecycle events for shipments</p>
+              <div class="column-list">
+                <span class="column-tag pk">id</span>
+                <span class="column-tag fk">shipment_id</span>
+                <span class="column-tag">code</span>
+                <span class="column-tag">ts</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Finance -->
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-icon finance">💸</div>
+              <div class="table-name">finance.transfers</div>
+            </div>
+            <div class="table-body">
+              <p class="table-desc">Financial movements (payments received/made) linked to shipments</p>
+              <div class="column-list">
+                <span class="column-tag pk">id</span>
+                <span class="column-tag fk">shipment_id</span>
+                <span class="column-tag">direction</span>
+                <span class="column-tag">amount</span>
+                <span class="column-tag">currency</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-icon finance">🏦</div>
+              <div class="table-name">finance.funds</div>
+            </div>
+            <div class="table-body">
+              <p class="table-desc">Bank accounts and cash funds</p>
+              <div class="column-list">
+                <span class="column-tag pk">id</span>
+                <span class="column-tag">name</span>
+                <span class="column-tag">type</span>
+                <span class="column-tag">currency</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-icon finance">📊</div>
+              <div class="table-name">finance.transactions</div>
+            </div>
+            <div class="table-body">
+              <p class="table-desc">Detailed financial transactions with contract/shipment links</p>
+              <div class="column-list">
+                <span class="column-tag pk">id</span>
+                <span class="column-tag">amount_usd</span>
+                <span class="column-tag">direction</span>
+                <span class="column-tag fk">contract_id</span>
+                <span class="column-tag fk">shipment_id</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-icon finance">🛃</div>
+              <div class="table-name">finance.customs_clearing_costs</div>
+            </div>
+            <div class="table-body">
+              <p class="table-desc">Customs clearing expenses for shipments</p>
+              <div class="column-list">
+                <span class="column-tag pk">id</span>
+                <span class="column-tag">file_number</span>
+                <span class="column-tag fk">shipment_id</span>
+                <span class="column-tag">total_clearing_cost</span>
+                <span class="column-tag">clearance_type</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Archive -->
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-icon archive">📁</div>
+              <div class="table-name">archive.documents</div>
+            </div>
+            <div class="table-body">
+              <p class="table-desc">Document metadata registry (files stored in S3)</p>
+              <div class="column-list">
+                <span class="column-tag pk">id</span>
+                <span class="column-tag fk">shipment_id</span>
+                <span class="column-tag fk">contract_id</span>
+                <span class="column-tag">doc_type</span>
+                <span class="column-tag">s3_key</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Comm -->
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-icon comm">💬</div>
+              <div class="table-name">comm.wa_messages</div>
+            </div>
+            <div class="table-body">
+              <p class="table-desc">WhatsApp message log for shipment notifications</p>
+              <div class="column-list">
+                <span class="column-tag pk">id</span>
+                <span class="column-tag">direction</span>
+                <span class="column-tag">body</span>
+                <span class="column-tag">status</span>
+                <span class="column-tag">related_sn</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Security -->
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-icon security">👤</div>
+              <div class="table-name">security.users</div>
+            </div>
+            <div class="table-body">
+              <p class="table-desc">User accounts and role-based access control</p>
+              <div class="column-list">
+                <span class="column-tag pk">id</span>
+                <span class="column-tag">username</span>
+                <span class="column-tag">role</span>
+                <span class="column-tag">name</span>
+                <span class="column-tag">email</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="table-card">
+            <div class="table-header">
+              <div class="table-icon security">📜</div>
+              <div class="table-name">security.audits</div>
+            </div>
+            <div class="table-body">
+              <p class="table-desc">Complete audit trail of all data changes</p>
+              <div class="column-list">
+                <span class="column-tag pk">id</span>
+                <span class="column-tag">table_name</span>
+                <span class="column-tag">action</span>
+                <span class="column-tag">old_json</span>
+                <span class="column-tag">new_json</span>
+                <span class="column-tag">actor</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <footer>
+      Generated for Loyal Supply Chain • PostgreSQL 16+ • Last updated: Nov 2025
+    </footer>
+  </div>
+  
+  <script>
+    // Initialize Mermaid
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#3b82f6',
+        primaryTextColor: '#fff',
+        primaryBorderColor: '#60a5fa',
+        lineColor: '#64748b',
+        secondaryColor: '#8b5cf6',
+        tertiaryColor: '#1e293b',
+        background: '#0f172a',
+        mainBkg: '#1e293b',
+        nodeBorder: '#3b82f6',
+        clusterBkg: 'rgba(59, 130, 246, 0.1)',
+        clusterBorder: '#3b82f6',
+        titleColor: '#e0e0e0',
+        edgeLabelBackground: '#1e293b',
+        nodeTextColor: '#e0e0e0',
+      },
+      er: {
+        useMaxWidth: true,
+        layoutDirection: 'TB',
+        minEntityWidth: 100,
+        minEntityHeight: 75,
+        entityPadding: 15,
+      },
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis',
+      },
+    });
+    
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Remove active class from all tabs and contents
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Add active class to clicked tab and corresponding content
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
+

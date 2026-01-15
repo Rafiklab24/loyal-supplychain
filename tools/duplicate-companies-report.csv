@@ -1,0 +1,3 @@
+Pair#,Similarity%,Company1_ID,Company1_Name,Company1_Types,Company2_ID,Company2_Name,Company2_Types,Levenshtein%,Token%,Bigram%,Containment%,FirstWords%,TokenSubset%
+1,100.0,04cda19f-f769-450b-a699-1207f5d85e0b,"PE IMPERIAL PLUS","Supplier; Customer",5e4a4b70-3dd3-4c97-9660-20f75547b786,"PE 'IMPERIAL PLUS'","N/A",100.0,100.0,100.0,100.0,100.0,100.0
+2,74.3,8318426f-06c9-47e0-b9a1-9af43c847681,"TransLiner","Shipping Line",9b04d345-3603-44b8-b2c2-4e58832d6b90,"TransLiner Pte. Ltd","Shipping Line",71.4,50.0,75.0,71.4,100.0,100.0

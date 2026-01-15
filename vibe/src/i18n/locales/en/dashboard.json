@@ -1,0 +1,52 @@
+{
+  "dashboard": {
+    "title": "Dashboard",
+    "totalShipments": "Total Shipments",
+    "totalValue": "Total Value",
+    "totalWeight": "Total Weight",
+    "suppliers": "Suppliers",
+    "shippingLines": "Shipping Lines",
+    "ports": "Ports",
+    "topOrigins": "Top Origin Ports",
+    "topDestinations": "Top Destination Ports",
+    "shipmentCount": "shipments",
+    "priorityTasks": "Priority Tasks",
+    "viewAllTasks": "View All",
+    "noTasks": "No pending tasks",
+    "allCaughtUp": "You're all caught up!"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago",
+    "shipment": "Shipment",
+    "actionRequired": "Action Required:",
+    "markComplete": "Mark as Completed",
+    "completed": "Completed",
+    "refresh": "Refresh",
+    "overdue": "Overdue",
+    "dueToday": "Due today",
+    "dueTomorrow": "Due tomorrow",
+    "daysLeft": "days left"
+  },
+  "tasks": {
+    "title": "Pending Tasks",
+    "description": "Track and complete all action items",
+    "all": "All",
+    "critical": "Critical",
+    "warning": "Warning",
+    "info": "Info",
+    "noTasks": "No pending tasks",
+    "allCaughtUp": "You're all caught up!",
+    "error": "Failed to load tasks",
+    "overdue": "Overdue",
+    "dueToday": "Due today",
+    "dueTomorrow": "Due tomorrow",
+    "daysLeft": "days left"
+  }
+}
+

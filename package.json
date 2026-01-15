@@ -1,0 +1,39 @@
+{
+  "name": "loyal-supplychain",
+  "version": "1.0.0",
+  "description": "Loyal Supply Chain - ETL Scripts",
+  "private": true,
+  "scripts": {
+    "etl:excel": "ts-node etl/excel-loader.ts",
+    "etl:suppliers": "ts-node etl/suppliers-loader.ts",
+    "etl:transfers": "ts-node etl/transfers-loader.ts",
+    "etl:qa": "ts-node etl/qa-checks.ts",
+    "prepare": "husky install",
+    "lint:fix": "cd app && npm run lint:fix && cd ../vibe && npm run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md,yml,yaml}\"",
+    "load:auth": "k6 run tests/load/auth-load.js",
+    "load:shipments": "k6 run tests/load/shipments-load.js",
+    "load:contracts": "k6 run tests/load/contracts-load.js",
+    "load:documents": "k6 run tests/load/documents-load.js",
+    "load:finance": "k6 run tests/load/finance-load.js",
+    "load:mixed": "k6 run tests/load/mixed-load.js",
+    "load:stress": "k6 run tests/load/stress-test.js",
+    "load:spike": "k6 run tests/load/spike-test.js",
+    "load:all": "npm run load:auth && npm run load:shipments && npm run load:contracts && npm run load:documents && npm run load:finance && npm run load:mixed"
+  },
+  "dependencies": {
+    "csv-parser": "^3.2.0",
+    "dotenv": "^17.2.3",
+    "pg": "^8.11.3",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.10.0",
+    "husky": "^9.1.7",
+    "knip": "^5.79.0",
+    "lint-staged": "^16.2.7",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}

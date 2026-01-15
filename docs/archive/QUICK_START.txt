@@ -1,0 +1,56 @@
+╔════════════════════════════════════════════════════════════╗
+║                                                            ║
+║      🚀 LOYAL SUPPLY CHAIN - QUICK START GUIDE            ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+
+✅ ALL DEPENDENCIES INSTALLED
+   - Root ETL: ✅
+   - Backend API: ✅
+   - Frontend UI: ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 EASIEST WAY TO START:
+
+   cd /Users/rafik/loyal-supplychain
+   ./START.sh
+
+   This will:
+   ✓ Start PostgreSQL database
+   ✓ Start backend API (port 3000)
+   ✓ Start frontend UI (port 5173)
+   ✓ Open browser automatically
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 OTHER STARTUP SCRIPTS:
+
+   ./START_DATABASE.sh   - Start PostgreSQL only
+   ./START_BACKEND.sh    - Start backend only
+   ./START_FRONTEND.sh   - Start frontend only
+   ./START_EVERYTHING.sh - Start backend + frontend
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌐 SYSTEM URLS:
+
+   Frontend:  http://localhost:5173
+   Backend:   http://localhost:3000
+   API Docs:  http://localhost:3000/api/health
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎨 WHAT TO EXPECT:
+
+   1. Login Page - Use any username/password
+   2. Dashboard - Stats and overview
+   3. Shipments - 376 imported shipments
+   4. Companies - 74 suppliers
+   5. Language Toggle - Arabic ⇄ English
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📖 For detailed instructions: See HOW_TO_START.md
+
+╚════════════════════════════════════════════════════════════╝
