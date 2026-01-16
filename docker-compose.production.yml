@@ -72,7 +72,12 @@ services:
       PORT: 3000
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://your-domain.com}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+      OPENAI_MAX_TOKENS: ${OPENAI_MAX_TOKENS:-4096}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      - uploads_data:/app/uploads
+      - ./storage:/app/storage
     depends_on:
       postgres:
         condition: service_healthy
@@ -111,6 +116,7 @@ volumes:
   redis_data:
   caddy_data:
   caddy_config:
+  uploads_data:
 
 networks:
   app-network:

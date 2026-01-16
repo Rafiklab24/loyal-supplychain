@@ -66,10 +66,13 @@ router.get('/summary', authorizeRoles(...E_FATURA_ROLES), async (req: Request, r
 
     const summaryQuery = `
       SELECT 
-        -- Pending: Cross-border OR selling shipments without E-Fatura
+        -- Pending: Cross-border with customs clearance OR selling shipments without E-Fatura
         COUNT(DISTINCT CASE 
-          WHEN (s.is_cross_border = TRUE OR s.transaction_type = 'outgoing')
-            AND (s.e_fatura_number IS NULL OR s.e_fatura_number = '')
+          WHEN (
+            (s.is_cross_border = TRUE AND s.customs_clearance_date IS NOT NULL)
+            OR s.transaction_type = 'outgoing'
+          )
+          AND (s.e_fatura_number IS NULL OR s.e_fatura_number = '')
           THEN s.id 
         END) AS pending_count,
         -- Archive: Has E-Fatura + Non-cross-border incoming
