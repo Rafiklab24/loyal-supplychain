@@ -1,6 +1,6 @@
 # Loyal Supply Chain - Master Context Document
 
-**Last Updated:** January 16, 2026 (DigitalOcean Docker Deployment Documentation)  
+**Last Updated:** January 16, 2026 (Branch-Restricted Exec Role)  
 **Purpose:** Single source of truth for all agents working on this codebase
 
 ---
@@ -615,9 +615,19 @@ Beyond role permissions, users are also restricted by **branch assignments**:
 
 | Role | Branch Filtering |
 |------|------------------|
-| Admin | Global (sees all) |
-| Exec | Global (sees all) |
+| Admin | Always Global (sees all) |
+| Exec | **Conditional** - Global if no branches assigned; Branch-restricted if branches assigned |
 | All Others | Branch-restricted |
+
+**Exec Conditional Global Access (January 2026):**
+- If an Exec user has **NO branch assignments** → Global access (company-wide CFO, CEO)
+- If an Exec user has **branch assignments** → Restricted to those branches (e.g., Turkish COO)
+
+This allows flexibility for C-level executives who may be responsible for only specific regions.
+
+**Example Use Cases:**
+- **Company-wide CFO:** Exec role with no branch assignments → sees all data
+- **Turkish COO:** Exec role with "Loyal Turkey" branch assigned → only sees Turkish branch data
 
 Branch-restricted users only see data where:
 - `shipment_logistics.final_destination->>'branch_id'` matches their assigned branch
@@ -3744,6 +3754,68 @@ const getAccessibleWarehouses = (branchId: string) => {
 - LOYAL Antrepo accessible by 3 branches ✅
 - Shared warehouse system extensible for future use ✅
 - No breaking changes to existing functionality ✅
+
+---
+
+### January 16, 2026 - Session: Branch-Restricted Exec Role
+**Agent:** Claude Opus 4.5
+**Work Done:**
+
+Implemented conditional global access for Exec users, allowing C-level executives to be optionally restricted to specific branches.
+
+#### Problem
+Previously, all Exec users had global access (could see all data across all branches). This didn't support the use case of a regional executive (e.g., Turkish COO) who should only see data for their specific region.
+
+#### Solution
+Changed from role-based global access to conditional global access:
+- **Admin:** Always has global access (unchanged)
+- **Exec:** Conditional - global access only if NO branches assigned; branch-restricted if branches ARE assigned
+- **Other roles:** Always branch-restricted (unchanged)
+
+#### Implementation
+
+**1. Backend Permissions (`app/src/middleware/permissions.ts`):**
+- Changed `GLOBAL_ACCESS_ROLES` from `['Admin', 'Exec']` to `['Admin']`
+- Added `CONDITIONAL_GLOBAL_ROLES: Role[] = ['Exec']`
+- Added `hasConditionalGlobalAccess()` helper function
+
+**2. Backend Branch Filter (`app/src/middleware/branchFilter.ts`):**
+- Updated `loadUserBranches` middleware to check branch assignments for Exec users
+- If Exec has no branches → global access
+- If Exec has branches → restrict to those branches
+
+**3. Backend Auth Response (`app/src/routes/auth.ts`):**
+- Added `computeHasGlobalAccess()` helper function
+- Added `has_global_access` boolean to login and /me endpoint responses
+- Updated `/me/branches` endpoint to use new logic
+
+**4. Frontend Permission Context (`vibe/src/contexts/PermissionContext.tsx`):**
+- Updated `hasGlobalAccess()` to use backend-computed `has_global_access` field
+- Maintains backward compatibility with fallback logic
+
+#### Usage
+**Make an Exec branch-restricted:**
+1. Go to Users page → Edit the Exec user
+2. Assign them to specific branches (e.g., "Loyal Turkey")
+3. Save - they will now only see Turkish branch data
+
+**Make an Exec company-wide:**
+1. Go to Users page → Edit the Exec user
+2. Remove all branch assignments (leave empty)
+3. Save - they will see all data globally
+
+#### Files Modified
+| File | Changes |
+|------|---------|
+| `app/src/middleware/permissions.ts` | Separated global and conditional global roles |
+| `app/src/middleware/branchFilter.ts` | Check Exec branch assignments |
+| `app/src/routes/auth.ts` | Added `has_global_access` to responses |
+| `vibe/src/contexts/PermissionContext.tsx` | Use backend-computed global access |
+
+**Results:**
+- Exec users can now be branch-restricted ✅
+- Backward compatible - existing Exec users without branches retain global access ✅
+- Frontend correctly shows/hides data based on computed access ✅
 
 ---
 

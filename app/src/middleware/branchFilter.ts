@@ -8,8 +8,8 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { pool } from '../db/client';
-import { AuthRequest, checkGlobalAccess } from './auth';
-import { Role, hasGlobalAccess } from './permissions';
+import { AuthRequest } from './auth';
+import { Role, hasGlobalAccess, hasConditionalGlobalAccess } from './permissions';
 import logger from '../utils/logger';
 
 /**
@@ -25,6 +25,13 @@ export interface BranchFilterRequest extends AuthRequest {
 /**
  * Middleware to load user's accessible branch IDs
  * Attaches userBranchIds to request for use in route handlers
+ * 
+ * Access Logic:
+ * - Admin: Always global access (no branch filtering)
+ * - Exec: Conditional global access
+ *   - If NO branches assigned → global access
+ *   - If branches assigned → filter by those branches
+ * - Other roles: Always check branch assignments
  */
 export async function loadUserBranches(
   req: Request,
@@ -40,8 +47,10 @@ export async function loadUserBranches(
   }
 
   try {
-    // Check for global access roles
-    if (hasGlobalAccess(authReq.user.role as Role)) {
+    const userRole = authReq.user.role as Role;
+    
+    // Admin always has global access - no need to check branches
+    if (hasGlobalAccess(userRole)) {
       authReq.userBranchIds = null; // null = no filtering needed
       authReq.hasGlobalAccess = true;
       return next();
@@ -54,6 +63,24 @@ export async function loadUserBranches(
     );
 
     const branchIds = result.rows[0]?.branch_ids || [];
+    
+    // For conditional global roles (Exec): 
+    // If no branches assigned, grant global access
+    // If branches assigned, restrict to those branches
+    if (hasConditionalGlobalAccess(userRole)) {
+      if (branchIds.length === 0) {
+        // No branches assigned = company-wide Exec (global access)
+        authReq.userBranchIds = null;
+        authReq.hasGlobalAccess = true;
+        return next();
+      }
+      // Branches assigned = branch-specific Exec (e.g., Turkish COO)
+      authReq.userBranchIds = branchIds;
+      authReq.hasGlobalAccess = false;
+      return next();
+    }
+    
+    // All other roles: use branch assignments for filtering
     authReq.userBranchIds = branchIds;
     authReq.hasGlobalAccess = false;
 

@@ -205,8 +205,12 @@ export const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>>
   },
 };
 
-// Global access roles - these bypass branch filtering
-export const GLOBAL_ACCESS_ROLES: Role[] = ['Admin', 'Exec'];
+// Global access roles - these ALWAYS bypass branch filtering
+export const GLOBAL_ACCESS_ROLES: Role[] = ['Admin'];
+
+// Conditional global access roles - bypass branch filtering only if NO branches assigned
+// If an Exec has branches assigned, they are restricted to those branches
+export const CONDITIONAL_GLOBAL_ROLES: Role[] = ['Exec'];
 
 /**
  * Check if a role has access to a module
@@ -324,10 +328,25 @@ export function hasGlobalAccess(role: Role): boolean {
 }
 
 /**
+ * Check if a role has conditional global access
+ * (gets global access only when no branches are assigned)
+ */
+export function hasConditionalGlobalAccess(role: Role): boolean {
+  return CONDITIONAL_GLOBAL_ROLES.includes(role);
+}
+
+/**
  * Check if ANY of the given roles has global access (multi-role support)
  */
 export function hasGlobalAccessMultiRole(roles: Role[]): boolean {
   return roles.some(role => hasGlobalAccess(role));
+}
+
+/**
+ * Check if ANY of the given roles has conditional global access (multi-role support)
+ */
+export function hasConditionalGlobalAccessMultiRole(roles: Role[]): boolean {
+  return roles.some(role => hasConditionalGlobalAccess(role));
 }
 
 /**

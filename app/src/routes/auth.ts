@@ -7,6 +7,7 @@ import { env } from '../config/env';
 import { AUTH, JWT } from '../config/constants';
 import { withTransaction } from '../utils/transactions';
 import { User } from '../types/database';
+import { Role, hasGlobalAccess, hasConditionalGlobalAccess } from '../middleware/permissions';
 
 const router = Router();
 
@@ -16,6 +17,36 @@ const JWT_SECRET = env.JWT_SECRET;
 
 // Shorter token expiration in production for security (1 hour vs 24 hours in dev)
 const JWT_EXPIRES_IN = env.JWT_EXPIRES_IN || (env.NODE_ENV === 'production' ? JWT.DEFAULT_EXPIRATION_PROD : JWT.DEFAULT_EXPIRATION_DEV);
+
+/**
+ * Compute whether a user has global access based on their role and branch assignments
+ * - Admin: Always global access
+ * - Exec: Global access only if NO branches assigned
+ * - Others: Never global access (use their assigned branches)
+ */
+async function computeHasGlobalAccess(userId: string, roles: string[]): Promise<boolean> {
+  // Check if any role has unconditional global access (Admin)
+  for (const role of roles) {
+    if (hasGlobalAccess(role as Role)) {
+      return true;
+    }
+  }
+  
+  // Check if any role has conditional global access (Exec)
+  const hasConditional = roles.some(role => hasConditionalGlobalAccess(role as Role));
+  if (hasConditional) {
+    // Check if user has any branch assignments
+    const result = await pool.query(
+      `SELECT COUNT(*) as count FROM security.user_branches WHERE user_id = $1`,
+      [userId]
+    );
+    const branchCount = parseInt(result.rows[0]?.count || '0', 10);
+    // Global access only if NO branches assigned
+    return branchCount === 0;
+  }
+  
+  return false;
+}
 
 // POST /api/auth/login - Authenticate user
 router.post('/login', async (req, res, next) => {
@@ -140,6 +171,9 @@ router.post('/login', async (req, res, next) => {
     // Get module_access (per-user access overrides)
     const moduleAccess = user.module_access || null;
 
+    // Compute whether user has global access (for branch filtering)
+    const userHasGlobalAccess = await computeHasGlobalAccess(user.id, userRoles);
+
     // Generate JWT token - include both role (legacy) and roles (new)
     const token = jwt.sign(
       {
@@ -148,6 +182,7 @@ router.post('/login', async (req, res, next) => {
         role: primaryRole,
         roles: userRoles,
         module_access: moduleAccess,
+        has_global_access: userHasGlobalAccess,
       },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN } as SignOptions
@@ -162,6 +197,7 @@ router.post('/login', async (req, res, next) => {
         role: primaryRole,
         roles: userRoles,
         module_access: moduleAccess,
+        has_global_access: userHasGlobalAccess,
       },
     });
   } catch (error) {
@@ -320,10 +356,14 @@ router.get('/me', async (req, res, next) => {
       ? userData.roles 
       : (userData.role ? [userData.role] : []);
 
+    // Compute whether user has global access
+    const userHasGlobalAccess = await computeHasGlobalAccess(userData.id, userRoles);
+
     res.json({
       ...userData,
       roles: userRoles,
       module_access: userData.module_access || null,
+      has_global_access: userHasGlobalAccess,
     });
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
@@ -1107,10 +1147,14 @@ router.get('/me/branches', async (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET) as {
       id: string;
       role: string;
+      roles?: string[];
     };
 
-    // Check if user has global access
-    const isGlobalAccess = ['Admin', 'Exec'].includes(decoded.role);
+    // Get user's roles (prefer array, fallback to single role)
+    const userRoles = decoded.roles || (decoded.role ? [decoded.role] : []);
+
+    // Compute whether user has global access
+    const isGlobalAccess = await computeHasGlobalAccess(decoded.id, userRoles);
 
     if (isGlobalAccess) {
       // Return all branches for global access users

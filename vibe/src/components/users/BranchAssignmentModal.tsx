@@ -64,8 +64,10 @@ export function BranchAssignmentModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Check if user has global access
-  const hasGlobalAccess = userRole === 'Admin' || userRole === 'Exec';
+  // Only Admin has unconditional global access (cannot be restricted)
+  // Exec can now be branch-restricted if branches are assigned
+  const isUnconditionalGlobalAccess = userRole === 'Admin';
+  const isConditionalGlobalAccess = userRole === 'Exec';
 
   // Load all available branches
   useEffect(() => {
@@ -174,8 +176,8 @@ export function BranchAssignmentModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {/* Global Access Warning */}
-          {hasGlobalAccess && (
+          {/* Admin Global Access Warning */}
+          {isUnconditionalGlobalAccess && (
             <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
               <ExclamationTriangleIcon className="h-5 w-5 text-amber-600 mt-0.5" />
               <div>
@@ -185,6 +187,23 @@ export function BranchAssignmentModal({
                 <p className="text-sm text-amber-700 mt-1">
                   {t('users.globalAccessDescription', 
                     `Users with ${userRole} role have automatic access to all branches. Branch assignments are not required.`
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Exec Conditional Access Info */}
+          {isConditionalGlobalAccess && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-3">
+              <BuildingOffice2Icon className="h-5 w-5 text-blue-600 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-blue-800">
+                  {t('users.execBranchInfo', 'Exec Branch Restriction')}
+                </p>
+                <p className="text-sm text-blue-700 mt-1">
+                  {t('users.execBranchDescription', 
+                    'Assigning branches will restrict this Exec user to only see data from the selected branches. Leave empty for company-wide (global) access.'
                   )}
                 </p>
               </div>
@@ -349,7 +368,7 @@ export function BranchAssignmentModal({
           </button>
           <button
             onClick={handleSave}
-            disabled={saving || hasGlobalAccess}
+            disabled={saving || isUnconditionalGlobalAccess}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             {saving && (

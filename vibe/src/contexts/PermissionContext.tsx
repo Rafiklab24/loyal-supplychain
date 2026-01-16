@@ -246,8 +246,10 @@ const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>> = {
   },
 };
 
-// Global access roles (bypass branch filtering)
-const GLOBAL_ACCESS_ROLES: Role[] = ['Admin', 'Exec'];
+// Global access roles - Admin ALWAYS has global access
+// Exec has conditional global access (only if no branches assigned)
+// The actual computation is done on the backend and returned as has_global_access
+const UNCONDITIONAL_GLOBAL_ROLES: Role[] = ['Admin'];
 
 // Per-user module access type
 export type ModuleAccess = Record<string, boolean> | null;
@@ -378,8 +380,15 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
     };
 
     const hasGlobalAccess = (): boolean => {
-      // User has global access if ANY of their roles has global access
-      return userRoles.some(role => GLOBAL_ACCESS_ROLES.includes(role));
+      // Use backend-computed value if available (accounts for branch assignments)
+      const backendHasGlobalAccess = (user as any)?.has_global_access;
+      if (typeof backendHasGlobalAccess === 'boolean') {
+        return backendHasGlobalAccess;
+      }
+      
+      // Fallback for backward compatibility: Admin always has global access
+      // For other roles, we don't know their branch status, so be conservative
+      return userRoles.some(role => UNCONDITIONAL_GLOBAL_ROLES.includes(role));
     };
 
     const hasRole = (role: Role): boolean => {
