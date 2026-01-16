@@ -22,8 +22,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Install dumb-init for proper signal handling and poppler-utils for PDF conversion
+RUN apk add --no-cache dumb-init poppler-utils
 
 # Copy package files
 COPY app/package*.json ./
