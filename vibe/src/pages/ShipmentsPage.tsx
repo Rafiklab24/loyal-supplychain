@@ -369,7 +369,7 @@ export function ShipmentsPage() {
           className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
         >
           <div className="flex items-center gap-2">
-            {i18n.language === 'ar' ? 'السعر الحقيقي' : 'Real Price'}
+            {i18n.language === 'ar' ? 'الإجمالي' : 'Total'}
             <SortIcon column="total_value_usd" />
           </div>
         </th>
