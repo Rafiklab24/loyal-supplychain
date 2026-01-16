@@ -5,6 +5,10 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Build argument for API URL (used at build time by Vite)
+ARG VITE_API_BASE_URL=/api
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 # Copy package files
 COPY vibe/package*.json ./
 
@@ -14,7 +18,7 @@ RUN npm ci
 # Copy source code
 COPY vibe/ ./
 
-# Build application
+# Build application with the API URL baked in
 RUN npm run build
 
 # Production stage with nginx

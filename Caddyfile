@@ -1,0 +1,41 @@
+# Caddyfile - Automatic HTTPS reverse proxy
+# Replace YOUR_DOMAIN.com with your actual domain
+
+{$DOMAIN:localhost} {
+    # Frontend - serve static files
+    handle {
+        reverse_proxy frontend:80
+    }
+
+    # API routes - proxy to backend
+    handle /api/* {
+        reverse_proxy backend:3000
+    }
+
+    # Quality media routes - proxy to backend
+    handle /quality-media/* {
+        reverse_proxy backend:3000
+    }
+
+    # Health check endpoint
+    handle /health {
+        respond "OK" 200
+    }
+
+    # Enable gzip compression
+    encode gzip
+
+    # Security headers
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        -Server
+    }
+
+    # Logging
+    log {
+        output file /data/access.log
+        format json
+    }
+}
