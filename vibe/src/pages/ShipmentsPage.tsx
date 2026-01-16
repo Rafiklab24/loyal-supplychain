@@ -291,7 +291,7 @@ export function ShipmentsPage() {
     price_per_ton: {
       header: () => (
         <th key="price_per_ton" className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-          {t('shipments.pricePerTon')}
+          {i18n.language === 'ar' ? 'السعر الحقيقي' : 'Real Price'}
         </th>
       ),
       cell: (shipment: any) => (
