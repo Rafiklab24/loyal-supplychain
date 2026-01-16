@@ -281,6 +281,95 @@ export function SellingCostsSection({ formData, onChange, errors }: SellingCosts
         </div>
       </div>
 
+      {/* Turkish Customs Section - Price on Paper & Tax */}
+      <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-xl">🇹🇷</span>
+          <h4 className="text-sm font-semibold text-gray-900">
+            {isRtl ? 'بيانات الجمارك التركية' : 'Turkish Customs Data'}
+          </h4>
+        </div>
+        <p className="text-xs text-gray-600 mb-4">
+          {isRtl 
+            ? 'القيم المعلنة للجمارك التركية - يتم إدخالها من قبل الفرع التركي'
+            : 'Declared values for Turkish customs - entered by Turkish branch'}
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Price on Paper (Declared Customs Value) */}
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-700">
+              {isRtl ? 'السعر الورقي (القيمة الجمركية المعلنة)' : 'Price on Paper (Declared Customs Value)'}
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="relative">
+                <span className={`absolute ${isRtl ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-gray-400 text-sm`}>$</span>
+                <input
+                  type="number"
+                  value={formData.price_on_paper_usd || ''}
+                  onChange={(e) => onChange('price_on_paper_usd', e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                  placeholder="USD"
+                  min="0"
+                  step="0.01"
+                  className={`w-full ${isRtl ? 'pr-7 pl-4' : 'pl-7 pr-4'} py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500`}
+                />
+              </div>
+              <div className="relative">
+                <span className={`absolute ${isRtl ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-gray-400 text-sm`}>₺</span>
+                <input
+                  type="number"
+                  value={formData.price_on_paper_try || ''}
+                  onChange={(e) => onChange('price_on_paper_try', e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                  placeholder="TRY"
+                  min="0"
+                  step="0.01"
+                  className={`w-full ${isRtl ? 'pr-7 pl-4' : 'pl-7 pr-4'} py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500`}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500">
+              {isRtl ? 'القيمة المعلنة على الورق للجمارك' : 'Value declared on paper for customs'}
+            </p>
+          </div>
+
+          {/* Tax */}
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-700">
+              {isRtl ? 'الضريبة' : 'Tax'}
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="relative">
+                <span className={`absolute ${isRtl ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-gray-400 text-sm`}>$</span>
+                <input
+                  type="number"
+                  value={formData.tax_usd || ''}
+                  onChange={(e) => onChange('tax_usd', e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                  placeholder="USD"
+                  min="0"
+                  step="0.01"
+                  className={`w-full ${isRtl ? 'pr-7 pl-4' : 'pl-7 pr-4'} py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500`}
+                />
+              </div>
+              <div className="relative">
+                <span className={`absolute ${isRtl ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-gray-400 text-sm`}>₺</span>
+                <input
+                  type="number"
+                  value={formData.tax_try || ''}
+                  onChange={(e) => onChange('tax_try', e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                  placeholder="TRY"
+                  min="0"
+                  step="0.01"
+                  className={`w-full ${isRtl ? 'pr-7 pl-4' : 'pl-7 pr-4'} py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500`}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-gray-500">
+              {isRtl ? 'مبلغ الضريبة المدفوعة' : 'Tax amount paid'}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Additional Notes for Costs */}
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">

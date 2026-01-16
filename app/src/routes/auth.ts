@@ -1131,6 +1131,226 @@ router.put('/users/:userId/branches', async (req, res, next) => {
   }
 });
 
+// GET /api/auth/me/preferences - Get current user's UI preferences
+router.get('/me/preferences', async (req, res, next) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Authentication token is required',
+      });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      id: string;
+    };
+
+    const result = await pool.query(
+      'SELECT ui_preferences FROM security.users WHERE id = $1',
+      [decoded.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'User not found',
+      });
+    }
+
+    res.json({
+      preferences: result.rows[0].ui_preferences || {},
+    });
+  } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Invalid or expired token',
+      });
+    }
+    next(error);
+  }
+});
+
+// PUT /api/auth/me/preferences - Update current user's UI preferences
+router.put('/me/preferences', async (req, res, next) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Authentication token is required',
+      });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      id: string;
+    };
+
+    const { preferences } = req.body;
+
+    if (typeof preferences !== 'object' || preferences === null) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'preferences must be an object',
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE security.users 
+       SET ui_preferences = $1, updated_at = NOW()
+       WHERE id = $2
+       RETURNING ui_preferences`,
+      [JSON.stringify(preferences), decoded.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'User not found',
+      });
+    }
+
+    res.json({
+      message: 'Preferences updated successfully',
+      preferences: result.rows[0].ui_preferences,
+    });
+  } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Invalid or expired token',
+      });
+    }
+    next(error);
+  }
+});
+
+// PUT /api/auth/users/:userId/preferences - Admin update user's UI preferences
+router.put('/users/:userId/preferences', async (req, res, next) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Authentication token is required',
+      });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      id: string;
+      role: string;
+    };
+
+    // Only admin can update other users' preferences
+    if (decoded.role !== 'Admin') {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Admin access required',
+      });
+    }
+
+    const { userId } = req.params;
+    const { preferences } = req.body;
+
+    if (typeof preferences !== 'object' || preferences === null) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'preferences must be an object',
+      });
+    }
+
+    const result = await pool.query(
+      `UPDATE security.users 
+       SET ui_preferences = $1, updated_at = NOW()
+       WHERE id = $2
+       RETURNING id, username, name, ui_preferences`,
+      [JSON.stringify(preferences), userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'User not found',
+      });
+    }
+
+    res.json({
+      message: 'User preferences updated successfully',
+      user: result.rows[0],
+    });
+  } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Invalid or expired token',
+      });
+    }
+    next(error);
+  }
+});
+
+// GET /api/auth/users/:userId/preferences - Admin get user's UI preferences
+router.get('/users/:userId/preferences', async (req, res, next) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Authentication token is required',
+      });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      id: string;
+      role: string;
+    };
+
+    // Only admin can view other users' preferences
+    if (decoded.role !== 'Admin' && decoded.id !== req.params.userId) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Admin access required',
+      });
+    }
+
+    const { userId } = req.params;
+
+    const result = await pool.query(
+      'SELECT id, username, name, ui_preferences FROM security.users WHERE id = $1',
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'User not found',
+      });
+    }
+
+    res.json({
+      user_id: userId,
+      preferences: result.rows[0].ui_preferences || {},
+    });
+  } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Invalid or expired token',
+      });
+    }
+    next(error);
+  }
+});
+
 // GET /api/auth/me/branches - Get current user's branches
 router.get('/me/branches', async (req, res, next) => {
   try {

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PlusIcon, UserIcon, ShieldCheckIcon, PencilIcon, TrashIcon, BuildingOffice2Icon, ExclamationTriangleIcon, AdjustmentsHorizontalIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, UserIcon, ShieldCheckIcon, PencilIcon, TrashIcon, BuildingOffice2Icon, ExclamationTriangleIcon, AdjustmentsHorizontalIcon, CheckIcon, XMarkIcon, Cog6ToothIcon, Bars3Icon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/common/Button';
 import { BranchAssignmentModal } from '../components/users/BranchAssignmentModal';
 import { API_BASE_URL } from '../config/api';
+import { SHIPMENT_COLUMN_CONFIG, DEFAULT_SHIPMENT_COLUMNS, UserPreferences } from '../hooks/useUserPreferences';
 
 // Module access type
 type ModuleAccess = Record<string, boolean> | null;
@@ -83,6 +84,10 @@ export function UsersPage() {
   // Module access modal state
   const [showModuleAccessModal, setShowModuleAccessModal] = useState(false);
   const [userForModuleAccess, setUserForModuleAccess] = useState<User | null>(null);
+  
+  // UI Preferences modal state
+  const [showUIPreferencesModal, setShowUIPreferencesModal] = useState(false);
+  const [userForUIPreferences, setUserForUIPreferences] = useState<User | null>(null);
   
   // Main admin check
   const [isMainAdmin, setIsMainAdmin] = useState(false);
@@ -385,6 +390,16 @@ export function UsersPage() {
                       </button>
                       <button
                         onClick={() => {
+                          setUserForUIPreferences(user);
+                          setShowUIPreferencesModal(true);
+                        }}
+                        className="text-teal-600 hover:text-teal-900 p-1.5 rounded hover:bg-teal-50 transition-colors mx-1"
+                        title="UI preferences"
+                      >
+                        <Cog6ToothIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => {
                           setSelectedUser(user);
                           setShowBranchModal(true);
                         }}
@@ -481,6 +496,28 @@ export function UsersPage() {
             setSuccess(message);
             setShowModuleAccessModal(false);
             setUserForModuleAccess(null);
+            fetchUsers();
+            setTimeout(() => setSuccess(null), 5000);
+          }}
+          onError={(message) => {
+            setError(message);
+            setTimeout(() => setError(null), 5000);
+          }}
+        />
+      )}
+
+      {/* UI Preferences Modal */}
+      {showUIPreferencesModal && userForUIPreferences && (
+        <UIPreferencesModal
+          user={userForUIPreferences}
+          onClose={() => {
+            setShowUIPreferencesModal(false);
+            setUserForUIPreferences(null);
+          }}
+          onSuccess={(message) => {
+            setSuccess(message);
+            setShowUIPreferencesModal(false);
+            setUserForUIPreferences(null);
             fetchUsers();
             setTimeout(() => setSuccess(null), 5000);
           }}
@@ -971,6 +1008,284 @@ function ModuleAccessModal({
             </Button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+// UI Preferences Modal Component
+function UIPreferencesModal({
+  user,
+  onClose,
+  onSuccess,
+  onError,
+}: {
+  user: User;
+  onClose: () => void;
+  onSuccess: (message: string) => void;
+  onError: (message: string) => void;
+}) {
+  const { i18n } = useTranslation();
+  const isArabic = i18n.language === 'ar';
+  
+  const [loading, setLoading] = useState(false);
+  const [fetchingPrefs, setFetchingPrefs] = useState(true);
+  const [hideTasks, setHideTasks] = useState(false);
+  const [columnOrder, setColumnOrder] = useState<string[]>(DEFAULT_SHIPMENT_COLUMNS);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  // Fetch current preferences
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/users/${user.id}/preferences`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const prefs: UserPreferences = data.preferences || {};
+          setHideTasks(prefs.dashboard?.hide_tasks || false);
+          setColumnOrder(prefs.shipments_columns?.order || DEFAULT_SHIPMENT_COLUMNS);
+        }
+      } catch (err) {
+        console.error('Failed to fetch preferences:', err);
+      } finally {
+        setFetchingPrefs(false);
+      }
+    };
+    fetchPreferences();
+  }, [user.id]);
+
+  // Drag and drop handlers
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+    
+    const newOrder = [...columnOrder];
+    const [removed] = newOrder.splice(draggedIndex, 1);
+    newOrder.splice(index, 0, removed);
+    setColumnOrder(newOrder);
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
+  // Toggle column visibility
+  const toggleColumn = (columnKey: string) => {
+    if (columnOrder.includes(columnKey)) {
+      setColumnOrder(columnOrder.filter(c => c !== columnKey));
+    } else {
+      setColumnOrder([...columnOrder, columnKey]);
+    }
+  };
+
+  // Reset to defaults
+  const resetToDefaults = () => {
+    setHideTasks(false);
+    setColumnOrder(DEFAULT_SHIPMENT_COLUMNS);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const preferences: UserPreferences = {
+        dashboard: {
+          hide_tasks: hideTasks,
+        },
+        shipments_columns: {
+          order: columnOrder,
+        },
+      };
+
+      const response = await fetch(`${API_BASE_URL}/auth/users/${user.id}/preferences`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: JSON.stringify({ preferences }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update preferences');
+      }
+
+      onSuccess(`UI preferences updated for "${user.name}"`);
+    } catch (err: any) {
+      onError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const allColumns = Object.keys(SHIPMENT_COLUMN_CONFIG);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-teal-50 to-cyan-50">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-teal-100 rounded-lg">
+              <Cog6ToothIcon className="h-6 w-6 text-teal-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">
+                {isArabic ? 'تفضيلات الواجهة' : 'UI Preferences'}
+              </h2>
+              <p className="text-sm text-gray-600">
+                {user.name} <span className="text-gray-400">@{user.username}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {fetchingPrefs ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">{isArabic ? 'جاري التحميل...' : 'Loading preferences...'}</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <div className="px-6 py-4 space-y-6">
+              {/* Dashboard Settings */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold">1</span>
+                  {isArabic ? 'إعدادات لوحة التحكم' : 'Dashboard Settings'}
+                </h3>
+                <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={hideTasks}
+                    onChange={(e) => setHideTasks(e.target.checked)}
+                    className="h-5 w-5 text-teal-600 rounded focus:ring-teal-500"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-900">
+                      {isArabic ? 'إخفاء قسم المهام' : 'Hide Tasks Section'}
+                    </span>
+                    <p className="text-xs text-gray-500">
+                      {isArabic ? 'إخفاء قسم المهام من لوحة التحكم الرئيسية' : 'Hide the Tasks section from the main dashboard'}
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              {/* Shipments Column Order */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-bold">2</span>
+                  {isArabic ? 'أعمدة جدول الشحنات' : 'Shipments Table Columns'}
+                </h3>
+                <p className="text-xs text-gray-500 mb-3">
+                  {isArabic ? 'اسحب لإعادة الترتيب، انقر لإظهار/إخفاء' : 'Drag to reorder, click to show/hide'}
+                </p>
+                
+                {/* Active columns (draggable) */}
+                <div className="space-y-1 mb-4">
+                  <p className="text-xs font-medium text-gray-700 mb-2">
+                    {isArabic ? 'الأعمدة المرئية:' : 'Visible columns:'}
+                  </p>
+                  {columnOrder.map((colKey, index) => {
+                    const config = SHIPMENT_COLUMN_CONFIG[colKey];
+                    if (!config) return null;
+                    return (
+                      <div
+                        key={colKey}
+                        draggable
+                        onDragStart={() => handleDragStart(index)}
+                        onDragOver={(e) => handleDragOver(e, index)}
+                        onDragEnd={handleDragEnd}
+                        className={`
+                          flex items-center gap-2 p-2 bg-white border rounded-lg cursor-move
+                          ${draggedIndex === index ? 'border-teal-500 bg-teal-50' : 'border-gray-200 hover:border-gray-300'}
+                        `}
+                      >
+                        <Bars3Icon className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                        <span className="text-sm font-medium text-gray-900 flex-1">
+                          {isArabic ? config.labelAr : config.label}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toggleColumn(colKey)}
+                          className="text-red-500 hover:text-red-700 p-1"
+                          title={isArabic ? 'إخفاء' : 'Hide'}
+                        >
+                          <XMarkIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Hidden columns */}
+                {allColumns.filter(c => !columnOrder.includes(c)).length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-700 mb-2">
+                      {isArabic ? 'الأعمدة المخفية:' : 'Hidden columns:'}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {allColumns.filter(c => !columnOrder.includes(c)).map((colKey) => {
+                        const config = SHIPMENT_COLUMN_CONFIG[colKey];
+                        if (!config) return null;
+                        return (
+                          <button
+                            key={colKey}
+                            type="button"
+                            onClick={() => toggleColumn(colKey)}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
+                          >
+                            <PlusIcon className="h-3 w-3" />
+                            {isArabic ? config.labelAr : config.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Reset button */}
+              <button
+                type="button"
+                onClick={resetToDefaults}
+                className="text-sm text-gray-500 hover:text-gray-700 underline"
+              >
+                {isArabic ? 'إعادة التعيين إلى الافتراضي' : 'Reset to defaults'}
+              </button>
+            </div>
+
+            {/* Actions */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex gap-3 justify-end">
+              <Button
+                type="button"
+                onClick={onClose}
+                variant="secondary"
+                disabled={loading}
+              >
+                {isArabic ? 'إلغاء' : 'Cancel'}
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                isLoading={loading}
+              >
+                {isArabic ? 'حفظ التفضيلات' : 'Save Preferences'}
+              </Button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

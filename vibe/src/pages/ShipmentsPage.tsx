@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FieldHighlighter } from '../components/common/FieldHighlighter';
@@ -6,6 +6,7 @@ import { MagnifyingGlassIcon, FunnelIcon, ArrowsUpDownIcon, ChevronUpIcon, Chevr
 import { useShipments } from '../hooks/useShipments';
 import { useSearchHistory } from '../hooks/useSearchHistory';
 import { useFilterSuggestions } from '../hooks/useFilterSuggestions';
+import { useUserPreferences, SHIPMENT_COLUMN_CONFIG, DEFAULT_SHIPMENT_COLUMNS } from '../hooks/useUserPreferences';
 import { Card } from '../components/common/Card';
 import { Spinner } from '../components/common/Spinner';
 import { Pagination } from '../components/common/Pagination';
@@ -27,6 +28,7 @@ type SortColumn = 'sn' | 'product_text' | 'eta' | 'weight_ton' | 'total_value_us
 export function ShipmentsPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { getShipmentColumns } = useUserPreferences();
   const [page, setPage] = useState(1);
   const [rawSearch, setRawSearch] = useState('');
   const [parsedSearch, setParsedSearch] = useState<ParsedSearch>({});
@@ -176,6 +178,9 @@ export function ShipmentsPage() {
     sortDir: parsedSearch.sortDir || sortDir,
   });
 
+  // Get user-configured column order
+  const userColumns = getShipmentColumns();
+
   const handleRowClick = (id: string) => {
     navigate(`/shipments/${id}`);
   };
@@ -227,6 +232,329 @@ export function ShipmentsPage() {
     setPage(1); // Reset to first page
   };
 
+  // Sort icon component for column headers
+  const SortIcon = ({ column }: { column: SortColumn }) => {
+    if (sortBy !== column) {
+      return <ArrowsUpDownIcon className="h-4 w-4 text-gray-400" />;
+    }
+    return sortDir === 'asc' 
+      ? <ChevronUpIcon className="h-4 w-4 text-primary-600" />
+      : <ChevronDownIcon className="h-4 w-4 text-primary-600" />;
+  };
+
+  // Column rendering configuration - maps column keys to render functions
+  const columnRenderers: Record<string, { header: () => JSX.Element; cell: (shipment: any) => JSX.Element }> = {
+    sn: {
+      header: () => (
+        <th
+          key="sn"
+          onClick={() => handleSort('sn')}
+          className="px-3 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
+        >
+          <div className="flex items-center gap-2">
+            {t('shipments.sn')}
+            <SortIcon column="sn" />
+          </div>
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td
+          key="sn"
+          onClick={() => handleRowClick(shipment.id)}
+          className="px-3 py-3 whitespace-nowrap text-sm font-medium text-primary-600 cursor-pointer"
+        >
+          {shipment.sn || '—'}
+        </td>
+      ),
+    },
+    product: {
+      header: () => (
+        <th
+          key="product"
+          onClick={() => handleSort('product_text')}
+          className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+        >
+          <div className="flex items-center gap-2">
+            {t('shipments.product')}
+            <SortIcon column="product_text" />
+          </div>
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="product" className="px-4 py-3 text-sm text-gray-900 max-w-xs">
+          <TruncatedText text={shipment.product_text} maxWidth="200px">
+            <TranslatedProductText text={shipment.product_text} />
+          </TruncatedText>
+        </td>
+      ),
+    },
+    price_per_ton: {
+      header: () => (
+        <th key="price_per_ton" className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+          {t('shipments.pricePerTon')}
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="price_per_ton" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-end">
+          {shipment.fixed_price_usd_per_ton ? formatCurrency(shipment.fixed_price_usd_per_ton) : '—'}
+        </td>
+      ),
+    },
+    origin: {
+      header: () => (
+        <th key="origin" className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+          {t('shipments.origin')}
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="origin" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+          {shipment.country_of_origin || shipment.pol_name || '—'}
+        </td>
+      ),
+    },
+    pol: {
+      header: () => (
+        <th key="pol" className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+          {t('shipments.pol', 'POL')}
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="pol" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+          {shipment.pol_name || '—'}
+        </td>
+      ),
+    },
+    pod: {
+      header: () => (
+        <th key="pod" className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+          {t('shipments.destination')}
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="pod" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+          {shipment.pod_name || '—'}
+        </td>
+      ),
+    },
+    status: {
+      header: () => (
+        <th
+          key="status"
+          onClick={() => handleSort('status')}
+          className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
+        >
+          <div className="flex items-center gap-2">
+            {t('shipments.status')}
+            <SortIcon column="status" />
+          </div>
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="status" className="px-4 py-3 whitespace-nowrap">
+          <Badge color={getStatusColor(shipment.status) as any}>
+            {i18n.language === 'ar' ? statusToArabic(shipment.status) : shipment.status}
+          </Badge>
+        </td>
+      ),
+    },
+    total_price: {
+      header: () => (
+        <th
+          key="total_price"
+          onClick={() => handleSort('total_value_usd')}
+          className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
+        >
+          <div className="flex items-center gap-2">
+            {t('shipments.totalValue')}
+            <SortIcon column="total_value_usd" />
+          </div>
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="total_price" className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900 text-end">
+          {shipment.total_value_usd ? formatCurrency(shipment.total_value_usd) : '—'}
+        </td>
+      ),
+    },
+    price_on_paper: {
+      header: () => (
+        <th key="price_on_paper" className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+          {i18n.language === 'ar' ? 'السعر الورقي' : 'Price on Paper'}
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="price_on_paper" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-end">
+          {shipment.price_on_paper_usd ? (
+            <div>
+              <div>{formatCurrency(shipment.price_on_paper_usd)}</div>
+              {shipment.price_on_paper_try && (
+                <div className="text-xs text-gray-500">₺{formatNumber(shipment.price_on_paper_try)}</div>
+              )}
+            </div>
+          ) : '—'}
+        </td>
+      ),
+    },
+    tax: {
+      header: () => (
+        <th key="tax" className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+          {i18n.language === 'ar' ? 'الضريبة' : 'Tax'}
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="tax" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-end">
+          {shipment.tax_usd ? (
+            <div>
+              <div>{formatCurrency(shipment.tax_usd)}</div>
+              {shipment.tax_try && (
+                <div className="text-xs text-gray-500">₺{formatNumber(shipment.tax_try)}</div>
+              )}
+            </div>
+          ) : '—'}
+        </td>
+      ),
+    },
+    eta: {
+      header: () => (
+        <th
+          key="eta"
+          onClick={() => handleSort('eta')}
+          className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
+        >
+          <div className="flex items-center gap-2">
+            {t('shipments.eta')}
+            <SortIcon column="eta" />
+          </div>
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="eta" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+          {formatDateString(shipment.eta)}
+        </td>
+      ),
+    },
+    etd: {
+      header: () => (
+        <th
+          key="etd"
+          onClick={() => handleSort('etd')}
+          className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
+        >
+          <div className="flex items-center gap-2">
+            {t('shipments.etd', 'ETD')}
+            <SortIcon column="etd" />
+          </div>
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="etd" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+          {formatDateString(shipment.etd)}
+        </td>
+      ),
+    },
+    supplier: {
+      header: () => (
+        <th key="supplier" className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+          {t('shipments.supplier', 'Supplier')}
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="supplier" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+          {shipment.supplier_name || '—'}
+        </td>
+      ),
+    },
+    customer: {
+      header: () => (
+        <th key="customer" className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+          {t('shipments.customer', 'Customer')}
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="customer" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+          {shipment.customer_name || '—'}
+        </td>
+      ),
+    },
+    container_count: {
+      header: () => (
+        <th
+          key="container_count"
+          onClick={() => handleSort('container_count')}
+          className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
+        >
+          <div className="flex items-center gap-2">
+            {t('shipments.containers', 'Containers')}
+            <SortIcon column="container_count" />
+          </div>
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="container_count" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-end">
+          {shipment.container_count || '—'}
+        </td>
+      ),
+    },
+    weight: {
+      header: () => (
+        <th
+          key="weight"
+          onClick={() => handleSort('weight_ton')}
+          className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
+        >
+          <div className="flex items-center gap-2">
+            {t('shipments.weight')}
+            <SortIcon column="weight_ton" />
+          </div>
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="weight" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-end">
+          {shipment.weight_ton ? formatNumber(shipment.weight_ton) : '—'}
+        </td>
+      ),
+    },
+    bl_no: {
+      header: () => (
+        <th key="bl_no" className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+          {t('shipments.blNo', 'BL No.')}
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="bl_no" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+          {shipment.bl_no || '—'}
+        </td>
+      ),
+    },
+    vessel: {
+      header: () => (
+        <th key="vessel" className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+          {t('shipments.vessel', 'Vessel')}
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="vessel" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+          {shipment.vessel_name || '—'}
+        </td>
+      ),
+    },
+    final_destination: {
+      header: () => (
+        <th key="final_destination" className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+          {t('shipments.finalDestination', 'Final Destination')}
+        </th>
+      ),
+      cell: (shipment: any) => (
+        <td key="final_destination" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+          {shipment.final_destination?.branch_name || shipment.final_destination?.customer_name || '—'}
+        </td>
+      ),
+    },
+  };
+
+  // Filter to only include columns that have renderers
+  const activeColumns = userColumns.filter(col => columnRenderers[col]);
+
   // Export to Excel (CSV format)
   const handleExport = () => {
     if (!data || !data.data || data.data.length === 0) {
@@ -271,15 +599,6 @@ export function ShipmentsPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const SortIcon = ({ column }: { column: SortColumn }) => {
-    if (sortBy !== column) {
-      return <ArrowsUpDownIcon className="w-4 h-4 opacity-30" />;
-    }
-    return sortDir === 'asc' ? 
-      <ChevronUpIcon className="w-4 h-4 text-primary-600" /> : 
-      <ChevronDownIcon className="w-4 h-4 text-primary-600" />;
   };
 
   // Bulk action handlers
@@ -1319,6 +1638,7 @@ export function ShipmentsPage() {
                 <table className="min-w-full divide-y divide-gray-200" style={{ minWidth: '1200px' }}>
                   <thead className="bg-gray-50 sticky top-0">
                     <tr>
+                      {/* Fixed: Checkbox column */}
                       <th className="px-3 py-3 text-center bg-white sticky start-0 z-10 border-e border-gray-200 shadow-sm w-12">
                         <input
                           type="checkbox"
@@ -1333,75 +1653,17 @@ export function ShipmentsPage() {
                           className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                         />
                       </th>
-                      <th
-                        onClick={() => handleSort('sn')}
-                        className="px-3 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
-                      >
-                        <div className="flex items-center gap-2">
-                          {t('shipments.sn')}
-                          <SortIcon column="sn" />
-                        </div>
-                      </th>
+                      {/* Dynamic columns based on user preferences */}
+                      {activeColumns.map(col => columnRenderers[col]?.header())}
+                      {/* Fixed: Linked Contract column */}
                       <th className="px-3 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         {t('shipments.linkedContract', 'Linked Contract')}
                       </th>
-                      <th
-                        onClick={() => handleSort('status')}
-                        className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
-                      >
-                        <div className="flex items-center gap-2">
-                          {t('shipments.status')}
-                          <SortIcon column="status" />
-                        </div>
-                      </th>
-                      <th
-                        onClick={() => handleSort('product_text')}
-                        className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
-                      >
-                        <div className="flex items-center gap-2">
-                          {t('shipments.product')}
-                          <SortIcon column="product_text" />
-                        </div>
-                      </th>
-                      <th
-                        onClick={() => handleSort('weight_ton')}
-                        className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
-                      >
-                        <div className="flex items-center gap-2">
-                          {t('shipments.weight')}
-                          <SortIcon column="weight_ton" />
-                        </div>
-                      </th>
-                      <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                        {t('shipments.pricePerTon')}
-                      </th>
-                      <th
-                        onClick={() => handleSort('total_value_usd')}
-                        className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
-                      >
-                        <div className="flex items-center gap-2">
-                          {t('shipments.totalValue')}
-                          <SortIcon column="total_value_usd" />
-                        </div>
-                      </th>
-                      <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                        {t('shipments.origin')}
-                      </th>
-                      <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                        {t('shipments.destination')}
-                      </th>
-                      <th
-                        onClick={() => handleSort('eta')}
-                        className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
-                      >
-                        <div className="flex items-center gap-2">
-                          {t('shipments.eta')}
-                          <SortIcon column="eta" />
-                        </div>
-                      </th>
+                      {/* Fixed: Customs Clearance Date */}
                       <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         {t('shipments.customsClearanceDate')}
                       </th>
+                      {/* Fixed: Demurrage Status */}
                       <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         {t('shipments.demurrageStatus')}
                       </th>
@@ -1413,6 +1675,7 @@ export function ShipmentsPage() {
                         key={shipment.id}
                         className={`hover:bg-gray-50 transition-colors ${selectedShipments.has(shipment.id) ? 'bg-blue-50' : ''}`}
                       >
+                        {/* Fixed: Checkbox cell */}
                         <td
                           onClick={(e) => e.stopPropagation()}
                           className="px-3 py-3 text-center bg-white sticky start-0 z-10 border-e border-gray-200 shadow-sm"
@@ -1424,12 +1687,9 @@ export function ShipmentsPage() {
                             className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                           />
                         </td>
-                        <td
-                          onClick={() => handleRowClick(shipment.id)}
-                          className="px-3 py-3 whitespace-nowrap text-sm font-medium text-primary-600 cursor-pointer"
-                        >
-                          {shipment.sn || '—'}
-                        </td>
+                        {/* Dynamic cells based on user preferences */}
+                        {activeColumns.map(col => columnRenderers[col]?.cell(shipment))}
+                        {/* Fixed: Linked Contract cell */}
                         <td className="px-3 py-3 whitespace-nowrap text-sm">
                           {shipment.contract_id ? (
                             <button
@@ -1445,37 +1705,11 @@ export function ShipmentsPage() {
                             <span className="text-gray-400">—</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <Badge color={getStatusColor(shipment.status) as any}>
-                            {i18n.language === 'ar' ? statusToArabic(shipment.status) : shipment.status}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-900 max-w-xs">
-                          <TruncatedText text={shipment.product_text} maxWidth="200px">
-                            <TranslatedProductText text={shipment.product_text} />
-                          </TruncatedText>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-end">
-                          {shipment.weight_ton ? formatNumber(shipment.weight_ton) : '—'}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-end">
-                          {shipment.fixed_price_usd_per_ton ? formatCurrency(shipment.fixed_price_usd_per_ton) : '—'}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900 text-end">
-                          {shipment.total_value_usd ? formatCurrency(shipment.total_value_usd) : '—'}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-                          {shipment.pol_name || '—'}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-                          {shipment.pod_name || '—'}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-                          {formatDateString(shipment.eta)}
-                        </td>
+                        {/* Fixed: Customs Clearance Date cell */}
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
                           {formatDateString(shipment.customs_clearance_date)}
                         </td>
+                        {/* Fixed: Demurrage Status cell */}
                         <td className="px-4 py-3 whitespace-nowrap">
                           <DemurrageInlineBadge
                             eta={shipment.eta}

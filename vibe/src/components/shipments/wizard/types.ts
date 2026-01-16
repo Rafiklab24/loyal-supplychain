@@ -377,6 +377,12 @@ export interface ShipmentFormData {
   // Total selling costs (calculated)
   total_selling_costs?: number | '';
   
+  // Turkish Customs Fields (Price on Paper & Tax)
+  price_on_paper_usd?: number | '';
+  price_on_paper_try?: number | '';
+  tax_usd?: number | '';
+  tax_try?: number | '';
+  
   // Bank account for receiving payment (selling only)
   payment_bank_account_id?: string;
   payment_bank_name?: string;
@@ -596,6 +602,11 @@ export const initialFormData: ShipmentFormData = {
   transit_fees_cost: '',
   land_insurance_cost: '',
   total_selling_costs: '',
+  // Turkish customs fields
+  price_on_paper_usd: '',
+  price_on_paper_try: '',
+  tax_usd: '',
+  tax_try: '',
 };
 
 export interface StepProps {

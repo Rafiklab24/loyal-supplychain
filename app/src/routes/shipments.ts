@@ -1103,6 +1103,9 @@ router.put('/:id', async (req, res, next) => {
       'beneficiary_bank_address': 'shipment_financials', 'beneficiary_account_number': 'shipment_financials',
       'beneficiary_iban': 'shipment_financials', 'intermediary_bank': 'shipment_financials',
       'payment_schedule': 'shipment_financials', 'additional_costs': 'shipment_financials', 'payment_beneficiaries': 'shipment_financials',
+      // Turkish customs fields
+      'price_on_paper_usd': 'shipment_financials', 'price_on_paper_try': 'shipment_financials',
+      'tax_usd': 'shipment_financials', 'tax_try': 'shipment_financials',
     };
 
     // NOTE: lines, containers, batches removed - now handled via normalized tables

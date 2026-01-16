@@ -9,6 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useStats } from '../../hooks/useStats';
 import { useTopTasks } from '../../hooks/useTasks';
+import { useUserPreferences } from '../../hooks/useUserPreferences';
 import { StatCard } from '../common/StatCard';
 import { Card } from '../common/Card';
 import { LoadingState } from '../common/LoadingState';
@@ -21,6 +22,10 @@ export function AdminExecDashboard() {
   const navigate = useNavigate();
   const { data: stats, isLoading, error } = useStats();
   const { data: topTasks, isLoading: tasksLoading, totalTasks } = useTopTasks(5);
+  const { shouldHideTasks } = useUserPreferences();
+  
+  // Check if tasks section should be hidden based on user preferences
+  const hideTasks = shouldHideTasks();
 
   return (
     <LoadingState
@@ -79,39 +84,41 @@ export function AdminExecDashboard() {
             />
           </div>
 
-          {/* Top 5 Priority Tasks */}
-          <Card 
-            title={
-              <div className="flex items-center justify-between">
-                <span>{t('dashboard.priorityTasks', 'Priority Tasks')}</span>
-                {totalTasks > 0 && (
-                  <button
-                    onClick={() => navigate('/tasks')}
-                    className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    {t('dashboard.viewAllTasks', 'View All')} ({totalTasks})
-                    <ArrowRightIcon className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            }
-          >
-            {tasksLoading ? (
-              <LoadingSkeleton lines={3} />
-            ) : topTasks && topTasks.length > 0 ? (
-              <div className="space-y-3">
-                {topTasks.map((task) => (
-                  <TaskCard key={task.id} task={task} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-2">✅</div>
-                <p className="text-gray-600">{t('dashboard.noTasks', 'No pending tasks')}</p>
-                <p className="text-sm text-gray-500 mt-1">{t('dashboard.allCaughtUp', 'You\'re all caught up!')}</p>
-              </div>
-            )}
-          </Card>
+          {/* Top 5 Priority Tasks - conditionally rendered based on user preferences */}
+          {!hideTasks && (
+            <Card 
+              title={
+                <div className="flex items-center justify-between">
+                  <span>{t('dashboard.priorityTasks', 'Priority Tasks')}</span>
+                  {totalTasks > 0 && (
+                    <button
+                      onClick={() => navigate('/tasks')}
+                      className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      {t('dashboard.viewAllTasks', 'View All')} ({totalTasks})
+                      <ArrowRightIcon className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              }
+            >
+              {tasksLoading ? (
+                <LoadingSkeleton lines={3} />
+              ) : topTasks && topTasks.length > 0 ? (
+                <div className="space-y-3">
+                  {topTasks.map((task) => (
+                    <TaskCard key={task.id} task={task} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-2">✅</div>
+                  <p className="text-gray-600">{t('dashboard.noTasks', 'No pending tasks')}</p>
+                  <p className="text-sm text-gray-500 mt-1">{t('dashboard.allCaughtUp', 'You\'re all caught up!')}</p>
+                </div>
+              )}
+            </Card>
+          )}
 
           {/* Top Ports */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
