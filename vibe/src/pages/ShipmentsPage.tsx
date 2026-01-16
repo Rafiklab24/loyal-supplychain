@@ -290,12 +290,12 @@ export function ShipmentsPage() {
     },
     price_per_ton: {
       header: () => (
-        <th key="price_per_ton" className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+        <th key="price_per_ton" className="px-4 py-3 text-start text-xs font-medium text-emerald-700 uppercase tracking-wider whitespace-nowrap bg-emerald-50">
           {i18n.language === 'ar' ? 'السعر الحقيقي' : 'Real Price'}
         </th>
       ),
       cell: (shipment: any) => (
-        <td key="price_per_ton" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-end">
+        <td key="price_per_ton" className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-emerald-700 text-end bg-emerald-50/50">
           {shipment.fixed_price_usd_per_ton ? formatCurrency(shipment.fixed_price_usd_per_ton) : '—'}
         </td>
       ),
@@ -382,17 +382,17 @@ export function ShipmentsPage() {
     },
     price_on_paper: {
       header: () => (
-        <th key="price_on_paper" className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+        <th key="price_on_paper" className="px-4 py-3 text-start text-xs font-medium text-blue-700 uppercase tracking-wider whitespace-nowrap bg-blue-50">
           {i18n.language === 'ar' ? 'السعر الورقي' : 'Price on Paper'}
         </th>
       ),
       cell: (shipment: any) => (
-        <td key="price_on_paper" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-end">
+        <td key="price_on_paper" className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-blue-700 text-end bg-blue-50/50">
           {shipment.price_on_paper_usd ? (
             <div>
               <div>{formatCurrency(shipment.price_on_paper_usd)}</div>
               {shipment.price_on_paper_try && (
-                <div className="text-xs text-gray-500">₺{formatNumber(shipment.price_on_paper_try)}</div>
+                <div className="text-xs text-blue-500">₺{formatNumber(shipment.price_on_paper_try)}</div>
               )}
             </div>
           ) : '—'}
@@ -426,7 +426,7 @@ export function ShipmentsPage() {
           className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-gray-100 select-none"
         >
           <div className="flex items-center gap-2">
-            {t('shipments.eta')}
+            {i18n.language === 'ar' ? 'الوصول المتوقع' : 'ETA'}
             <SortIcon column="eta" />
           </div>
         </th>
