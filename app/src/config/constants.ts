@@ -46,18 +46,18 @@ export const AUTH = {
 export const RATE_LIMIT = {
   /** Rate limit window duration in milliseconds (15 minutes) */
   WINDOW_MS: 15 * 60 * 1000,
-  /** Maximum requests per window in production */
-  MAX_REQUESTS_PROD: 100,
+  /** Maximum requests per window in production (1000 = ~1 request/second) */
+  MAX_REQUESTS_PROD: 1000,
   /** Maximum requests per window in development */
-  MAX_REQUESTS_DEV: 1000,
+  MAX_REQUESTS_DEV: 5000,
   /** Maximum authentication attempts per window */
-  MAX_AUTH_ATTEMPTS: 10,
+  MAX_AUTH_ATTEMPTS: 20,
   /** Maximum password reset attempts per hour */
-  MAX_PASSWORD_RESET_ATTEMPTS: 5,
+  MAX_PASSWORD_RESET_ATTEMPTS: 10,
   /** Password reset window duration in milliseconds (1 hour) */
   PASSWORD_RESET_WINDOW_MS: 60 * 60 * 1000,
   /** Maximum document uploads per window */
-  MAX_DOCUMENT_UPLOADS: 20,
+  MAX_DOCUMENT_UPLOADS: 50,
 } as const;
 
 /**

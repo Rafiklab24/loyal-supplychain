@@ -70,6 +70,10 @@ import { setupSwagger } from './swagger';
 const app = express();
 const PORT = env.PORT;
 
+// Trust proxy - essential when behind reverse proxy (Caddy, nginx, etc.)
+// This ensures rate limiting uses the real client IP from X-Forwarded-For header
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 
