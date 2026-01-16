@@ -1673,7 +1673,8 @@ export function ShipmentsPage() {
                     {data.data.map((shipment) => (
                       <tr
                         key={shipment.id}
-                        className={`hover:bg-gray-50 transition-colors ${selectedShipments.has(shipment.id) ? 'bg-blue-50' : ''}`}
+                        onClick={() => handleRowClick(shipment.id)}
+                        className={`hover:bg-gray-50 transition-colors cursor-pointer ${selectedShipments.has(shipment.id) ? 'bg-blue-50' : ''}`}
                       >
                         {/* Fixed: Checkbox cell */}
                         <td
