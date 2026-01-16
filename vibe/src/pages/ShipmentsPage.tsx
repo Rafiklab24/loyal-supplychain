@@ -303,14 +303,18 @@ export function ShipmentsPage() {
     origin: {
       header: () => (
         <th key="origin" className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-          {t('shipments.origin')}
+          {i18n.language === 'ar' ? 'بلد المنشأ' : 'Country of Origin'}
         </th>
       ),
-      cell: (shipment: any) => (
-        <td key="origin" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-          {shipment.country_of_origin || shipment.pol_name || '—'}
-        </td>
-      ),
+      cell: (shipment: any) => {
+        // Get country of origin from the first product line, or fall back to country_of_export
+        const countryOfOrigin = shipment.lines?.[0]?.country_of_origin || shipment.country_of_export || '—';
+        return (
+          <td key="origin" className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+            {countryOfOrigin}
+          </td>
+        );
+      },
     },
     pol: {
       header: () => (
