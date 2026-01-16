@@ -21,6 +21,7 @@ import { loadUserBranches, buildContractBranchFilter, BranchFilterRequest } from
 import { findBestMatches, normalizeCompanyName } from '../utils/stringMatch';
 import logger from '../utils/logger';
 import { withTransaction } from '../utils/transactions';
+import { withTimeout } from '../middleware/timeout';
 
 const router = Router();
 
@@ -2057,6 +2058,7 @@ router.get('/:id/documents', async (req, res, next) => {
 
 router.post(
   '/extract-from-proforma',
+  withTimeout(120000), // 2 minute timeout for AI processing
   upload.single('file'),
   async (req, res, next) => {
     logger.info('🚀 Extract endpoint hit!');
