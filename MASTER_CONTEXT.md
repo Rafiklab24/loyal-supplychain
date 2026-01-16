@@ -1,6 +1,6 @@
 # Loyal Supply Chain - Master Context Document
 
-**Last Updated:** January 3, 2026 (Branch Filtering Fix & Database Schema Review)  
+**Last Updated:** January 16, 2026 (DigitalOcean Docker Deployment Documentation)  
 **Purpose:** Single source of truth for all agents working on this codebase
 
 ---
@@ -16,6 +16,7 @@
 7. [Known Issues](#known-issues)
 8. [Session Log](#session-log)
 9. [Critical Rules for Agents](#critical-rules-for-agents)
+10. [Production Deployment (DigitalOcean)](#production-deployment-digitalocean)
 
 ---
 
@@ -4151,6 +4152,268 @@ psql -U rafik -d loyal_supplychain -c "SELECT COUNT(*) as total_votes FROM syste
 # Check cafe settings
 psql -U rafik -d loyal_supplychain -c "SELECT key, value FROM system.cafe_settings"
 ```
+
+---
+
+## Production Deployment (DigitalOcean)
+
+The system is deployed on a DigitalOcean Droplet using Docker containers with Caddy as the reverse proxy.
+
+### Server Information
+
+| Item | Value |
+|------|-------|
+| **Server IP** | `209.38.237.125` |
+| **Live URL** | http://209.38.237.125 |
+| **SSH Access** | `ssh root@209.38.237.125` |
+| **App Directory** | `/opt/loyal-supplychain` |
+| **Deployment Method** | Docker Compose |
+
+### Docker Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Caddy (Port 80/443)                      │
+│                    Reverse Proxy + SSL                      │
+└─────────────────────────────────────────────────────────────┘
+                    │                    │
+         /api/*     │                    │    /*
+                    ▼                    ▼
+┌─────────────────────────┐  ┌─────────────────────────┐
+│   Backend (Port 3000)   │  │  Frontend (Nginx:80)    │
+│   Node.js + Express     │  │  Static React Build     │
+└─────────────────────────┘  └─────────────────────────┘
+         │                              
+         ▼                              
+┌─────────────────────────┐  ┌─────────────────────────┐
+│  PostgreSQL (5432)      │  │     Redis (6379)        │
+│  loyal_supplychain DB   │  │     Session Cache       │
+└─────────────────────────┘  └─────────────────────────┘
+```
+
+### Container Names
+
+| Container | Service | Purpose |
+|-----------|---------|---------|
+| `loyal-backend` | backend | Node.js API server |
+| `loyal-frontend` | frontend | Nginx serving React build |
+| `loyal-postgres` | postgres | PostgreSQL database |
+| `loyal-redis` | redis | Redis cache |
+| `loyal-caddy` | caddy | Reverse proxy |
+
+### How to Deploy Changes
+
+#### Standard Deployment (Code Changes)
+
+After pushing changes to GitHub, deploy to production:
+
+```bash
+# SSH into the server
+ssh root@209.38.237.125
+
+# Navigate to app directory
+cd /opt/loyal-supplychain
+
+# Pull latest code
+git pull
+
+# Rebuild and restart containers
+docker compose -f docker-compose.production.yml --env-file .env.production up -d --build backend
+
+# For frontend changes, rebuild frontend too:
+docker compose -f docker-compose.production.yml --env-file .env.production up -d --build frontend
+```
+
+#### Quick One-Liner (from local machine)
+
+```bash
+# Deploy backend changes
+ssh root@209.38.237.125 "cd /opt/loyal-supplychain && git pull && docker compose -f docker-compose.production.yml --env-file .env.production up -d --build backend"
+
+# Deploy all changes (backend + frontend)
+ssh root@209.38.237.125 "cd /opt/loyal-supplychain && git pull && docker compose -f docker-compose.production.yml --env-file .env.production up -d --build"
+```
+
+#### After Container Recreation
+
+When containers are recreated, fix uploads directory permissions:
+
+```bash
+ssh root@209.38.237.125 "docker exec -u root loyal-backend mkdir -p /app/uploads/temp && docker exec -u root loyal-backend chown -R nodejs:nodejs /app/uploads"
+```
+
+### Database Operations
+
+#### Run SQL on Production Database
+
+```bash
+# Single SQL command
+ssh root@209.38.237.125 "cd /opt/loyal-supplychain && docker compose -f docker-compose.production.yml --env-file .env.production exec -T postgres psql -U postgres -d loyal_supplychain -c \"YOUR_SQL_HERE\""
+
+# Multi-line SQL
+ssh root@209.38.237.125 "cd /opt/loyal-supplychain && docker compose -f docker-compose.production.yml --env-file .env.production exec -T postgres psql -U postgres -d loyal_supplychain << 'EOF'
+CREATE TABLE IF NOT EXISTS schema.table_name (
+    id SERIAL PRIMARY KEY,
+    column_name TEXT
+);
+EOF"
+```
+
+#### Add Missing Column
+
+```bash
+ssh root@209.38.237.125 "cd /opt/loyal-supplychain && docker compose -f docker-compose.production.yml --env-file .env.production exec -T postgres psql -U postgres -d loyal_supplychain -c \"ALTER TABLE schema.table_name ADD COLUMN IF NOT EXISTS column_name TYPE;\""
+```
+
+#### Create Missing Table
+
+```bash
+ssh root@209.38.237.125 "cd /opt/loyal-supplychain && docker compose -f docker-compose.production.yml --env-file .env.production exec -T postgres psql -U postgres -d loyal_supplychain << 'EOF'
+CREATE TABLE IF NOT EXISTS security.table_name (
+    id SERIAL PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_table_column ON security.table_name(column);
+EOF"
+```
+
+### Useful Commands
+
+#### Check Container Status
+
+```bash
+ssh root@209.38.237.125 "cd /opt/loyal-supplychain && docker compose -f docker-compose.production.yml --env-file .env.production ps"
+```
+
+#### View Backend Logs
+
+```bash
+# Last 50 lines
+ssh root@209.38.237.125 "cd /opt/loyal-supplychain && docker compose -f docker-compose.production.yml --env-file .env.production logs backend --tail=50"
+
+# Follow logs in real-time
+ssh root@209.38.237.125 "cd /opt/loyal-supplychain && docker compose -f docker-compose.production.yml --env-file .env.production logs -f backend"
+
+# Search for errors
+ssh root@209.38.237.125 "cd /opt/loyal-supplychain && docker compose -f docker-compose.production.yml --env-file .env.production logs backend --tail=100 2>&1 | grep -E 'error|Error|500'"
+```
+
+#### Restart Services
+
+```bash
+# Restart backend only
+ssh root@209.38.237.125 "cd /opt/loyal-supplychain && docker compose -f docker-compose.production.yml --env-file .env.production restart backend"
+
+# Restart Caddy (after Caddyfile changes)
+ssh root@209.38.237.125 "cd /opt/loyal-supplychain && docker compose -f docker-compose.production.yml --env-file .env.production restart caddy"
+```
+
+#### Execute Command Inside Container
+
+```bash
+# Check if a tool exists
+ssh root@209.38.237.125 "docker exec loyal-backend which pdftoppm"
+
+# Run command as root in container
+ssh root@209.38.237.125 "docker exec -u root loyal-backend COMMAND"
+
+# Check environment variables
+ssh root@209.38.237.125 "docker exec loyal-backend env | grep OPENAI"
+```
+
+### Environment Variables
+
+The `.env.production` file on the server contains:
+
+```bash
+# Server
+DOMAIN=209.38.237.125
+NODE_ENV=production
+
+# Database
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=<secret>
+POSTGRES_DB=loyal_supplychain
+
+# Security
+JWT_SECRET=<secret>
+ALLOWED_ORIGINS=http://209.38.237.125
+
+# API
+VITE_API_BASE_URL=/api
+LOG_LEVEL=info
+
+# OpenAI (for AI OCR)
+OPENAI_API_KEY=<secret>
+OPENAI_MODEL=gpt-4o
+OPENAI_MAX_TOKENS=4096
+```
+
+To view current env file:
+```bash
+ssh root@209.38.237.125 "cat /opt/loyal-supplychain/.env.production"
+```
+
+To add a new environment variable:
+```bash
+ssh root@209.38.237.125 "echo 'NEW_VAR=value' >> /opt/loyal-supplychain/.env.production"
+# Then restart backend to pick up changes
+ssh root@209.38.237.125 "cd /opt/loyal-supplychain && docker compose -f docker-compose.production.yml --env-file .env.production restart backend"
+```
+
+### Known Production Issues & Fixes
+
+#### Missing Database Tables/Columns
+
+When code references tables/columns that don't exist in production:
+
+**Symptom:** 500 errors with `"column X does not exist"` or `"relation X does not exist"`
+
+**Solution:** Add the missing schema:
+```bash
+# Check what's missing in logs
+ssh root@209.38.237.125 "cd /opt/loyal-supplychain && docker compose -f docker-compose.production.yml --env-file .env.production logs backend --tail=50 2>&1 | grep 'does not exist'"
+
+# Add the missing column/table (see Database Operations above)
+```
+
+**Tables/columns added to production (January 2026):**
+- `security.token_usage` - Token theft detection
+- `security.suspicious_activity` - IP blocking
+- `logistics.shipments.final_destination` (JSONB) - Destination branch info
+
+#### Gateway Timeout on AI Operations
+
+**Symptom:** 504 Gateway Timeout when using AI extraction
+
+**Solution:** The extraction route has a 2-minute timeout. Caddy has 180s read/write timeout. If still timing out, check OpenAI API key is valid.
+
+#### File Upload Permission Denied
+
+**Symptom:** `ENOENT: no such file or directory` or `EACCES: permission denied` for uploads
+
+**Solution:**
+```bash
+ssh root@209.38.237.125 "docker exec -u root loyal-backend mkdir -p /app/uploads/temp && docker exec -u root loyal-backend chown -R nodejs:nodejs /app/uploads"
+```
+
+### Deployment Checklist for Agents
+
+Before deploying:
+1. ✅ Commit and push all changes to GitHub
+2. ✅ Ensure code compiles locally (`cd app && npm run build`)
+
+After deploying:
+1. ✅ Check container status: `docker compose ... ps`
+2. ✅ Check for errors in logs: `docker compose ... logs backend --tail=50`
+3. ✅ Fix uploads permissions if container was recreated
+4. ✅ Test the affected feature on http://209.38.237.125
+
+If errors occur:
+1. 📋 Check backend logs for specific error message
+2. 🔍 If "does not exist" → Add missing table/column
+3. 🔍 If permission error → Fix file permissions
+4. 🔍 If timeout → Check route timeout settings
 
 ### Troubleshooting
 
