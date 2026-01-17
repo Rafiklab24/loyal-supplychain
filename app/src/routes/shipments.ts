@@ -1392,12 +1392,13 @@ router.put('/:id', async (req, res, next) => {
       logger.error('Error generating notifications for updated shipment:', err);
     });
 
-    // Re-fetch shipment to include updated status
+    // Re-fetch shipment to include updated status and document count
     const finalShipment = await pool.query(
       `SELECT s.*,
         pol.name as pol_name, pol.country as pol_country,
         pod.name as pod_name, pod.country as pod_country,
-        c.name as shipping_line_name
+        c.name as shipping_line_name,
+        (SELECT COUNT(*) FROM archive.documents d WHERE d.shipment_id = s.id AND (d.is_deleted IS NULL OR d.is_deleted = false)) as document_count
       FROM logistics.v_shipments_complete s
       LEFT JOIN master_data.ports pol ON s.pol_id = pol.id
       LEFT JOIN master_data.ports pod ON s.pod_id = pod.id
@@ -1423,7 +1424,8 @@ router.get('/:id', async (req, res, next) => {
         pol.name as pol_name, pol.country as pol_country,
         pod.name as pod_name, pod.country as pod_country,
         c.name as shipping_line_name,
-        c.country as shipping_line_country
+        c.country as shipping_line_country,
+        (SELECT COUNT(*) FROM archive.documents d WHERE d.shipment_id = s.id AND (d.is_deleted IS NULL OR d.is_deleted = false)) as document_count
       FROM logistics.v_shipments_complete s
       LEFT JOIN master_data.ports pol ON s.pol_id = pol.id
       LEFT JOIN master_data.ports pod ON s.pod_id = pod.id

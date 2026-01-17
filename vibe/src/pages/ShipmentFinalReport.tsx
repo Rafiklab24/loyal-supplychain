@@ -262,8 +262,11 @@ export function ShipmentFinalReport() {
       await updateShipment(id, updateData);
       setIsInlineEditing(false);
       setEditedData({});
+      // Invalidate both shipment and shipment-lines queries to refresh all data
       await queryClient.invalidateQueries({ queryKey: ['shipment', id] });
+      await queryClient.invalidateQueries({ queryKey: ['shipment-lines', id] });
       await queryClient.refetchQueries({ queryKey: ['shipment', id] });
+      await queryClient.refetchQueries({ queryKey: ['shipment-lines', id] });
     } catch (error: any) {
       setSaveError(error.response?.data?.message || error.message || 'Failed to save changes');
     } finally {
@@ -1712,8 +1715,11 @@ export function ShipmentFinalReport() {
           isOpen={showEditWizard}
           onClose={() => setShowEditWizard(false)}
           shipment={shipment}
-          onSuccess={() => {
+          onSuccess={async () => {
             setShowEditWizard(false);
+            // Invalidate both shipment and shipment-lines queries to refresh all data
+            await queryClient.invalidateQueries({ queryKey: ['shipment', id] });
+            await queryClient.invalidateQueries({ queryKey: ['shipment-lines', id] });
             refetch();
           }}
         />
