@@ -721,6 +721,26 @@ router.get('/autocomplete', async (req, res, next) => {
         results = contractResult.rows;
         break;
         
+      case 'country':
+        // Get unique countries from ports and companies
+        const normalizedCountry = searchTerm.replace(/%/g, '').replace(/[-_\s]/g, '').toLowerCase();
+        const countryResult = await pool.query(
+          `SELECT DISTINCT country as value, COUNT(*) as frequency
+           FROM (
+             SELECT country FROM master_data.ports WHERE country IS NOT NULL
+             UNION ALL
+             SELECT country FROM master_data.companies WHERE country IS NOT NULL AND is_deleted = false
+           ) countries
+           WHERE REPLACE(REPLACE(REPLACE(LOWER(country), '-', ''), '_', ''), ' ', '') LIKE $1 OR
+                 LOWER(country) LIKE LOWER($2)
+           GROUP BY country
+           ORDER BY frequency DESC, country
+           LIMIT 15`,
+          [`%${normalizedCountry}%`, searchTerm]
+        );
+        results = countryResult.rows;
+        break;
+        
       default:
         return res.status(400).json({ error: 'Invalid type parameter' });
     }
