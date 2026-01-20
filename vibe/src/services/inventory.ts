@@ -106,6 +106,29 @@ export type SortOption =
 // ============================================================
 
 /**
+ * Branch information for filtering
+ */
+export interface BranchInfo {
+  id: string;
+  name: string;
+  name_ar?: string;
+  branch_type?: string;
+  city?: string;
+}
+
+/**
+ * Get branches accessible to current user for warehouse filtering
+ */
+export async function getMyBranches(): Promise<{
+  branches: BranchInfo[];
+  has_global_access: boolean;
+  total: number;
+}> {
+  const response = await apiClient.get('/inventory/my-branches');
+  return response.data;
+}
+
+/**
  * Get shipments for the current user's branch
  */
 export async function getInventoryShipments(params?: {
@@ -113,12 +136,14 @@ export async function getInventoryShipments(params?: {
   search?: string;
   delivered?: boolean;
   sort?: SortOption;
+  branch_id?: string;
 }): Promise<{ shipments: InventoryShipment[]; total: number }> {
   const queryParams = new URLSearchParams();
   if (params?.status) queryParams.append('status', params.status);
   if (params?.search) queryParams.append('search', params.search);
   if (params?.delivered !== undefined) queryParams.append('delivered', String(params.delivered));
   if (params?.sort) queryParams.append('sort', params.sort);
+  if (params?.branch_id) queryParams.append('branch_id', params.branch_id);
   
   const queryString = queryParams.toString();
   const url = `/inventory/shipments${queryString ? `?${queryString}` : ''}`;

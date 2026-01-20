@@ -1275,6 +1275,14 @@ router.put('/:id', async (req, res, next) => {
             changed_by
           ]);
         }
+        
+        // SYNC: Update container_count in shipment_cargo to match actual containers
+        await client.query(`
+          UPDATE logistics.shipment_cargo
+          SET container_count = $1, updated_at = NOW()
+          WHERE shipment_id = $2
+        `, [updateData.containers.length, id]);
+        logger.info(`✅ Synced container_count to ${updateData.containers.length}`);
       }
 
       // Handle batches - delete existing and insert new
@@ -2073,6 +2081,14 @@ router.post('/', async (req, res, next) => {
             created_by
           ]);
         }
+        
+        // SYNC: Update container_count in shipment_cargo to match actual containers
+        await client.query(`
+          UPDATE logistics.shipment_cargo
+          SET container_count = $1, updated_at = NOW()
+          WHERE shipment_id = $2
+        `, [containers.length, shipmentId]);
+        logger.info(`✅ Synced container_count to ${containers.length}`);
       }
 
       // 9. Insert batches into shipment_batches

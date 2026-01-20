@@ -44,6 +44,7 @@ import trademarksRoutes from './routes/trademarks';
 import translateRoutes from './routes/translate';
 import certificatesRoutes from './routes/certificates';
 import dashboardRoutes from './routes/dashboard';
+import antrepoRoutes from './routes/antrepo';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -227,6 +228,7 @@ app.use('/api/v1/trademarks', authenticateToken, detectTokenTheft, setDatabaseUs
 app.use('/api/v1/translate', authenticateToken, detectTokenTheft, setDatabaseUserContext, translateRoutes);
 app.use('/api/v1/certificates', authenticateToken, detectTokenTheft, setDatabaseUserContext, certificatesRoutes);
 app.use('/api/v1/dashboard', authenticateToken, detectTokenTheft, setDatabaseUserContext, dashboardRoutes);
+app.use('/api/v1/antrepo', authenticateToken, detectTokenTheft, setDatabaseUserContext, antrepoRoutes);
 
 // Legacy routes (deprecated - use /api/v1/* instead)
 // These routes will log deprecation warnings and redirect to v1
@@ -270,6 +272,7 @@ app.use('/api/trademarks', deprecationMiddleware, authenticateToken, detectToken
 app.use('/api/translate', deprecationMiddleware, authenticateToken, detectTokenTheft, setDatabaseUserContext, translateRoutes);
 app.use('/api/certificates', deprecationMiddleware, authenticateToken, detectTokenTheft, setDatabaseUserContext, certificatesRoutes);
 app.use('/api/dashboard', deprecationMiddleware, authenticateToken, detectTokenTheft, setDatabaseUserContext, dashboardRoutes);
+app.use('/api/antrepo', deprecationMiddleware, authenticateToken, detectTokenTheft, setDatabaseUserContext, antrepoRoutes);
 
 // Setup Swagger documentation
 setupSwagger(app);

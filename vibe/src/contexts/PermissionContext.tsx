@@ -32,7 +32,8 @@ export type Role =
   | 'Clearance' 
   | 'Accounting'
   | 'Cafe'
-  | 'Bookkeeper';
+  | 'Bookkeeper'
+  | 'Antrepo';
 
 // All valid roles for validation
 export const ALL_ROLES: Role[] = [
@@ -46,6 +47,7 @@ export const ALL_ROLES: Role[] = [
   'Accounting',
   'Cafe',
   'Bookkeeper',
+  'Antrepo',
 ];
 
 export type Module = 
@@ -64,7 +66,8 @@ export type Module =
   | 'inventory'
   | 'quality'
   | 'cafe'
-  | 'cashbox';
+  | 'cashbox'
+  | 'antrepo';
 
 export type PermissionLevel = 'full' | 'read' | 'none';
 
@@ -87,6 +90,7 @@ const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>> = {
     quality: 'full',
     cafe: 'full',
     cashbox: 'full',
+    antrepo: 'full',
   },
   Exec: {
     users: 'none',
@@ -104,6 +108,7 @@ const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>> = {
     inventory: 'read',
     quality: 'full', // Exec can review quality incidents
     cafe: 'read', // Can vote
+    antrepo: 'read',
   },
   Correspondence: {
     users: 'none',
@@ -138,6 +143,7 @@ const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>> = {
     inventory: 'none',
     quality: 'none',
     cafe: 'read', // Can vote
+    antrepo: 'read', // Can view antrepo inventory
   },
   Procurement: {
     users: 'none',
@@ -189,6 +195,7 @@ const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>> = {
     inventory: 'none',
     quality: 'none',
     cafe: 'read', // Can vote
+    antrepo: 'read', // Can view antrepo for customs purposes
   },
   Accounting: {
     users: 'none',
@@ -244,6 +251,25 @@ const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>> = {
     cafe: 'read', // Can vote like any user
     cashbox: 'full', // Full access to cash boxes
   },
+  Antrepo: {
+    users: 'none',
+    dashboard: 'read',
+    contracts: 'read',
+    shipments: 'read',
+    finance: 'none',
+    customs: 'read',
+    land_transport: 'read',
+    companies: 'none',
+    products: 'read',
+    analytics: 'none',
+    accounting: 'none',
+    audit_logs: 'none',
+    inventory: 'none',
+    quality: 'none',
+    cafe: 'read',
+    cashbox: 'none',
+    antrepo: 'full', // Full access to antrepo management
+  },
 };
 
 // Global access roles - Admin ALWAYS has global access
@@ -276,6 +302,8 @@ export const PATH_TO_MODULE: Record<string, Module> = {
   '/quality-incident': 'quality',
   '/cafe': 'cafe',
   '/cashbox': 'cashbox',
+  '/antrepo': 'antrepo',
+  '/antrepo-lots': 'antrepo',
 };
 
 interface PermissionContextType {

@@ -211,6 +211,10 @@ export interface ShipmentFormData {
   internal_transport_mode?: string;
   // Clearance category (transit/domestic/custom_clearance)
   clearance_category?: 'transit' | 'domestic' | 'custom_clearance' | null;
+  // Antrepo (Customs Warehouse) assignment
+  goes_to_antrepo?: boolean; // When TRUE, shipment is destined for antrepo storage
+  assigned_antrepo_id?: string; // The antrepo warehouse this shipment is assigned to
+  assigned_lot_id?: string; // Pre-assigned lot in the antrepo (optional)
   // Contract-derived helpers (for prefilling)
   currency?: string;
   country_of_export?: string; // Country of Export (port of loading country)
@@ -492,6 +496,9 @@ export const initialFormData: ShipmentFormData = {
   transit_countries: [],
   internal_transport_mode: 'truck',
   clearance_category: null,
+  goes_to_antrepo: false,
+  assigned_antrepo_id: '',
+  assigned_lot_id: '',
   cargo_type: '',
   tanker_type: '',
   container_count: '',

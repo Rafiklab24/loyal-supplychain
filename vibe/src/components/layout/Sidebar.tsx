@@ -80,6 +80,16 @@ const navigation: NavItem[] = [
       { name: 'nav.qualityIncidents', href: '/quality-incidents', icon: ExclamationTriangleIcon, module: 'quality' },
     ]
   },
+  { 
+    name: 'nav.antrepo', 
+    href: '/antrepo', 
+    icon: CircleStackIcon,
+    module: 'antrepo',
+    subItems: [
+      { name: 'nav.antrepoDashboard', href: '/antrepo', icon: CircleStackIcon, module: 'antrepo' },
+      { name: 'nav.antrepoLots', href: '/antrepo-lots', icon: ArchiveBoxIcon, module: 'antrepo' },
+    ]
+  },
   { name: 'nav.cafeDashboard', href: '/cafe', icon: CubeIcon, module: 'cafe' },
   { name: 'nav.cashBoxes', href: '/cashbox', icon: BanknotesIcon, module: 'cashbox' },
 ];

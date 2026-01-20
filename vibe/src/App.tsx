@@ -45,6 +45,8 @@ const QualityReviewPage = lazy(() => import('./pages/QualityReviewPage'));
 const QualityIncidentWizardPage = lazy(() => import('./components/quality/QualityIncidentWizard').then(m => ({ default: m.QualityIncidentWizard })));
 const CafeDashboardPage = lazy(() => import('./pages/CafeDashboardPage'));
 const CashBoxPage = lazy(() => import('./pages/CashBoxPage'));
+const AntrepoDashboardPage = lazy(() => import('./pages/AntrepoDashboardPage'));
+const AntrepoLotsPage = lazy(() => import('./pages/AntrepoLotsPage'));
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -427,6 +429,24 @@ function App() {
                 element={
                     <ProtectedModuleRoute module="cashbox">
                     <CashBoxPage />
+                    </ProtectedModuleRoute>
+                }
+              />
+
+              {/* Antrepo - Customs Warehouse Management */}
+              <Route
+                path="/antrepo"
+                element={
+                    <ProtectedModuleRoute module="antrepo">
+                    <AntrepoDashboardPage />
+                    </ProtectedModuleRoute>
+                }
+              />
+              <Route
+                path="/antrepo-lots"
+                element={
+                    <ProtectedModuleRoute module="antrepo" requireWrite>
+                    <AntrepoLotsPage />
                     </ProtectedModuleRoute>
                 }
               />

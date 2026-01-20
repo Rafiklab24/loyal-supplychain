@@ -3,7 +3,7 @@
 /**
  * Shipment Status - Automatically calculated by the status engine
  */
-export type ShipmentStatus = 'planning' | 'delayed' | 'sailed' | 'awaiting_clearance' | 'pending_transport' | 'loaded_to_final' | 'received' | 'quality_issue';
+export type ShipmentStatus = 'planning' | 'delayed' | 'sailed' | 'awaiting_clearance' | 'pending_transport' | 'loaded_to_final' | 'arrived' | 'delivered' | 'received' | 'quality_issue';
 
 export interface Shipment {
   id: string;
@@ -236,12 +236,30 @@ export const SHIPMENT_STATUS_CONFIG: Record<ShipmentStatus, {
     description: 'Transport assigned. Shipment is on the way to final destination.',
     description_ar: 'تم تعيين النقل. الشحنة في الطريق إلى الوجهة النهائية.'
   },
+  arrived: {
+    label: 'Arrived at Port',
+    label_ar: 'وصلت إلى الميناء',
+    color: 'text-cyan-700',
+    bgColor: 'bg-cyan-100',
+    order: 7,
+    description: 'Shipment has arrived at the destination port.',
+    description_ar: 'وصلت الشحنة إلى ميناء الوصول.'
+  },
+  delivered: {
+    label: 'Delivered',
+    label_ar: 'تم التسليم',
+    color: 'text-emerald-700',
+    bgColor: 'bg-emerald-100',
+    order: 8,
+    description: 'Shipment has been delivered to the final destination.',
+    description_ar: 'تم تسليم الشحنة إلى الوجهة النهائية.'
+  },
   received: {
     label: 'Received',
     label_ar: 'تم الاستلام',
     color: 'text-green-700',
     bgColor: 'bg-green-100',
-    order: 7,
+    order: 9,
     description: 'Shipment received at warehouse without issues.',
     description_ar: 'تم استلام الشحنة في المستودع بدون مشاكل.'
   },
@@ -250,7 +268,7 @@ export const SHIPMENT_STATUS_CONFIG: Record<ShipmentStatus, {
     label_ar: 'مشكلة جودة',
     color: 'text-orange-700',
     bgColor: 'bg-orange-100',
-    order: 8,
+    order: 10,
     description: 'Shipment received with quality issues. Follow-up required.',
     description_ar: 'تم استلام الشحنة مع مشاكل في الجودة. مطلوب متابعة.'
   }

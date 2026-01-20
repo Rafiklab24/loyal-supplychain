@@ -19,6 +19,7 @@ export const ROLES = [
   'Accounting',
   'Cafe',
   'Bookkeeper',
+  'Antrepo',
 ] as const;
 
 export type Role = typeof ROLES[number];
@@ -42,6 +43,7 @@ export const MODULES = [
   'audit_logs',
   'cafe',
   'cashbox',
+  'antrepo',
 ] as const;
 
 export type Module = typeof MODULES[number];
@@ -64,6 +66,7 @@ export const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>>
     audit_logs: 'full',
     cafe: 'full',
     cashbox: 'full',
+    antrepo: 'full',
   },
   Exec: {
     users: 'none',
@@ -79,6 +82,7 @@ export const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>>
     accounting: 'read',
     audit_logs: 'read',
     cafe: 'read',
+    antrepo: 'read',
   },
   Correspondence: {
     users: 'none',
@@ -109,6 +113,7 @@ export const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>>
     accounting: 'none',
     audit_logs: 'none',
     cafe: 'read',
+    antrepo: 'read', // Can view antrepo inventory
   },
   Procurement: {
     users: 'none',
@@ -154,6 +159,7 @@ export const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>>
     accounting: 'none',
     audit_logs: 'none',
     cafe: 'read',
+    antrepo: 'read', // Can view antrepo for customs purposes
   },
   Accounting: {
     users: 'none',
@@ -202,6 +208,23 @@ export const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>>
     audit_logs: 'none',
     cafe: 'read', // Can vote like any user
     cashbox: 'full', // Full access to cash boxes
+  },
+  Antrepo: {
+    users: 'none',
+    dashboard: 'read',
+    contracts: 'read',
+    shipments: 'read',
+    finance: 'none',
+    customs: 'read',
+    land_transport: 'read',
+    companies: 'none',
+    products: 'read',
+    analytics: 'none',
+    accounting: 'none',
+    audit_logs: 'none',
+    cafe: 'read',
+    cashbox: 'none',
+    antrepo: 'full', // Full access to antrepo management
   },
 };
 
@@ -394,6 +417,8 @@ export const PATH_TO_MODULE: Record<string, Module> = {
   '/tasks': 'dashboard', // Tasks is part of dashboard
   '/cafe': 'cafe',
   '/cashbox': 'cashbox',
+  '/antrepo': 'antrepo',
+  '/antrepo-lots': 'antrepo',
 };
 
 /**
@@ -418,5 +443,6 @@ export const API_ROUTE_TO_MODULE: Record<string, Module> = {
   '/api/ports': 'shipments',
   '/api/cafe': 'cafe',
   '/api/cashbox': 'cashbox',
+  '/api/antrepo': 'antrepo',
 };
 

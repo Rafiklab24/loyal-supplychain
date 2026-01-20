@@ -8,10 +8,11 @@ import path from 'path';
 import { pool } from '../db/client';
 import logger from '../utils/logger';
 
-// Get documents path from environment or use absolute path to project root
-// This ensures files go to /storage/documents at project root, not /app/storage/documents
-const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
-const DOCUMENTS_PATH = process.env.DOCUMENTS_PATH || path.join(PROJECT_ROOT, 'storage', 'documents');
+// Get documents path from environment or use absolute path to app root
+// In Docker: __dirname = /app/dist/services → going up 2 levels = /app → /app/storage/documents
+// In dev: __dirname = /path/to/loyal-supplychain/app/dist/services → /path/to/loyal-supplychain/app/storage/documents
+const APP_ROOT = path.resolve(__dirname, '..', '..');
+const DOCUMENTS_PATH = process.env.DOCUMENTS_PATH || path.join(APP_ROOT, 'storage', 'documents');
 
 // Entity types for folder organization
 export type EntityType = 'shipment' | 'contract' | 'finance' | 'customs' | 'company';

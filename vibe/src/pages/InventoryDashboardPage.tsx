@@ -36,10 +36,11 @@ import { Pagination } from '../components/common/Pagination';
 import { formatDateString, formatCurrency, formatNumber } from '../utils/format';
 import { TranslatedProductText } from '../components/common/TranslatedProductText';
 import { DemurrageInlineBadge } from '../components/shipments/DemurrageStatusBadge';
-import { getInventoryShipments, markShipmentDelivered } from '../services/inventory';
+import { getInventoryShipments, markShipmentDelivered, getMyBranches } from '../services/inventory';
 import { useBranches } from '../hooks/useBranches';
 import { getFinalDestinationDisplay } from '../hooks/useFinalDestination';
 import type { InventoryShipment, SortOption } from '../services/inventory';
+import { BuildingOffice2Icon, ChevronDownIcon as ChevronDownIconSolid } from '@heroicons/react/24/solid';
 
 // ============================================================
 // DELIVERY CONFIRMATION MODAL
@@ -196,6 +197,14 @@ export default function InventoryDashboardPage() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [selectedShipment, setSelectedShipment] = useState<InventoryShipment | null>(null);
   const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+  const [selectedBranchId, setSelectedBranchId] = useState<string>('');
+  
+  // Fetch user's accessible branches for warehouse filtering
+  const { data: myBranchesData } = useQuery({
+    queryKey: ['my-branches'],
+    queryFn: getMyBranches,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
   
   // Convert to API sort format
   const getApiSort = (): SortOption => {
@@ -208,11 +217,12 @@ export default function InventoryDashboardPage() {
   
   // Queries
   const { data, isLoading, error } = useQuery({
-    queryKey: ['inventory-shipments', searchQuery, deliveredFilter, sortBy, sortDir, page],
+    queryKey: ['inventory-shipments', searchQuery, deliveredFilter, sortBy, sortDir, page, selectedBranchId],
     queryFn: () => getInventoryShipments({
       search: searchQuery || undefined,
       delivered: deliveredFilter === '' ? undefined : deliveredFilter === 'true',
-      sort: getApiSort()
+      sort: getApiSort(),
+      branch_id: selectedBranchId || undefined,
     }),
     staleTime: 30000,
   });
@@ -341,24 +351,65 @@ export default function InventoryDashboardPage() {
         </div>
       </div>
       
-      {/* Quick Status Filters */}
-      <div className="flex flex-wrap gap-2">
-        {statusCategories.map((cat) => (
-          <button
-            key={cat.value}
-            onClick={() => {
-              setDeliveredFilter(cat.value);
-              setPage(1);
-            }}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              deliveredFilter === cat.value
-                ? 'bg-emerald-600 text-white'
-                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
+      {/* Filters Row */}
+      <div className="flex flex-wrap items-center gap-4">
+        {/* Status Filters */}
+        <div className="flex flex-wrap gap-2">
+          {statusCategories.map((cat) => (
+            <button
+              key={cat.value}
+              onClick={() => {
+                setDeliveredFilter(cat.value);
+                setPage(1);
+              }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                deliveredFilter === cat.value
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+        
+        {/* Branch/Warehouse Filter - Only show for global access users */}
+        {myBranchesData?.has_global_access && (
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-px bg-gray-300" /> {/* Separator */}
+            <div className="relative">
+              <BuildingOffice2Icon className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <select
+                value={selectedBranchId}
+                onChange={(e) => {
+                  setSelectedBranchId(e.target.value);
+                  setPage(1);
+                }}
+                className="appearance-none ps-9 pe-8 py-2 pr-3 border border-gray-300 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer min-w-[180px]"
+              >
+                <option value="">{isRtl ? 'جميع الفروع' : 'All Branches'}</option>
+                {myBranchesData.branches.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {isRtl ? branch.name_ar || branch.name : branch.name}
+                    {branch.city && ` (${branch.city})`}
+                  </option>
+                ))}
+              </select>
+              <ChevronDownIconSolid className="absolute end-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+        )}
+        
+        {/* Show current branch badge for non-global users with single branch */}
+        {!myBranchesData?.has_global_access && myBranchesData?.branches.length === 1 && (
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-px bg-gray-300" /> {/* Separator */}
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-medium border border-emerald-200">
+              <BuildingOffice2Icon className="w-4 h-4" />
+              {isRtl ? myBranchesData.branches[0].name_ar || myBranchesData.branches[0].name : myBranchesData.branches[0].name}
+            </span>
+          </div>
+        )}
       </div>
       
       {/* Search */}

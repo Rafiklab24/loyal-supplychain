@@ -37,6 +37,7 @@ export type DocumentType =
   | 'payment_receipt'
   | 'e_fatura'
   | 'combined_documents'  // Combined/bundled documents file
+  | 'beyaname'  // Customs entry declaration (Antrepo)
   | 'other';
 
 export interface Document {

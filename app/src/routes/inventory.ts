@@ -78,20 +78,30 @@ router.get('/shipments',
       const branchIds = branchResult.rows.map(r => r.branch_id);
       
       // Build query - filter by branch if user has branch assignments
-      // Admins and Execs can see all if no branch filter
+      // Admins and Execs can see all if no branch filter, but can filter by specific branch
       let branchFilter = '';
       const params: any[] = [];
       
-      if (branchIds.length > 0 && !['Admin', 'Exec'].includes(user.role)) {
+      // Optional filters from query params
+      const { status, search, delivered, sort, branch_id } = req.query;
+      
+      // If specific branch_id provided (for Admin/Exec filtering)
+      // Note: final_destination JSONB can have either 'branch_id' or 'warehouse_id'
+      if (branch_id && ['Admin', 'Exec'].includes(user.role)) {
         branchFilter = `AND (
-          s.final_destination->>'branch_id' = ANY($1::text[])
-          OR s.final_destination->>'branch_id' IS NULL
+          vis.final_destination->>'branch_id' = $1 
+          OR vis.final_destination->>'warehouse_id' = $1
+        )`;
+        params.push(branch_id);
+      } else if (branchIds.length > 0 && !['Admin', 'Exec'].includes(user.role)) {
+        // Regular users - filter by their assigned branches
+        branchFilter = `AND (
+          vis.final_destination->>'branch_id' = ANY($1::text[])
+          OR vis.final_destination->>'warehouse_id' = ANY($1::text[])
+          OR (vis.final_destination->>'branch_id' IS NULL AND vis.final_destination->>'warehouse_id' IS NULL)
         )`;
         params.push(branchIds);
       }
-      
-      // Optional filters from query params
-      const { status, search, delivered, sort } = req.query;
       
       let statusFilter = '';
       if (status) {
@@ -540,6 +550,65 @@ router.get('/supplier-stats/:supplierId',
       }
       
       res.json(result.rows[0]);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ============================================================
+// GET /api/inventory/my-branches
+// Get branches accessible to current user for warehouse filtering
+// ============================================================
+
+router.get('/my-branches',
+  authenticateToken,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = (req as any).user;
+      
+      // Check if user is Admin/Exec (global access)
+      const isGlobalAccess = ['Admin', 'Exec'].includes(user.role);
+      
+      let branches: any[] = [];
+      
+      if (isGlobalAccess) {
+        // Global access users can see all branches
+        const result = await pool.query(`
+          SELECT 
+            id,
+            name,
+            name_ar,
+            branch_type,
+            city
+          FROM master_data.branches
+          WHERE is_active = TRUE
+          ORDER BY sort_order, name ASC
+        `);
+        branches = result.rows;
+      } else {
+        // Regular users only see their assigned branches
+        const result = await pool.query(`
+          SELECT 
+            b.id,
+            b.name,
+            b.name_ar,
+            b.branch_type,
+            b.city
+          FROM master_data.branches b
+          INNER JOIN security.user_branches ub ON ub.branch_id = b.id
+          WHERE ub.user_id = $1
+            AND b.is_active = TRUE
+          ORDER BY b.sort_order, b.name ASC
+        `, [user.id]);
+        branches = result.rows;
+      }
+      
+      res.json({
+        branches,
+        has_global_access: isGlobalAccess,
+        total: branches.length
+      });
     } catch (error) {
       next(error);
     }
