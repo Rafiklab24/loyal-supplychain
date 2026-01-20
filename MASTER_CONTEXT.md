@@ -3757,6 +3757,42 @@ const getAccessibleWarehouses = (branchId: string) => {
 
 ---
 
+### January 20, 2026 - Session: Production Document Upload Fix
+**Agent:** Claude Opus 4.5
+**Work Done:**
+
+Fixed document upload 500 error in production caused by incorrect storage path resolution.
+
+#### Problem
+Users couldn't upload documents - all uploads failed with:
+```
+EACCES: permission denied, mkdir '/storage'
+```
+
+#### Root Cause
+`fileStorage.ts` was calculating path incorrectly:
+- `__dirname` in Docker = `/app/dist/services`
+- Going up **3** levels = `/` (root filesystem!)
+- Result: Tried to create `/storage/documents` at root where nodejs has no permission
+
+#### Fix Applied (`app/src/services/fileStorage.ts`)
+Changed to go up only **2** levels:
+```typescript
+// BEFORE (broken):
+const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..');
+
+// AFTER (fixed):
+const APP_ROOT = path.resolve(__dirname, '..', '..');
+```
+
+Now correctly resolves to `/app/storage/documents` which matches the Docker volume mount.
+
+**Results:**
+- Document uploads working in production ✅
+- Storage path: `/app/storage/documents` ✅
+
+---
+
 ### January 16, 2026 - Session: Branch-Restricted Exec Role
 **Agent:** Claude Opus 4.5
 **Work Done:**
