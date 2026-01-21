@@ -228,6 +228,9 @@ export async function processCommercialInvoiceDocument(
   let imagePaths: string[] = [];
   let wasConverted = false;
   const startTime = Date.now();
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/0351c484-bc79-48a7-8b30-3870c2e1206d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'documentExtraction.ts:processCI:start',message:'processCommercialInvoiceDocument started',data:{filePath,isPdf:path.extname(filePath).toLowerCase()==='.pdf'},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
 
   try {
     logger.info(`📄 Processing Commercial Invoice: ${path.basename(filePath)}`);
@@ -235,7 +238,14 @@ export async function processCommercialInvoiceDocument(
     // If PDF, convert ALL pages to images (for multi-document PDFs)
     if (path.extname(filePath).toLowerCase() === '.pdf') {
       logger.info('📋 Converting PDF pages to images (may contain multiple documents)...');
+      // #region agent log
+      const pdfConversionStart = Date.now();
+      fetch('http://127.0.0.1:7242/ingest/0351c484-bc79-48a7-8b30-3870c2e1206d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'documentExtraction.ts:processCI:pdf-conversion-start',message:'Starting PDF to images conversion',data:{elapsed:Date.now()-startTime},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       imagePaths = await convertPdfToImages(filePath);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/0351c484-bc79-48a7-8b30-3870c2e1206d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'documentExtraction.ts:processCI:pdf-conversion-end',message:'PDF conversion completed',data:{elapsed:Date.now()-startTime,conversionTime:Date.now()-pdfConversionStart,pageCount:imagePaths.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       wasConverted = true;
       logger.info(`✅ PDF converted: ${imagePaths.length} pages`);
     } else {
@@ -245,7 +255,14 @@ export async function processCommercialInvoiceDocument(
 
     // Extract data using OpenAI Vision (pass all pages for multi-document detection)
     logger.info('🤖 Extracting Commercial Invoice data with OpenAI Vision...');
+    // #region agent log
+    const openaiStart = Date.now();
+    fetch('http://127.0.0.1:7242/ingest/0351c484-bc79-48a7-8b30-3870c2e1206d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'documentExtraction.ts:processCI:openai-start',message:'Starting OpenAI Vision extraction',data:{elapsed:Date.now()-startTime,pageCount:imagePaths.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
     const result = await extractFromCommercialInvoice(imagePaths.length === 1 ? imagePaths[0] : imagePaths);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/0351c484-bc79-48a7-8b30-3870c2e1206d',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'documentExtraction.ts:processCI:openai-end',message:'OpenAI Vision extraction completed',data:{elapsed:Date.now()-startTime,openaiTime:Date.now()-openaiStart,success:result.success,confidence:result.confidence},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
+    // #endregion
 
     if (!result.success) {
       throw new Error(result.warnings[0] || 'Extraction failed');

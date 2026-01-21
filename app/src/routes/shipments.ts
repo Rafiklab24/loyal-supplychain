@@ -15,6 +15,7 @@ import { validateShipmentLogic } from '../validators/shipmentLogic';
 import logger from '../utils/logger';
 import { withTransaction } from '../utils/transactions';
 import { getFirstRowOrNull } from '../types/database';
+import { withTimeout } from '../middleware/timeout';
 import { parsePagination, createPaginatedResponse } from '../utils/pagination';
 
 const router = Router();
@@ -2617,6 +2618,7 @@ router.post('/:id/lines/link', async (req, res, next) => {
 
 router.post(
   '/extract-from-bol',
+  withTimeout(120000), // 2 minute timeout for AI processing
   upload.single('file'),
   async (req, res, next) => {
     logger.info('🚀 BOL Extract endpoint hit!');
@@ -2720,6 +2722,7 @@ router.post(
 
 router.post(
   '/extract-from-ci',
+  withTimeout(120000), // 2 minute timeout for AI processing (matching proforma extraction)
   upload.single('file'),
   async (req, res, next) => {
     logger.info('🚀 Commercial Invoice Extract endpoint hit!');
