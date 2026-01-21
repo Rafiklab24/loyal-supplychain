@@ -93,10 +93,11 @@ export function useUpdateLot() {
 // INVENTORY
 // ============================================================
 
-export function useAntrepoInventory(filters: InventoryFilters = {}) {
+export function useAntrepoInventory(filters?: InventoryFilters) {
   return useQuery({
-    queryKey: antrepoKeys.inventory(filters),
-    queryFn: () => antrepoService.getInventory(filters),
+    queryKey: antrepoKeys.inventory(filters || {}),
+    queryFn: () => antrepoService.getInventory(filters || {}),
+    enabled: !!filters,
   });
 }
 

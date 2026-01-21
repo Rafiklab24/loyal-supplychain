@@ -21,6 +21,7 @@ import {
   CircleStackIcon,
   InboxStackIcon,
   ExclamationTriangleIcon,
+  WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import { useAuth } from '../../contexts/AuthContext';
@@ -81,13 +82,14 @@ const navigation: NavItem[] = [
     ]
   },
   { 
-    name: 'nav.antrepo', 
-    href: '/antrepo', 
+    name: 'nav.stock', 
+    href: '/stock', 
     icon: CircleStackIcon,
     module: 'antrepo',
     subItems: [
+      { name: 'nav.stockDashboard', href: '/stock', icon: ChartBarIcon, module: 'antrepo' },
       { name: 'nav.antrepoDashboard', href: '/antrepo', icon: CircleStackIcon, module: 'antrepo' },
-      { name: 'nav.antrepoLots', href: '/antrepo-lots', icon: ArchiveBoxIcon, module: 'antrepo' },
+      { name: 'nav.elleclemeDashboard', href: '/ellecleme', icon: WrenchScrewdriverIcon, module: 'ellecleme' },
     ]
   },
   { name: 'nav.cafeDashboard', href: '/cafe', icon: CubeIcon, module: 'cafe' },

@@ -21,9 +21,13 @@ import {
   FunnelIcon,
   XMarkIcon,
   BuildingOfficeIcon,
+  WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
 import { EFaturaCard } from '../components/efatura/EFaturaCard';
 import { BeyanameCard } from '../components/efatura/BeyanameCard';
+import { Link } from 'react-router-dom';
+import { useElleclemeRequests, useElleclemeDashboard } from '../hooks/useEllecleme';
+import { getStatusColor, type ElleclemeRequest, type ElleclemeStatus } from '../services/ellecleme';
 import { Pagination } from '../components/common/Pagination';
 import { Spinner } from '../components/common/Spinner';
 import { useToast } from '../components/common/Toast';
@@ -48,7 +52,7 @@ import type {
 } from '../services/efatura';
 import { uploadDocument } from '../services/documents';
 
-type TabType = 'pending' | 'archive' | 'beyaname';
+type TabType = 'pending' | 'beyaname' | 'ellecleme' | 'archive';
 
 const EFaturaPage = () => {
   const { i18n } = useTranslation();
@@ -93,6 +97,15 @@ const EFaturaPage = () => {
     total: 0,
   });
   const [beyanameStatus, setBeyanameStatus] = useState<'pending' | 'issued' | 'completed' | 'all'>('pending');
+
+  // Elleçleme state (for Ragıp to process)
+  const [elleclemeStatus, setElleclemeStatus] = useState<ElleclemeStatus | undefined>('draft');
+  const { data: elleclemeData, isLoading: elleclemeLoading, refetch: refetchEllecleme } = useElleclemeRequests({
+    status: elleclemeStatus,
+    page: pagination.page,
+    limit: pagination.limit,
+  });
+  const { data: elleclemeDashboard } = useElleclemeDashboard();
 
   // Fetch summary counts
   const fetchSummary = useCallback(async () => {
@@ -198,6 +211,9 @@ const EFaturaPage = () => {
     }
     if (tab !== 'beyaname') {
       setBeyanameStatus('pending');
+    }
+    if (tab !== 'ellecleme') {
+      setElleclemeStatus('draft');
     }
   };
 
@@ -398,6 +414,26 @@ const EFaturaPage = () => {
             </button>
             <button
               type="button"
+              onClick={() => handleTabChange('ellecleme')}
+              className={`
+                flex-1 py-4 px-6 text-center font-medium text-sm transition-colors
+                flex items-center justify-center gap-2
+                ${activeTab === 'ellecleme'
+                  ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50/50'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }
+              `}
+            >
+              <WrenchScrewdriverIcon className="h-5 w-5" />
+              <span>{isRtl ? 'إليجلمه' : 'Elleçleme'}</span>
+              {(elleclemeDashboard?.summary?.draft_count || 0) > 0 && (
+                <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-semibold">
+                  {elleclemeDashboard?.summary?.draft_count || 0}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
               onClick={() => handleTabChange('archive')}
               className={`
                 flex-1 py-4 px-6 text-center font-medium text-sm transition-colors
@@ -423,6 +459,7 @@ const EFaturaPage = () => {
         <div className={`px-6 py-3 text-sm ${
           activeTab === 'pending' ? 'bg-amber-50 text-amber-800' : 
           activeTab === 'beyaname' ? 'bg-purple-50 text-purple-800' :
+          activeTab === 'ellecleme' ? 'bg-blue-50 text-blue-800' :
           'bg-emerald-50 text-emerald-800'
         }`}>
           {activeTab === 'pending' ? (
@@ -439,6 +476,14 @@ const EFaturaPage = () => {
               {isRtl 
                 ? 'شحنات الاستيراد المتجهة إلى الأنتريبو - تحتاج إلى بيانامة'
                 : 'Import shipments destined to Antrepo warehouse - Require Beyaname'
+              }
+            </div>
+          ) : activeTab === 'ellecleme' ? (
+            <div className="flex items-center gap-2">
+              <WrenchScrewdriverIcon className="h-4 w-4" />
+              {isRtl 
+                ? 'طلبات الإليجلمه (المناولة) من المستودع - تحتاج إلى معالجة'
+                : 'Elleçleme (Handling) requests from warehouse - Need processing'
               }
             </div>
           ) : (
@@ -598,10 +643,100 @@ const EFaturaPage = () => {
 
         {/* Content */}
         <div className="p-4">
-          {loading ? (
+          {loading && activeTab !== 'ellecleme' ? (
             <div className="flex items-center justify-center py-20">
               <Spinner size="lg" />
             </div>
+          ) : activeTab === 'ellecleme' ? (
+            // Elleçleme Tab Content (for Ragıp)
+            elleclemeLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Spinner size="lg" />
+              </div>
+            ) : !elleclemeData?.data || elleclemeData.data.length === 0 ? (
+              <div className="py-12 text-center">
+                <WrenchScrewdriverIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {isRtl ? 'لا توجد طلبات إليجلمه' : 'No Elleçleme Requests'}
+                </h3>
+                <p className="text-gray-500">
+                  {isRtl ? 'لا توجد طلبات مناولة تحتاج إلى معالجة' : 'No handling requests need processing'}
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Elleçleme Status Filter */}
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="text-sm text-gray-600">{isRtl ? 'تصفية بالحالة:' : 'Filter by status:'}</span>
+                  <select
+                    value={elleclemeStatus || ''}
+                    onChange={(e) => setElleclemeStatus(e.target.value as ElleclemeStatus || undefined)}
+                    className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white"
+                  >
+                    <option value="draft">{isRtl ? 'مسودة (للاستلام)' : 'Draft (To Pickup)'}</option>
+                    <option value="pending_permit">{isRtl ? 'في انتظار التصريح' : 'Pending Permit'}</option>
+                    <option value="approved">{isRtl ? 'موافق عليه' : 'Approved'}</option>
+                    <option value="in_progress">{isRtl ? 'قيد التنفيذ' : 'In Progress'}</option>
+                    <option value="pending_confirmation">{isRtl ? 'في انتظار التأكيد' : 'Pending Confirmation'}</option>
+                    <option value="">{isRtl ? 'الكل' : 'All'}</option>
+                  </select>
+                </div>
+
+                {/* Elleçleme Request Cards */}
+                <div className="space-y-3">
+                  {elleclemeData.data.map((request: ElleclemeRequest) => (
+                    <Link
+                      key={request.id}
+                      to={`/ellecleme/requests/${request.id}`}
+                      className="block p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md hover:border-blue-300 transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="font-mono font-bold text-blue-600">{request.request_number}</span>
+                            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(request.status)}`}>
+                              {isRtl 
+                                ? request.status === 'draft' ? 'مسودة'
+                                : request.status === 'pending_permit' ? 'انتظار التصريح'
+                                : request.status === 'approved' ? 'موافق عليه'
+                                : request.status === 'in_progress' ? 'قيد التنفيذ'
+                                : request.status === 'pending_confirmation' ? 'انتظار التأكيد'
+                                : request.status === 'completed' ? 'مكتمل'
+                                : request.status
+                                : request.status.replace('_', ' ')
+                              }
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-800 font-medium mb-1">
+                            {request.activity_code} - {i18n.language === 'ar' ? request.activity_name_ar : i18n.language === 'tr' ? request.activity_name_tr : request.activity_name}
+                          </p>
+                          <p className="text-sm text-gray-600">{request.product_text}</p>
+                          <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                            <span>{request.lot_code}</span>
+                            {request.quantity_mt && <span>{Number(request.quantity_mt).toLocaleString()} MT</span>}
+                            {request.requested_by_name && <span>{isRtl ? 'طلب من:' : 'From:'} {request.requested_by_name}</span>}
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {request.requested_date && new Date(request.requested_date).toLocaleDateString('en-GB')}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {elleclemeData.pagination?.pages > 1 && (
+                  <div className="flex justify-center mt-6">
+                    <Pagination
+                      currentPage={pagination.page}
+                      totalPages={elleclemeData.pagination.pages}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                )}
+              </>
+            )
           ) : activeTab === 'beyaname' ? (
             // Beyaname Tab Content
             beyanameShipments.length === 0 ? (

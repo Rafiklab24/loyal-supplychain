@@ -11,6 +11,7 @@ import arFinance from './locales/ar/finance.json';
 import arDocuments from './locales/ar/documents.json';
 import arCustoms from './locales/ar/customs.json';
 import arOperations from './locales/ar/operations.json';
+import arEllecleme from './locales/ar/ellecleme.json';
 
 // English namespace imports
 import enCommon from './locales/en/common.json';
@@ -21,6 +22,7 @@ import enFinance from './locales/en/finance.json';
 import enDocuments from './locales/en/documents.json';
 import enCustoms from './locales/en/customs.json';
 import enOperations from './locales/en/operations.json';
+import enEllecleme from './locales/en/ellecleme.json';
 
 // Turkish namespace imports
 import trCommon from './locales/tr/common.json';
@@ -31,6 +33,7 @@ import trFinance from './locales/tr/finance.json';
 import trDocuments from './locales/tr/documents.json';
 import trCustoms from './locales/tr/customs.json';
 import trOperations from './locales/tr/operations.json';
+import trEllecleme from './locales/tr/ellecleme.json';
 
 // Merge all namespaces into single translation object per language
 // This maintains backward compatibility - all keys work with default namespace
@@ -52,7 +55,8 @@ i18n
           arFinance,
           arDocuments,
           arCustoms,
-          arOperations
+          arOperations,
+          arEllecleme
         ),
       },
       en: {
@@ -64,7 +68,8 @@ i18n
           enFinance,
           enDocuments,
           enCustoms,
-          enOperations
+          enOperations,
+          enEllecleme
         ),
       },
       tr: {
@@ -76,7 +81,8 @@ i18n
           trFinance,
           trDocuments,
           trCustoms,
-          trOperations
+          trOperations,
+          trEllecleme
         ),
       },
     },

@@ -36,9 +36,19 @@ export const createInventorySchema = z.object({
   entry_date: z.string().optional(), // DATE string
   expected_exit_date: z.string().optional(),
   entry_declaration_no: z.string().max(100).optional(),
-  original_quantity_mt: z.number().positive(),
+  // Legacy field (for backward compatibility)
+  original_quantity_mt: z.number().positive().optional(),
   quantity_bags: z.number().int().nonnegative().optional(),
   quantity_containers: z.number().int().nonnegative().optional(),
+  // Dual Stock Fields - Customs (from paperwork)
+  customs_quantity_mt: z.number().positive().optional(),
+  customs_bags: z.number().int().nonnegative().optional(),
+  // Dual Stock Fields - Actual (after weighing/counting)
+  actual_quantity_mt: z.number().positive().optional(),
+  actual_bags: z.number().int().nonnegative().optional(),
+  // Discrepancy notes (optional explanation for significant differences)
+  discrepancy_notes: z.string().max(2000).optional(),
+  // Product info
   product_text: z.string().max(500).optional(),
   product_gtip: z.string().max(20).optional(),
   origin_country: z.string().max(100).optional(),
@@ -54,6 +64,12 @@ export const updateInventorySchema = z.object({
   expected_exit_date: z.string().optional(),
   entry_declaration_no: z.string().max(100).optional(),
   product_gtip: z.string().max(20).optional(),
+  // Dual Stock Fields can be updated if corrections needed
+  customs_quantity_mt: z.number().positive().optional(),
+  customs_bags: z.number().int().nonnegative().optional(),
+  actual_quantity_mt: z.number().positive().optional(),
+  actual_bags: z.number().int().nonnegative().optional(),
+  discrepancy_notes: z.string().max(2000).optional(),
   is_third_party: z.boolean().optional(),
   third_party_owner: z.string().max(200).optional(),
   third_party_contact: z.string().max(200).optional(),
@@ -78,8 +94,13 @@ export const transferInventorySchema = z.object({
 const baseExitSchema = z.object({
   inventory_id: z.string().uuid(),
   exit_date: z.string().optional(), // DATE string
+  // Actual exit quantities (physical amount being moved)
   quantity_mt: z.number().positive(),
   quantity_bags: z.number().int().nonnegative().optional(),
+  // Customs exit quantities (paperwork/declared amount for customs)
+  // If not provided, defaults to same as actual quantities
+  customs_quantity_mt: z.number().positive().optional(),
+  customs_quantity_bags: z.number().int().nonnegative().optional(),
   declaration_no: z.string().max(100).optional(),
   declaration_date: z.string().optional(),
   notes: z.string().max(2000).optional(),

@@ -9,7 +9,7 @@ import type {
   CreateCostFromPendingInput,
 } from '../types/api';
 
-const BASE_URL = '/customs-clearing-costs';
+const BASE_URL = '/v1/customs-clearing-costs';
 
 /**
  * Customs Clearing Costs API Service

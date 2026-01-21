@@ -67,7 +67,8 @@ export type Module =
   | 'quality'
   | 'cafe'
   | 'cashbox'
-  | 'antrepo';
+  | 'antrepo'
+  | 'ellecleme';
 
 export type PermissionLevel = 'full' | 'read' | 'none';
 
@@ -91,6 +92,7 @@ const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>> = {
     cafe: 'full',
     cashbox: 'full',
     antrepo: 'full',
+    ellecleme: 'full',
   },
   Exec: {
     users: 'none',
@@ -109,6 +111,7 @@ const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>> = {
     quality: 'full', // Exec can review quality incidents
     cafe: 'read', // Can vote
     antrepo: 'read',
+    ellecleme: 'read',
   },
   Correspondence: {
     users: 'none',
@@ -196,6 +199,7 @@ const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>> = {
     quality: 'none',
     cafe: 'read', // Can vote
     antrepo: 'read', // Can view antrepo for customs purposes
+    ellecleme: 'full', // Full access to Elleçleme for permit management
   },
   Accounting: {
     users: 'none',
@@ -269,6 +273,7 @@ const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>> = {
     cafe: 'read',
     cashbox: 'none',
     antrepo: 'full', // Full access to antrepo management
+    ellecleme: 'full', // Full access to Elleçleme handling operations
   },
 };
 
@@ -297,6 +302,7 @@ export const PATH_TO_MODULE: Record<string, Module> = {
   '/analytics': 'analytics',
   '/accounting': 'accounting',
   '/tasks': 'dashboard',
+  '/ellecleme': 'ellecleme',
   '/inventory': 'inventory',
   '/quality-incidents': 'quality',
   '/quality-incident': 'quality',

@@ -32,6 +32,7 @@ import { AuditLogViewer } from '../components/audit/AuditLogViewer';
 import { DemurrageStatusBadge } from '../components/shipments/DemurrageStatusBadge';
 import { DocumentPanel } from '../components/documents';
 import { TransactionsPanel } from '../components/finance';
+import ElleclemeHistoryPanel from '../components/ellecleme/ElleclemeHistoryPanel';
 import { updateShipment } from '../services/shipments';
 import { companiesService } from '../services/companies';
 import { 
@@ -1531,6 +1532,14 @@ export function ShipmentDetailPage() {
           entityType="shipment"
           entityId={shipment.id}
           entityRef={shipment.sn}
+        />
+      )}
+
+      {/* Elleçleme History */}
+      {shipment?.id && (
+        <ElleclemeHistoryPanel
+          shipmentId={shipment.id}
+          shipmentSn={shipment.sn}
         />
       )}
 

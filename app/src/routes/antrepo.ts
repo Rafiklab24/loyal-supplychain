@@ -90,11 +90,24 @@ router.get('/dashboard', async (req: Request, res: Response) => {
       antrepoFilter = `AND al.antrepo_id = $${paramIndex++}`;
     }
 
-    // Summary statistics
+    // Summary statistics with dual-stock tracking
     const summaryResult = await pool.query(`
       SELECT 
         COUNT(DISTINCT ai.id) AS total_items,
+        -- Legacy field
         COALESCE(SUM(ai.current_quantity_mt), 0) AS total_quantity_mt,
+        -- Dual stock: Customs (paperwork) totals
+        COALESCE(SUM(COALESCE(ai.customs_quantity_mt, ai.original_quantity_mt)), 0) AS total_customs_mt,
+        COALESCE(SUM(COALESCE(ai.customs_bags, ai.quantity_bags)), 0) AS total_customs_bags,
+        -- Dual stock: Actual (physical) totals
+        COALESCE(SUM(COALESCE(ai.actual_quantity_mt, ai.current_quantity_mt)), 0) AS total_actual_mt,
+        COALESCE(SUM(COALESCE(ai.actual_bags, ai.quantity_bags)), 0) AS total_actual_bags,
+        -- Total discrepancy
+        COALESCE(SUM(COALESCE(ai.weight_discrepancy_mt, 0)), 0) AS total_discrepancy_mt,
+        COALESCE(SUM(COALESCE(ai.bags_discrepancy, 0)), 0) AS total_discrepancy_bags,
+        -- Items with discrepancies
+        COUNT(DISTINCT ai.id) FILTER (WHERE COALESCE(ai.weight_discrepancy_mt, 0) != 0 OR COALESCE(ai.bags_discrepancy, 0) != 0) AS items_with_discrepancy,
+        -- Third party
         COUNT(DISTINCT ai.id) FILTER (WHERE ai.is_third_party = TRUE) AS third_party_items,
         COALESCE(SUM(ai.current_quantity_mt) FILTER (WHERE ai.is_third_party = TRUE), 0) AS third_party_quantity_mt,
         COUNT(DISTINCT al.id) AS lots_in_use
@@ -522,47 +535,97 @@ router.get('/inventory/:id', validateParams(inventoryIdSchema), async (req: Requ
 
 /**
  * @route POST /api/antrepo/inventory
- * @desc Record goods entry into antrepo
+ * @desc Record goods entry into antrepo with dual-stock tracking
+ * 
+ * Supports dual-stock tracking:
+ * - customs_quantity_mt / customs_bags: Paperwork values (for customs authority)
+ * - actual_quantity_mt / actual_bags: Physical values after weighing/counting
+ * 
+ * If shipment_id is provided, customs values can be auto-filled from shipment cargo data.
  */
 router.post('/inventory', validateBody(createInventorySchema), async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;
     const data = req.body;
 
-    // If shipment_id provided, get product info
+    // Initialize values
     let productText = data.product_text;
     let originCountry = data.origin_country;
+    let customsQuantityMt = data.customs_quantity_mt;
+    let customsBags = data.customs_bags;
     
-    if (data.shipment_id && !productText) {
+    // If shipment_id provided, get product info and paperwork quantities
+    if (data.shipment_id) {
       const shipmentResult = await pool.query(`
-        SELECT sc.product_text, sc.country_of_origin
+        SELECT 
+          sc.product_text,
+          sc.country_of_origin,
+          sc.weight_ton AS paperwork_weight_mt,
+          sc.bags_count AS paperwork_bags
         FROM logistics.shipment_cargo sc
         WHERE sc.shipment_id = $1
       `, [data.shipment_id]);
       
       if (shipmentResult.rows[0]) {
-        productText = shipmentResult.rows[0].product_text;
-        originCountry = shipmentResult.rows[0].country_of_origin;
+        // Auto-fill product info if not provided
+        if (!productText) {
+          productText = shipmentResult.rows[0].product_text;
+        }
+        if (!originCountry) {
+          originCountry = shipmentResult.rows[0].country_of_origin;
+        }
+        // Auto-fill customs quantities from shipment paperwork if not provided
+        if (!customsQuantityMt && shipmentResult.rows[0].paperwork_weight_mt) {
+          customsQuantityMt = shipmentResult.rows[0].paperwork_weight_mt;
+        }
+        if (!customsBags && shipmentResult.rows[0].paperwork_bags) {
+          customsBags = shipmentResult.rows[0].paperwork_bags;
+        }
       }
     }
+
+    // Determine actual values (user-provided or fallback to customs if not provided)
+    const actualQuantityMt = data.actual_quantity_mt || customsQuantityMt || data.original_quantity_mt;
+    const actualBags = data.actual_bags ?? customsBags ?? data.quantity_bags;
+    
+    // Use customs values or fallback to legacy original_quantity_mt
+    customsQuantityMt = customsQuantityMt || data.original_quantity_mt;
+    customsBags = customsBags ?? data.quantity_bags;
+
+    // Calculate discrepancies: positive = shortage (customs > actual)
+    const weightDiscrepancyMt = (customsQuantityMt || 0) - (actualQuantityMt || 0);
+    const bagsDiscrepancy = (customsBags || 0) - (actualBags || 0);
 
     const result = await pool.query(`
       INSERT INTO logistics.antrepo_inventory (
         shipment_id, shipment_line_id, lot_id,
         entry_date, expected_exit_date, entry_declaration_no,
+        -- Legacy fields (for backward compatibility)
         original_quantity_mt, current_quantity_mt,
         quantity_bags, quantity_containers,
+        -- Dual-stock: Customs (paperwork)
+        customs_quantity_mt, customs_bags,
+        -- Dual-stock: Actual (physical)
+        actual_quantity_mt, actual_bags,
+        original_actual_quantity_mt, original_actual_bags,
+        -- Discrepancy tracking
+        weight_discrepancy_mt, bags_discrepancy, discrepancy_notes,
+        -- Product info
         product_text, product_gtip, origin_country,
         is_third_party, third_party_owner, third_party_contact, third_party_ref,
         notes, created_by
       ) VALUES (
         $1, $2, $3,
         COALESCE($4, CURRENT_DATE), $5, $6,
-        $7, $7,
-        $8, $9,
-        $10, $11, $12,
-        $13, $14, $15, $16,
-        $17, $18
+        $7, $8,
+        $9, $10,
+        $11, $12,
+        $13, $14,
+        $15, $16,
+        $17, $18, $19,
+        $20, $21, $22,
+        $23, $24, $25, $26,
+        $27, $28
       )
       RETURNING *
     `, [
@@ -572,9 +635,24 @@ router.post('/inventory', validateBody(createInventorySchema), async (req: Reque
       data.entry_date,
       data.expected_exit_date,
       data.entry_declaration_no,
-      data.original_quantity_mt,
-      data.quantity_bags,
+      // Legacy fields
+      customsQuantityMt, // original_quantity_mt (use customs for legacy compat)
+      actualQuantityMt,  // current_quantity_mt (use actual for live tracking)
+      actualBags,        // quantity_bags (use actual for live tracking)
       data.quantity_containers,
+      // Customs stock
+      customsQuantityMt,
+      customsBags,
+      // Actual stock
+      actualQuantityMt,
+      actualBags,
+      actualQuantityMt,  // original_actual_quantity_mt
+      actualBags,        // original_actual_bags
+      // Discrepancy
+      weightDiscrepancyMt,
+      bagsDiscrepancy,
+      data.discrepancy_notes,
+      // Product
       productText,
       data.product_gtip,
       originCountry,
@@ -967,7 +1045,13 @@ router.get('/exits', validateQuery(exitsFiltersSchema), async (req: Request, res
 
 /**
  * @route POST /api/antrepo/exits
- * @desc Record an exit from antrepo
+ * @desc Record an exit from antrepo with dual-stock tracking
+ * 
+ * Supports dual quantities:
+ * - quantity_mt / quantity_bags: Actual physical amount being moved (deducts from Actual Stock)
+ * - customs_quantity_mt / customs_quantity_bags: Declared amount on exit paperwork (deducts from Customs Stock)
+ * 
+ * If customs quantities not provided, they default to actual quantities.
  */
 router.post('/exits', validateBody(createExitSchema), async (req: Request, res: Response) => {
   try {
@@ -976,7 +1060,11 @@ router.post('/exits', validateBody(createExitSchema), async (req: Request, res: 
 
     // Verify inventory exists and has sufficient quantity
     const inventoryResult = await pool.query(`
-      SELECT * FROM logistics.antrepo_inventory
+      SELECT 
+        *,
+        COALESCE(actual_quantity_mt, current_quantity_mt) AS available_actual_mt,
+        COALESCE(customs_quantity_mt, original_quantity_mt) AS available_customs_mt
+      FROM logistics.antrepo_inventory
       WHERE id = $1 AND is_deleted = FALSE AND status IN ('in_stock', 'partial_exit')
     `, [data.inventory_id]);
 
@@ -985,57 +1073,79 @@ router.post('/exits', validateBody(createExitSchema), async (req: Request, res: 
     }
 
     const inventory = inventoryResult.rows[0];
-    if (data.quantity_mt > inventory.current_quantity_mt) {
+    
+    // Validate actual exit quantity against actual stock
+    if (data.quantity_mt > inventory.available_actual_mt) {
       return res.status(400).json({ 
-        error: `Exit quantity (${data.quantity_mt} MT) exceeds available quantity (${inventory.current_quantity_mt} MT)` 
+        error: `Actual exit quantity (${data.quantity_mt} MT) exceeds available actual stock (${inventory.available_actual_mt} MT)` 
       });
     }
 
-    // Build insert based on exit type
+    // Validate customs exit quantity against customs stock (if provided)
+    const customsQuantityMt = data.customs_quantity_mt || data.quantity_mt;
+    if (customsQuantityMt > inventory.available_customs_mt) {
+      return res.status(400).json({ 
+        error: `Customs exit quantity (${customsQuantityMt} MT) exceeds available customs stock (${inventory.available_customs_mt} MT)` 
+      });
+    }
+
+    // Build insert based on exit type - now including customs quantities
     let result;
     
     if (data.exit_type === 'transit') {
       result = await pool.query(`
         INSERT INTO logistics.antrepo_exits (
-          inventory_id, exit_date, quantity_mt, quantity_bags,
+          inventory_id, exit_date, 
+          quantity_mt, quantity_bags,
+          customs_quantity_mt, customs_quantity_bags,
           exit_type, border_crossing_id, delivery_id, transit_destination,
           declaration_no, declaration_date, notes, created_by
-        ) VALUES ($1, COALESCE($2, CURRENT_DATE), $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        ) VALUES ($1, COALESCE($2, CURRENT_DATE), $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         RETURNING *
       `, [
-        data.inventory_id, data.exit_date, data.quantity_mt, data.quantity_bags,
+        data.inventory_id, data.exit_date, 
+        data.quantity_mt, data.quantity_bags,
+        data.customs_quantity_mt || data.quantity_mt, data.customs_quantity_bags || data.quantity_bags,
         'transit', data.border_crossing_id, data.delivery_id, data.transit_destination,
         data.declaration_no, data.declaration_date, data.notes, user?.id,
       ]);
     } else if (data.exit_type === 'port') {
       result = await pool.query(`
         INSERT INTO logistics.antrepo_exits (
-          inventory_id, exit_date, quantity_mt, quantity_bags,
+          inventory_id, exit_date, 
+          quantity_mt, quantity_bags,
+          customs_quantity_mt, customs_quantity_bags,
           exit_type, destination_port_id, vessel_name, bl_no, export_country,
           declaration_no, declaration_date, notes, created_by
-        ) VALUES ($1, COALESCE($2, CURRENT_DATE), $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        ) VALUES ($1, COALESCE($2, CURRENT_DATE), $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
         RETURNING *
       `, [
-        data.inventory_id, data.exit_date, data.quantity_mt, data.quantity_bags,
+        data.inventory_id, data.exit_date, 
+        data.quantity_mt, data.quantity_bags,
+        data.customs_quantity_mt || data.quantity_mt, data.customs_quantity_bags || data.quantity_bags,
         'port', data.destination_port_id, data.vessel_name, data.bl_no, data.export_country,
         data.declaration_no, data.declaration_date, data.notes, user?.id,
       ]);
     } else if (data.exit_type === 'domestic') {
       result = await pool.query(`
         INSERT INTO logistics.antrepo_exits (
-          inventory_id, exit_date, quantity_mt, quantity_bags,
+          inventory_id, exit_date, 
+          quantity_mt, quantity_bags,
+          customs_quantity_mt, customs_quantity_bags,
           exit_type, beyaname_no, beyaname_date, tax_amount, tax_currency, customs_clearing_cost_id,
           declaration_no, declaration_date, notes, created_by
-        ) VALUES ($1, COALESCE($2, CURRENT_DATE), $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        ) VALUES ($1, COALESCE($2, CURRENT_DATE), $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         RETURNING *
       `, [
-        data.inventory_id, data.exit_date, data.quantity_mt, data.quantity_bags,
+        data.inventory_id, data.exit_date, 
+        data.quantity_mt, data.quantity_bags,
+        data.customs_quantity_mt || data.quantity_mt, data.customs_quantity_bags || data.quantity_bags,
         'domestic', data.beyaname_no, data.beyaname_date, data.tax_amount, data.tax_currency, data.customs_clearing_cost_id,
         data.declaration_no, data.declaration_date, data.notes, user?.id,
       ]);
     }
 
-    // Note: The trigger will automatically update inventory quantity and status
+    // Note: The trigger will automatically update both actual and customs stock
 
     res.status(201).json({
       success: true,
@@ -1592,6 +1702,440 @@ router.get('/activity-log', validateQuery(activityLogFiltersSchema), async (req:
   } catch (error) {
     logger.error('Error fetching activity log:', error);
     res.status(500).json({ error: 'Failed to fetch activity log' });
+  }
+});
+
+// ============================================================
+// DUAL STOCK REPORTS
+// ============================================================
+
+/**
+ * @route GET /api/antrepo/reports/customs-stock
+ * @desc Get customs stock report (paperwork values for customs authority)
+ * 
+ * Shows inventory based on customs/declared values - used for official reports to customs.
+ */
+router.get('/reports/customs-stock', async (req: Request, res: Response) => {
+  try {
+    const branchReq = req as BranchFilterRequest;
+    const { antrepo_id, lot_id, group_by } = req.query;
+
+    // Build branch filter
+    const branchFilter = buildAntrepoBranchFilter(branchReq, 'al');
+    const conditions: string[] = ['ai.is_deleted = FALSE', 'ai.status IN (\'in_stock\', \'partial_exit\')', branchFilter.clause];
+    const params: any[] = [...branchFilter.params];
+    let paramIndex = branchFilter.paramStartIndex;
+
+    if (antrepo_id) {
+      conditions.push(`al.antrepo_id = $${paramIndex++}`);
+      params.push(antrepo_id);
+    }
+
+    if (lot_id) {
+      conditions.push(`ai.lot_id = $${paramIndex++}`);
+      params.push(lot_id);
+    }
+
+    const whereClause = conditions.join(' AND ');
+
+    // Grouped summary
+    if (group_by === 'lot') {
+      const result = await pool.query(`
+        SELECT 
+          al.id AS lot_id,
+          al.code AS lot_code,
+          al.name AS lot_name,
+          b.name AS antrepo_name,
+          COUNT(ai.id) AS item_count,
+          SUM(COALESCE(ai.customs_quantity_mt, ai.original_quantity_mt)) AS total_customs_mt,
+          SUM(COALESCE(ai.customs_bags, ai.quantity_bags)) AS total_customs_bags
+        FROM logistics.antrepo_inventory ai
+        JOIN logistics.antrepo_lots al ON ai.lot_id = al.id
+        JOIN master_data.branches b ON al.antrepo_id = b.id
+        WHERE ${whereClause}
+        GROUP BY al.id, al.code, al.name, b.name
+        ORDER BY b.name, al.code
+      `, params);
+
+      return res.json({ success: true, data: result.rows, group_by: 'lot' });
+    }
+
+    if (group_by === 'product') {
+      const result = await pool.query(`
+        SELECT 
+          ai.product_text,
+          ai.origin_country,
+          COUNT(ai.id) AS item_count,
+          SUM(COALESCE(ai.customs_quantity_mt, ai.original_quantity_mt)) AS total_customs_mt,
+          SUM(COALESCE(ai.customs_bags, ai.quantity_bags)) AS total_customs_bags
+        FROM logistics.antrepo_inventory ai
+        JOIN logistics.antrepo_lots al ON ai.lot_id = al.id
+        WHERE ${whereClause}
+        GROUP BY ai.product_text, ai.origin_country
+        ORDER BY ai.product_text
+      `, params);
+
+      return res.json({ success: true, data: result.rows, group_by: 'product' });
+    }
+
+    // Detailed list (default)
+    const result = await pool.query(`
+      SELECT 
+        ai.id,
+        ai.shipment_id,
+        s.sn AS shipment_sn,
+        ai.lot_id,
+        al.code AS lot_code,
+        al.name AS lot_name,
+        b.name AS antrepo_name,
+        ai.entry_date,
+        ai.entry_declaration_no,
+        ai.product_text,
+        ai.product_gtip,
+        ai.origin_country,
+        -- Customs stock values (paperwork)
+        COALESCE(ai.customs_quantity_mt, ai.original_quantity_mt) AS customs_quantity_mt,
+        COALESCE(ai.customs_bags, ai.quantity_bags) AS customs_bags,
+        ai.quantity_containers,
+        ai.is_third_party,
+        ai.third_party_owner,
+        ai.status,
+        sp.supplier_name
+      FROM logistics.antrepo_inventory ai
+      JOIN logistics.antrepo_lots al ON ai.lot_id = al.id
+      JOIN master_data.branches b ON al.antrepo_id = b.id
+      LEFT JOIN logistics.shipments s ON ai.shipment_id = s.id
+      LEFT JOIN logistics.shipment_parties sp ON sp.shipment_id = s.id
+      WHERE ${whereClause}
+      ORDER BY b.name, al.code, ai.entry_date DESC
+    `, params);
+
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    logger.error('Error fetching customs stock report:', error);
+    res.status(500).json({ error: 'Failed to fetch customs stock report' });
+  }
+});
+
+/**
+ * @route GET /api/antrepo/reports/actual-stock
+ * @desc Get actual stock report (physical values for internal accounting)
+ * 
+ * Shows real physical inventory - used for internal accounting and operations.
+ */
+router.get('/reports/actual-stock', async (req: Request, res: Response) => {
+  try {
+    const branchReq = req as BranchFilterRequest;
+    const { antrepo_id, lot_id, group_by } = req.query;
+
+    // Build branch filter
+    const branchFilter = buildAntrepoBranchFilter(branchReq, 'al');
+    const conditions: string[] = ['ai.is_deleted = FALSE', 'ai.status IN (\'in_stock\', \'partial_exit\')', branchFilter.clause];
+    const params: any[] = [...branchFilter.params];
+    let paramIndex = branchFilter.paramStartIndex;
+
+    if (antrepo_id) {
+      conditions.push(`al.antrepo_id = $${paramIndex++}`);
+      params.push(antrepo_id);
+    }
+
+    if (lot_id) {
+      conditions.push(`ai.lot_id = $${paramIndex++}`);
+      params.push(lot_id);
+    }
+
+    const whereClause = conditions.join(' AND ');
+
+    // Grouped summary
+    if (group_by === 'lot') {
+      const result = await pool.query(`
+        SELECT 
+          al.id AS lot_id,
+          al.code AS lot_code,
+          al.name AS lot_name,
+          al.capacity_mt,
+          b.name AS antrepo_name,
+          COUNT(ai.id) AS item_count,
+          SUM(COALESCE(ai.actual_quantity_mt, ai.current_quantity_mt)) AS total_actual_mt,
+          SUM(COALESCE(ai.actual_bags, ai.quantity_bags)) AS total_actual_bags,
+          -- Capacity utilization
+          CASE WHEN al.capacity_mt > 0 
+            THEN ROUND((SUM(COALESCE(ai.actual_quantity_mt, ai.current_quantity_mt)) / al.capacity_mt) * 100, 1)
+            ELSE NULL
+          END AS capacity_utilization_pct
+        FROM logistics.antrepo_inventory ai
+        JOIN logistics.antrepo_lots al ON ai.lot_id = al.id
+        JOIN master_data.branches b ON al.antrepo_id = b.id
+        WHERE ${whereClause}
+        GROUP BY al.id, al.code, al.name, al.capacity_mt, b.name
+        ORDER BY b.name, al.code
+      `, params);
+
+      return res.json({ success: true, data: result.rows, group_by: 'lot' });
+    }
+
+    if (group_by === 'product') {
+      const result = await pool.query(`
+        SELECT 
+          ai.product_text,
+          ai.origin_country,
+          COUNT(ai.id) AS item_count,
+          SUM(COALESCE(ai.actual_quantity_mt, ai.current_quantity_mt)) AS total_actual_mt,
+          SUM(COALESCE(ai.actual_bags, ai.quantity_bags)) AS total_actual_bags,
+          -- Original received totals
+          SUM(COALESCE(ai.original_actual_quantity_mt, ai.original_quantity_mt)) AS total_original_actual_mt,
+          -- Total exited
+          SUM(COALESCE(ai.original_actual_quantity_mt, ai.original_quantity_mt) - COALESCE(ai.actual_quantity_mt, ai.current_quantity_mt)) AS total_exited_mt
+        FROM logistics.antrepo_inventory ai
+        JOIN logistics.antrepo_lots al ON ai.lot_id = al.id
+        WHERE ${whereClause}
+        GROUP BY ai.product_text, ai.origin_country
+        ORDER BY ai.product_text
+      `, params);
+
+      return res.json({ success: true, data: result.rows, group_by: 'product' });
+    }
+
+    // Detailed list (default)
+    const result = await pool.query(`
+      SELECT 
+        ai.id,
+        ai.shipment_id,
+        s.sn AS shipment_sn,
+        ai.lot_id,
+        al.code AS lot_code,
+        al.name AS lot_name,
+        b.name AS antrepo_name,
+        ai.entry_date,
+        ai.entry_declaration_no,
+        ai.product_text,
+        ai.product_gtip,
+        ai.origin_country,
+        -- Actual stock values (physical)
+        COALESCE(ai.actual_quantity_mt, ai.current_quantity_mt) AS actual_quantity_mt,
+        COALESCE(ai.actual_bags, ai.quantity_bags) AS actual_bags,
+        -- Original received values
+        COALESCE(ai.original_actual_quantity_mt, ai.original_quantity_mt) AS original_actual_quantity_mt,
+        COALESCE(ai.original_actual_bags, ai.quantity_bags) AS original_actual_bags,
+        ai.quantity_containers,
+        ai.is_third_party,
+        ai.third_party_owner,
+        ai.status,
+        (CURRENT_DATE - ai.entry_date) AS days_in_antrepo,
+        sp.supplier_name,
+        -- Exit summary
+        COALESCE(exits.total_exited_mt, 0) AS total_exited_mt,
+        exits.exit_count
+      FROM logistics.antrepo_inventory ai
+      JOIN logistics.antrepo_lots al ON ai.lot_id = al.id
+      JOIN master_data.branches b ON al.antrepo_id = b.id
+      LEFT JOIN logistics.shipments s ON ai.shipment_id = s.id
+      LEFT JOIN logistics.shipment_parties sp ON sp.shipment_id = s.id
+      LEFT JOIN LATERAL (
+        SELECT 
+          SUM(ae.quantity_mt) AS total_exited_mt,
+          COUNT(*) AS exit_count
+        FROM logistics.antrepo_exits ae
+        WHERE ae.inventory_id = ai.id AND ae.is_deleted = FALSE
+      ) exits ON TRUE
+      WHERE ${whereClause}
+      ORDER BY b.name, al.code, ai.entry_date DESC
+    `, params);
+
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    logger.error('Error fetching actual stock report:', error);
+    res.status(500).json({ error: 'Failed to fetch actual stock report' });
+  }
+});
+
+/**
+ * @route GET /api/antrepo/reports/discrepancies
+ * @desc Get stock discrepancy report (differences between customs and actual)
+ * 
+ * Shows items where customs stock differs from actual received values.
+ * Useful for internal audit and reconciliation.
+ */
+router.get('/reports/discrepancies', async (req: Request, res: Response) => {
+  try {
+    const branchReq = req as BranchFilterRequest;
+    const { antrepo_id, lot_id, min_discrepancy_pct, include_zero } = req.query;
+
+    // Build branch filter
+    const branchFilter = buildAntrepoBranchFilter(branchReq, 'al');
+    const conditions: string[] = ['ai.is_deleted = FALSE', branchFilter.clause];
+    const params: any[] = [...branchFilter.params];
+    let paramIndex = branchFilter.paramStartIndex;
+
+    if (antrepo_id) {
+      conditions.push(`al.antrepo_id = $${paramIndex++}`);
+      params.push(antrepo_id);
+    }
+
+    if (lot_id) {
+      conditions.push(`ai.lot_id = $${paramIndex++}`);
+      params.push(lot_id);
+    }
+
+    // Filter by minimum discrepancy percentage
+    if (min_discrepancy_pct) {
+      conditions.push(`
+        ABS(COALESCE(ai.weight_discrepancy_mt, 0)) / NULLIF(COALESCE(ai.customs_quantity_mt, ai.original_quantity_mt), 0) * 100 >= $${paramIndex++}
+      `);
+      params.push(parseFloat(min_discrepancy_pct as string));
+    } else if (include_zero !== 'true') {
+      // Default: only show items with discrepancies
+      conditions.push(`(COALESCE(ai.weight_discrepancy_mt, 0) != 0 OR COALESCE(ai.bags_discrepancy, 0) != 0)`);
+    }
+
+    const whereClause = conditions.join(' AND ');
+
+    const result = await pool.query(`
+      SELECT 
+        ai.id,
+        ai.shipment_id,
+        s.sn AS shipment_sn,
+        ai.lot_id,
+        al.code AS lot_code,
+        al.name AS lot_name,
+        b.name AS antrepo_name,
+        ai.entry_date,
+        ai.entry_declaration_no,
+        ai.product_text,
+        ai.origin_country,
+        -- Customs values (paperwork)
+        COALESCE(ai.customs_quantity_mt, ai.original_quantity_mt) AS customs_quantity_mt,
+        COALESCE(ai.customs_bags, ai.quantity_bags) AS customs_bags,
+        -- Original actual values (at entry)
+        COALESCE(ai.original_actual_quantity_mt, ai.original_quantity_mt) AS original_actual_quantity_mt,
+        COALESCE(ai.original_actual_bags, ai.quantity_bags) AS original_actual_bags,
+        -- Discrepancies
+        COALESCE(ai.weight_discrepancy_mt, 0) AS weight_discrepancy_mt,
+        COALESCE(ai.bags_discrepancy, 0) AS bags_discrepancy,
+        ai.discrepancy_notes,
+        -- Discrepancy percentages
+        CASE 
+          WHEN COALESCE(ai.customs_quantity_mt, ai.original_quantity_mt, 0) > 0 
+          THEN ROUND((COALESCE(ai.weight_discrepancy_mt, 0) / COALESCE(ai.customs_quantity_mt, ai.original_quantity_mt)) * 100, 2)
+          ELSE 0
+        END AS weight_discrepancy_pct,
+        CASE 
+          WHEN COALESCE(ai.customs_bags, ai.quantity_bags, 0) > 0 
+          THEN ROUND((COALESCE(ai.bags_discrepancy, 0)::NUMERIC / COALESCE(ai.customs_bags, ai.quantity_bags)) * 100, 2)
+          ELSE 0
+        END AS bags_discrepancy_pct,
+        -- Status
+        ai.status,
+        sp.supplier_name
+      FROM logistics.antrepo_inventory ai
+      JOIN logistics.antrepo_lots al ON ai.lot_id = al.id
+      JOIN master_data.branches b ON al.antrepo_id = b.id
+      LEFT JOIN logistics.shipments s ON ai.shipment_id = s.id
+      LEFT JOIN logistics.shipment_parties sp ON sp.shipment_id = s.id
+      WHERE ${whereClause}
+      ORDER BY ABS(COALESCE(ai.weight_discrepancy_mt, 0)) DESC, ai.entry_date DESC
+    `, params);
+
+    // Calculate summary
+    const summary = {
+      total_items: result.rows.length,
+      total_weight_discrepancy_mt: result.rows.reduce((sum: number, r: any) => sum + parseFloat(r.weight_discrepancy_mt || 0), 0),
+      total_bags_discrepancy: result.rows.reduce((sum: number, r: any) => sum + parseInt(r.bags_discrepancy || 0), 0),
+      items_with_shortage: result.rows.filter((r: any) => parseFloat(r.weight_discrepancy_mt) > 0).length,
+      items_with_surplus: result.rows.filter((r: any) => parseFloat(r.weight_discrepancy_mt) < 0).length,
+    };
+
+    res.json({ success: true, data: result.rows, summary });
+  } catch (error) {
+    logger.error('Error fetching discrepancy report:', error);
+    res.status(500).json({ error: 'Failed to fetch discrepancy report' });
+  }
+});
+
+/**
+ * @route GET /api/antrepo/reports/lot-occupancy
+ * @desc Get lot occupancy report showing actual stock utilization per lot
+ */
+router.get('/reports/lot-occupancy', async (req: Request, res: Response) => {
+  try {
+    const branchReq = req as BranchFilterRequest;
+    const { antrepo_id } = req.query;
+
+    // Build branch filter
+    const branchFilter = buildAntrepoBranchFilter(branchReq, 'al');
+    const conditions: string[] = ['al.is_active = TRUE', branchFilter.clause];
+    const params: any[] = [...branchFilter.params];
+    let paramIndex = branchFilter.paramStartIndex;
+
+    if (antrepo_id) {
+      conditions.push(`al.antrepo_id = $${paramIndex++}`);
+      params.push(antrepo_id);
+    }
+
+    const whereClause = conditions.join(' AND ');
+
+    const result = await pool.query(`
+      SELECT 
+        al.id AS lot_id,
+        al.code AS lot_code,
+        al.name AS lot_name,
+        al.name_ar AS lot_name_ar,
+        al.lot_type,
+        al.capacity_mt,
+        al.antrepo_id,
+        b.name AS antrepo_name,
+        b.name_ar AS antrepo_name_ar,
+        -- Inventory counts
+        COUNT(ai.id) FILTER (WHERE ai.status IN ('in_stock', 'partial_exit')) AS item_count,
+        -- Actual stock (physical) - used for space calculation
+        COALESCE(SUM(COALESCE(ai.actual_quantity_mt, ai.current_quantity_mt)) 
+          FILTER (WHERE ai.status IN ('in_stock', 'partial_exit')), 0) AS actual_stock_mt,
+        COALESCE(SUM(COALESCE(ai.actual_bags, ai.quantity_bags)) 
+          FILTER (WHERE ai.status IN ('in_stock', 'partial_exit')), 0) AS actual_stock_bags,
+        -- Customs stock (paperwork)
+        COALESCE(SUM(COALESCE(ai.customs_quantity_mt, ai.original_quantity_mt)) 
+          FILTER (WHERE ai.status IN ('in_stock', 'partial_exit')), 0) AS customs_stock_mt,
+        COALESCE(SUM(COALESCE(ai.customs_bags, ai.quantity_bags)) 
+          FILTER (WHERE ai.status IN ('in_stock', 'partial_exit')), 0) AS customs_stock_bags,
+        -- Capacity utilization (based on actual stock)
+        CASE WHEN al.capacity_mt > 0 
+          THEN ROUND(
+            COALESCE(SUM(COALESCE(ai.actual_quantity_mt, ai.current_quantity_mt)) 
+              FILTER (WHERE ai.status IN ('in_stock', 'partial_exit')), 0) / al.capacity_mt * 100, 1)
+          ELSE NULL
+        END AS utilization_pct,
+        -- Available capacity
+        CASE WHEN al.capacity_mt > 0 
+          THEN al.capacity_mt - COALESCE(SUM(COALESCE(ai.actual_quantity_mt, ai.current_quantity_mt)) 
+              FILTER (WHERE ai.status IN ('in_stock', 'partial_exit')), 0)
+          ELSE NULL
+        END AS available_capacity_mt,
+        -- Third party goods
+        COUNT(ai.id) FILTER (WHERE ai.is_third_party = TRUE AND ai.status IN ('in_stock', 'partial_exit')) AS third_party_items,
+        COALESCE(SUM(COALESCE(ai.actual_quantity_mt, ai.current_quantity_mt)) 
+          FILTER (WHERE ai.is_third_party = TRUE AND ai.status IN ('in_stock', 'partial_exit')), 0) AS third_party_stock_mt
+      FROM logistics.antrepo_lots al
+      JOIN master_data.branches b ON al.antrepo_id = b.id
+      LEFT JOIN logistics.antrepo_inventory ai ON ai.lot_id = al.id AND ai.is_deleted = FALSE
+      WHERE ${whereClause}
+      GROUP BY al.id, al.code, al.name, al.name_ar, al.lot_type, al.capacity_mt, 
+               al.antrepo_id, b.name, b.name_ar
+      ORDER BY b.name, al.sort_order, al.code
+    `, params);
+
+    // Calculate totals
+    const totals = {
+      total_lots: result.rows.length,
+      total_capacity_mt: result.rows.reduce((sum: number, r: any) => sum + (parseFloat(r.capacity_mt) || 0), 0),
+      total_actual_stock_mt: result.rows.reduce((sum: number, r: any) => sum + parseFloat(r.actual_stock_mt), 0),
+      total_customs_stock_mt: result.rows.reduce((sum: number, r: any) => sum + parseFloat(r.customs_stock_mt), 0),
+      total_items: result.rows.reduce((sum: number, r: any) => sum + parseInt(r.item_count), 0),
+    };
+
+    res.json({ success: true, data: result.rows, totals });
+  } catch (error) {
+    logger.error('Error fetching lot occupancy report:', error);
+    res.status(500).json({ error: 'Failed to fetch lot occupancy report' });
   }
 });
 

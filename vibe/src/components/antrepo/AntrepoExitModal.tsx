@@ -40,10 +40,22 @@ export default function AntrepoExitModal({ isOpen, onClose, inventory }: Antrepo
 
   // Form state
   const [exitType, setExitType] = useState<ExitType>('transit');
+  
+  // Determine available stock (use dual stock if available, fallback to legacy)
+  const availableActualMT = inventory.actual_quantity_mt ?? inventory.current_quantity_mt;
+  const availableCustomsMT = inventory.customs_quantity_mt ?? inventory.current_quantity_mt;
+  const availableActualBags = inventory.actual_bags ?? inventory.quantity_bags;
+  const availableCustomsBags = inventory.customs_bags ?? inventory.quantity_bags;
+  const hasDiscrepancy = availableActualMT !== availableCustomsMT;
+
   const [formData, setFormData] = useState({
     exit_date: new Date().toISOString().split('T')[0],
-    quantity_mt: inventory.current_quantity_mt,
-    quantity_bags: inventory.quantity_bags || undefined,
+    // Actual exit quantities (physical)
+    quantity_mt: availableActualMT,
+    quantity_bags: availableActualBags || undefined,
+    // Customs exit quantities (paperwork)
+    customs_quantity_mt: availableCustomsMT,
+    customs_quantity_bags: availableCustomsBags || undefined,
     declaration_no: '',
     declaration_date: '',
     notes: '',
@@ -63,53 +75,55 @@ export default function AntrepoExitModal({ isOpen, onClose, inventory }: Antrepo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (formData.quantity_mt <= 0 || formData.quantity_mt > inventory.current_quantity_mt) {
+    // Validate actual quantity
+    if (formData.quantity_mt <= 0 || formData.quantity_mt > availableActualMT) {
+      return;
+    }
+    // Validate customs quantity
+    if (formData.customs_quantity_mt <= 0 || formData.customs_quantity_mt > availableCustomsMT) {
       return;
     }
 
     try {
+      // Common exit data with dual quantities
+      const commonData = {
+        inventory_id: inventory.id,
+        exit_date: formData.exit_date,
+        // Actual quantities (physical)
+        quantity_mt: Number(formData.quantity_mt),
+        quantity_bags: formData.quantity_bags ? Number(formData.quantity_bags) : undefined,
+        // Customs quantities (paperwork)
+        customs_quantity_mt: Number(formData.customs_quantity_mt),
+        customs_quantity_bags: formData.customs_quantity_bags ? Number(formData.customs_quantity_bags) : undefined,
+        declaration_no: formData.declaration_no || undefined,
+        declaration_date: formData.declaration_date || undefined,
+        notes: formData.notes || undefined,
+      };
+
       let exitData: CreateExitInput;
       
       if (exitType === 'transit') {
         exitData = {
+          ...commonData,
           exit_type: 'transit',
-          inventory_id: inventory.id,
-          exit_date: formData.exit_date,
-          quantity_mt: Number(formData.quantity_mt),
-          quantity_bags: formData.quantity_bags,
-          declaration_no: formData.declaration_no || undefined,
-          declaration_date: formData.declaration_date || undefined,
           transit_destination: formData.transit_destination || undefined,
-          notes: formData.notes || undefined,
         };
       } else if (exitType === 'port') {
         exitData = {
+          ...commonData,
           exit_type: 'port',
-          inventory_id: inventory.id,
-          exit_date: formData.exit_date,
-          quantity_mt: Number(formData.quantity_mt),
-          quantity_bags: formData.quantity_bags,
-          declaration_no: formData.declaration_no || undefined,
-          declaration_date: formData.declaration_date || undefined,
           vessel_name: formData.vessel_name || undefined,
           bl_no: formData.bl_no || undefined,
           export_country: formData.export_country || undefined,
-          notes: formData.notes || undefined,
         };
       } else {
         exitData = {
+          ...commonData,
           exit_type: 'domestic',
-          inventory_id: inventory.id,
-          exit_date: formData.exit_date,
-          quantity_mt: Number(formData.quantity_mt),
-          quantity_bags: formData.quantity_bags,
-          declaration_no: formData.declaration_no || undefined,
-          declaration_date: formData.declaration_date || undefined,
           beyaname_no: formData.beyaname_no || undefined,
           beyaname_date: formData.beyaname_date || undefined,
           tax_amount: formData.tax_amount,
           tax_currency: formData.tax_currency,
-          notes: formData.notes || undefined,
         };
       }
 
@@ -131,8 +145,6 @@ export default function AntrepoExitModal({ isOpen, onClose, inventory }: Antrepo
       maximumFractionDigits: decimals,
     });
   };
-
-  const isPartialExit = Number(formData.quantity_mt) < inventory.current_quantity_mt;
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
@@ -160,20 +172,54 @@ export default function AntrepoExitModal({ isOpen, onClose, inventory }: Antrepo
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
-            {/* Inventory Info */}
+            {/* Inventory Info with Dual Stock Display */}
             <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <span className="font-mono font-bold text-indigo-600">{inventory.lot_code}</span>
                   {inventory.shipment_sn && (
                     <span className="text-sm text-slate-500">• {inventory.shipment_sn}</span>
                   )}
                 </div>
-                <span className="text-sm font-semibold text-slate-800">
-                  {formatNumber(inventory.current_quantity_mt)} MT {t('antrepo.available', 'متاح')}
-                </span>
               </div>
-              <p className="text-sm text-slate-600">{inventory.product_text || '-'}</p>
+              <p className="text-sm text-slate-600 mb-3">{inventory.product_text || '-'}</p>
+              
+              {/* Dual Stock Display */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Actual Stock */}
+                <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-200">
+                  <p className="text-xs text-emerald-600 font-medium mb-1">
+                    {t('antrepo.actualStock', 'المخزون الفعلي')}
+                  </p>
+                  <p className="text-sm font-bold text-emerald-700">
+                    {formatNumber(availableActualMT, 3)} MT
+                  </p>
+                  {availableActualBags !== undefined && (
+                    <p className="text-xs text-emerald-600">{formatNumber(availableActualBags, 0)} {t('antrepo.bags', 'كيس')}</p>
+                  )}
+                </div>
+                {/* Customs Stock */}
+                <div className="p-2 bg-amber-50 rounded-lg border border-amber-200">
+                  <p className="text-xs text-amber-600 font-medium mb-1">
+                    {t('antrepo.customsStock', 'المخزون الجمركي')}
+                  </p>
+                  <p className="text-sm font-bold text-amber-700">
+                    {formatNumber(availableCustomsMT, 3)} MT
+                  </p>
+                  {availableCustomsBags !== undefined && (
+                    <p className="text-xs text-amber-600">{formatNumber(availableCustomsBags, 0)} {t('antrepo.bags', 'كيس')}</p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Show discrepancy warning if exists */}
+              {hasDiscrepancy && (
+                <div className="mt-2 p-2 bg-red-50 rounded border border-red-200">
+                  <p className="text-xs text-red-600">
+                    ⚠️ {t('antrepo.discrepancyNote', 'يوجد فرق بين المخزون الفعلي والجمركي')}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Exit Type Selection */}
@@ -210,31 +256,99 @@ export default function AntrepoExitModal({ isOpen, onClose, inventory }: Antrepo
               </RadioGroup>
             </div>
 
-            {/* Quantity & Date */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  {t('antrepo.quantityMT', 'الكمية (طن)')} *
-                </label>
-                <input
-                  type="number"
-                  step="0.001"
-                  max={inventory.current_quantity_mt}
-                  value={formData.quantity_mt || ''}
-                  onChange={(e) => handleChange('quantity_mt', e.target.value)}
-                  required
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                    Number(formData.quantity_mt) > inventory.current_quantity_mt
-                      ? 'border-red-300 bg-red-50'
-                      : 'border-slate-300'
-                  }`}
-                />
-                {isPartialExit && Number(formData.quantity_mt) <= inventory.current_quantity_mt && (
-                  <p className="text-xs text-amber-600 mt-1">
-                    {t('antrepo.partialExit', 'خروج جزئي')} - {formatNumber(inventory.current_quantity_mt - Number(formData.quantity_mt))} MT {t('antrepo.willRemain', 'سيبقى')}
-                  </p>
-                )}
+            {/* Dual Stock Exit Quantities */}
+            <div className="space-y-4">
+              {/* Actual Exit Quantity */}
+              <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                <h4 className="text-sm font-medium text-emerald-800 mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                  {t('antrepo.actualExitQty', 'كمية الخروج الفعلية')} ({t('antrepo.physical', 'المادي')})
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-emerald-700 mb-1">
+                      {t('antrepo.weightMT', 'الوزن (طن)')} *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.001"
+                      max={availableActualMT}
+                      value={formData.quantity_mt || ''}
+                      onChange={(e) => handleChange('quantity_mt', e.target.value)}
+                      required
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
+                        Number(formData.quantity_mt) > availableActualMT
+                          ? 'border-red-300 bg-red-50'
+                          : 'border-emerald-300'
+                      }`}
+                    />
+                    {Number(formData.quantity_mt) < availableActualMT && Number(formData.quantity_mt) > 0 && (
+                      <p className="text-xs text-emerald-600 mt-1">
+                        {t('antrepo.remaining', 'متبقي')}: {formatNumber(availableActualMT - Number(formData.quantity_mt), 3)} MT
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-emerald-700 mb-1">
+                      {t('antrepo.bags', 'الأكياس')}
+                    </label>
+                    <input
+                      type="number"
+                      max={availableActualBags || 999999}
+                      value={formData.quantity_bags || ''}
+                      onChange={(e) => handleChange('quantity_bags', e.target.value ? Number(e.target.value) : undefined)}
+                      className="w-full px-3 py-2 border border-emerald-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
               </div>
+
+              {/* Customs Exit Quantity */}
+              <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <h4 className="text-sm font-medium text-amber-800 mb-3 flex items-center gap-2">
+                  <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+                  {t('antrepo.customsExitQty', 'كمية الخروج الجمركية')} ({t('antrepo.paperwork', 'الورقي')})
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-amber-700 mb-1">
+                      {t('antrepo.weightMT', 'الوزن (طن)')} *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.001"
+                      max={availableCustomsMT}
+                      value={formData.customs_quantity_mt || ''}
+                      onChange={(e) => handleChange('customs_quantity_mt', e.target.value)}
+                      required
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 ${
+                        Number(formData.customs_quantity_mt) > availableCustomsMT
+                          ? 'border-red-300 bg-red-50'
+                          : 'border-amber-300'
+                      }`}
+                    />
+                    {Number(formData.customs_quantity_mt) < availableCustomsMT && Number(formData.customs_quantity_mt) > 0 && (
+                      <p className="text-xs text-amber-600 mt-1">
+                        {t('antrepo.remaining', 'متبقي')}: {formatNumber(availableCustomsMT - Number(formData.customs_quantity_mt), 3)} MT
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-amber-700 mb-1">
+                      {t('antrepo.bags', 'الأكياس')}
+                    </label>
+                    <input
+                      type="number"
+                      max={availableCustomsBags || 999999}
+                      value={formData.customs_quantity_bags || ''}
+                      onChange={(e) => handleChange('customs_quantity_bags', e.target.value ? Number(e.target.value) : undefined)}
+                      className="w-full px-3 py-2 border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Exit Date */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
                   {t('antrepo.exitDate', 'تاريخ الخروج')}
@@ -428,7 +542,9 @@ export default function AntrepoExitModal({ isOpen, onClose, inventory }: Antrepo
                 disabled={
                   createExit.isPending ||
                   !formData.quantity_mt ||
-                  Number(formData.quantity_mt) > inventory.current_quantity_mt
+                  Number(formData.quantity_mt) > availableActualMT ||
+                  !formData.customs_quantity_mt ||
+                  Number(formData.customs_quantity_mt) > availableCustomsMT
                 }
                 className="px-6 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-slate-400 rounded-lg transition-colors"
               >

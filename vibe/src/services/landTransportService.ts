@@ -18,7 +18,7 @@ import type {
   OngoingTransportResponse,
 } from '../types/api';
 
-const BASE_URL = '/land-transport';
+const BASE_URL = '/v1/land-transport';
 
 /**
  * Land Transport API Service

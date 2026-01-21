@@ -60,25 +60,51 @@ export default function AntrepoEntryModal({ isOpen, onClose, pendingArrival }: A
     entry_date: currentDate,
     entry_time: currentTime,
     notes: '',
+    // Dual Stock Fields
+    customs_quantity_mt: '', // Paperwork weight (auto-filled from shipment)
+    customs_bags: '',        // Paperwork bags (auto-filled from shipment)
+    actual_quantity_mt: '',  // Actual weight after weighing
+    actual_bags: '',         // Actual bags after counting
+    discrepancy_notes: '',   // Notes explaining any discrepancy
   });
 
-  // Pre-fill lot from pending arrival if pre-assigned
+  // Pre-fill lot and customs quantities from pending arrival
   useEffect(() => {
-    if (pendingArrival?.assigned_lot_id) {
+    if (pendingArrival) {
       setFormData((prev) => ({
         ...prev,
-        lot_id: pendingArrival.assigned_lot_id || '',
+        lot_id: pendingArrival.assigned_lot_id || prev.lot_id,
+        // Auto-fill customs quantities from shipment paperwork
+        customs_quantity_mt: pendingArrival.weight_ton?.toString() || '',
+        customs_bags: (pendingArrival.number_of_packages || pendingArrival.bags_count)?.toString() || '',
+        // Pre-fill actual with same values (user can edit after weighing)
+        actual_quantity_mt: pendingArrival.weight_ton?.toString() || '',
+        actual_bags: (pendingArrival.number_of_packages || pendingArrival.bags_count)?.toString() || '',
       }));
     }
   }, [pendingArrival]);
 
-  // Reset step and file when modal opens/closes
+  // Reset step, file, and form when modal opens/closes
   useEffect(() => {
     if (!isOpen) {
       setStep('entry');
       setBeyanameFile(null);
+      // Reset dual stock fields
+      setFormData(prev => ({
+        ...prev,
+        customs_quantity_mt: '',
+        customs_bags: '',
+        actual_quantity_mt: '',
+        actual_bags: '',
+        discrepancy_notes: '',
+      }));
     }
   }, [isOpen]);
+
+  // Calculate discrepancies for display
+  const weightDiscrepancy = parseFloat(formData.customs_quantity_mt || '0') - parseFloat(formData.actual_quantity_mt || '0');
+  const bagsDiscrepancy = parseInt(formData.customs_bags || '0') - parseInt(formData.actual_bags || '0');
+  const hasDiscrepancy = Math.abs(weightDiscrepancy) > 0.001 || Math.abs(bagsDiscrepancy) > 0;
 
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,20 +132,18 @@ export default function AntrepoEntryModal({ isOpen, onClose, pendingArrival }: A
     const entryDateTime = `${formData.entry_date}T${formData.entry_time}:00`;
 
     try {
-      // Ensure numeric values are actually numbers (not strings from API)
-      // Use parseFloat for weight (decimal) and parseInt for counts (integers)
-      const weightValue = pendingArrival.weight_ton;
-      const quantityMt = weightValue ? parseFloat(String(weightValue)) : 0;
-      
-      const bagsValue = pendingArrival.number_of_packages || pendingArrival.bags_count;
-      const quantityBags = bagsValue ? parseInt(String(bagsValue), 10) : undefined;
+      // Parse dual-stock quantities
+      const customsQuantityMt = parseFloat(formData.customs_quantity_mt) || 0;
+      const customsBags = formData.customs_bags ? parseInt(formData.customs_bags, 10) : undefined;
+      const actualQuantityMt = parseFloat(formData.actual_quantity_mt) || 0;
+      const actualBags = formData.actual_bags ? parseInt(formData.actual_bags, 10) : undefined;
       
       const containersValue = pendingArrival.container_count;
       const quantityContainers = containersValue ? parseInt(String(containersValue), 10) : undefined;
 
-      // Validate that we have a positive quantity
-      if (quantityMt <= 0) {
-        console.error('Invalid quantity: must be greater than 0');
+      // Validate that we have positive quantities
+      if (actualQuantityMt <= 0) {
+        console.error('Invalid actual quantity: must be greater than 0');
         return;
       }
 
@@ -128,14 +152,22 @@ export default function AntrepoEntryModal({ isOpen, onClose, pendingArrival }: A
         lot_id: formData.lot_id,
         entry_date: entryDateTime,
         entry_declaration_no: formData.entry_declaration_no,
-        // Pass shipment data (read-only, from the shipment)
-        original_quantity_mt: quantityMt,
+        // Dual Stock: Customs (paperwork) values
+        customs_quantity_mt: customsQuantityMt,
+        customs_bags: customsBags,
+        // Dual Stock: Actual (physical) values
+        actual_quantity_mt: actualQuantityMt,
+        actual_bags: actualBags,
+        // Legacy field (for backward compatibility)
+        original_quantity_mt: customsQuantityMt,
+        // Product info
         product_text: pendingArrival.product_text || '',
         origin_country: pendingArrival.origin_country || '',
-        quantity_bags: quantityBags,
+        quantity_bags: actualBags, // Legacy uses actual
         quantity_containers: quantityContainers,
         is_third_party: false,
         notes: formData.notes,
+        discrepancy_notes: formData.discrepancy_notes || undefined,
       } as CreateInventoryInput);
       
       // Upload beyaname document if file was selected
@@ -346,6 +378,141 @@ export default function AntrepoEntryModal({ isOpen, onClose, pendingArrival }: A
 
               {/* Form - Only Editable Fields */}
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                {/* ===== DUAL STOCK SECTION ===== */}
+                <div className="space-y-4">
+                  {/* Customs Stock (Paperwork) */}
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="p-1.5 bg-amber-100 rounded-lg">
+                        <ScaleIcon className="h-4 w-4 text-amber-600" />
+                      </div>
+                      <h4 className="font-semibold text-amber-800">
+                        {t('antrepo.customsStock', 'المخزون الجمركي')}
+                        <span className="text-xs font-normal text-amber-600 ms-2">
+                          ({t('antrepo.fromPaperwork', 'من الأوراق')})
+                        </span>
+                      </h4>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-amber-700 mb-1">
+                          {t('antrepo.weightMT', 'الوزن (طن)')}
+                        </label>
+                        <input
+                          type="number"
+                          step="0.001"
+                          value={formData.customs_quantity_mt}
+                          onChange={(e) => handleChange('customs_quantity_mt', e.target.value)}
+                          className="w-full px-3 py-2 border border-amber-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                          placeholder="0.000"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-amber-700 mb-1">
+                          {t('antrepo.bags', 'الأكياس')}
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.customs_bags}
+                          onChange={(e) => handleChange('customs_bags', e.target.value)}
+                          className="w-full px-3 py-2 border border-amber-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
+                          placeholder="0"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actual Stock (After Weighing) */}
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="p-1.5 bg-emerald-100 rounded-lg">
+                        <ScaleIcon className="h-4 w-4 text-emerald-600" />
+                      </div>
+                      <h4 className="font-semibold text-emerald-800">
+                        {t('antrepo.actualStock', 'المخزون الفعلي')}
+                        <span className="text-xs font-normal text-emerald-600 ms-2">
+                          ({t('antrepo.afterWeighing', 'بعد الوزن')})
+                        </span>
+                      </h4>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-emerald-700 mb-1">
+                          {t('antrepo.weightMT', 'الوزن (طن)')} *
+                        </label>
+                        <input
+                          type="number"
+                          step="0.001"
+                          value={formData.actual_quantity_mt}
+                          onChange={(e) => handleChange('actual_quantity_mt', e.target.value)}
+                          required
+                          className="w-full px-3 py-2 border border-emerald-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                          placeholder="0.000"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-emerald-700 mb-1">
+                          {t('antrepo.bags', 'الأكياس')}
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.actual_bags}
+                          onChange={(e) => handleChange('actual_bags', e.target.value)}
+                          className="w-full px-3 py-2 border border-emerald-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                          placeholder="0"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Discrepancy Display (auto-calculated) */}
+                  {hasDiscrepancy && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="p-1.5 bg-red-100 rounded-lg">
+                          <ScaleIcon className="h-4 w-4 text-red-600" />
+                        </div>
+                        <h4 className="font-semibold text-red-800">
+                          {t('antrepo.discrepancy', 'الفرق')}
+                          <span className="text-xs font-normal text-red-600 ms-2">
+                            ({t('antrepo.autoCalculated', 'محسوب تلقائياً')})
+                          </span>
+                        </h4>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div className="p-2 bg-white rounded-lg border border-red-200">
+                          <span className="text-xs text-red-600">{t('antrepo.weightDiff', 'فرق الوزن')}: </span>
+                          <span className={`font-bold ${weightDiscrepancy > 0 ? 'text-red-700' : 'text-green-700'}`}>
+                            {weightDiscrepancy > 0 ? '-' : '+'}{Math.abs(weightDiscrepancy).toFixed(3)} MT
+                          </span>
+                          {weightDiscrepancy > 0 && (
+                            <span className="text-xs text-red-500 ms-1">({t('antrepo.shortage', 'نقص')})</span>
+                          )}
+                        </div>
+                        <div className="p-2 bg-white rounded-lg border border-red-200">
+                          <span className="text-xs text-red-600">{t('antrepo.bagsDiff', 'فرق الأكياس')}: </span>
+                          <span className={`font-bold ${bagsDiscrepancy > 0 ? 'text-red-700' : 'text-green-700'}`}>
+                            {bagsDiscrepancy > 0 ? '-' : '+'}{Math.abs(bagsDiscrepancy)}
+                          </span>
+                        </div>
+                      </div>
+                      {/* Discrepancy Notes */}
+                      <div>
+                        <label className="block text-xs font-medium text-red-700 mb-1">
+                          {t('antrepo.discrepancyNotes', 'ملاحظات الفرق')}
+                        </label>
+                        <textarea
+                          value={formData.discrepancy_notes}
+                          onChange={(e) => handleChange('discrepancy_notes', e.target.value)}
+                          rows={2}
+                          placeholder={t('antrepo.explainDiscrepancy', 'اشرح سبب الفرق...')}
+                          className="w-full px-3 py-2 border border-red-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-500 text-sm resize-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Lot Selection */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">

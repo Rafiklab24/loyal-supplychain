@@ -17,6 +17,7 @@ import {
   ChevronRightIcon,
   ArchiveBoxIcon,
   DocumentTextIcon,
+  WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
 import {
   useAntrepoDashboard,
@@ -26,13 +27,17 @@ import {
   useAntrepoLots,
   useArchiveInventory,
 } from '../hooks/useAntrepo';
+import { useElleclemeRequests, useElleclemeDashboard } from '../hooks/useEllecleme';
+import { getStatusColor, type ElleclemeRequest, type ElleclemeStatus } from '../services/ellecleme';
+import { Link } from 'react-router-dom';
 import { getExitTypeLabel, getStatusLabel } from '../services/antrepo';
 import type { AntrepoInventory, PendingArrival, ActivityLogEntry } from '../services/antrepo';
 import { SHIPMENT_STATUS_CONFIG } from '../types/api';
 import AntrepoEntryModal from '../components/antrepo/AntrepoEntryModal';
 import AntrepoExitModal from '../components/antrepo/AntrepoExitModal';
+import ElleclemeRequestModal from '../components/ellecleme/ElleclemeRequestModal';
 
-type TabType = 'stock' | 'arrivals' | 'activity';
+type TabType = 'stock' | 'arrivals' | 'activity' | 'ellecleme';
 
 // Helper to get translated shipment status
 const getShipmentStatusLabel = (status: string, isArabic: boolean): string => {
@@ -62,6 +67,7 @@ export default function AntrepoDashboardPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [entryModalOpen, setEntryModalOpen] = useState(false);
   const [exitModalOpen, setExitModalOpen] = useState(false);
+  const [elleclemeModalOpen, setElleclemeModalOpen] = useState(false);
   const [selectedInventory, setSelectedInventory] = useState<AntrepoInventory | null>(null);
   const [selectedArrival, setSelectedArrival] = useState<PendingArrival | null>(null);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
@@ -80,6 +86,13 @@ export default function AntrepoDashboardPage() {
   const { data: pendingArrivals, isLoading: arrivalsLoading } = usePendingArrivals();
   const { data: activityLog, isLoading: activityLoading } = useActivityLog({ limit: 50 });
   const { data: lots } = useAntrepoLots();
+  
+  // Elleçleme data for Hamza to see his requests
+  const { data: elleclemeData, isLoading: elleclemeLoading, refetch: refetchEllecleme } = useElleclemeRequests({
+    page: 1,
+    limit: 50,
+  });
+  const { data: elleclemeDashboard } = useElleclemeDashboard();
 
   // Handlers
   const handleRecordEntry = (arrival?: PendingArrival) => {
@@ -90,6 +103,11 @@ export default function AntrepoDashboardPage() {
   const handleRecordExit = (inventory: AntrepoInventory) => {
     setSelectedInventory(inventory);
     setExitModalOpen(true);
+  };
+
+  const handleEllecleme = (inventory: AntrepoInventory) => {
+    setSelectedInventory(inventory);
+    setElleclemeModalOpen(true);
   };
 
   const handleArchiveClick = (inventory: AntrepoInventory) => {
@@ -128,6 +146,7 @@ export default function AntrepoDashboardPage() {
   const tabs = [
     { id: 'stock' as const, label: t('antrepo.currentStock', 'المخزون الحالي'), icon: CubeIcon },
     { id: 'arrivals' as const, label: t('antrepo.pendingArrivals', 'الشحنات القادمة'), icon: TruckIcon },
+    { id: 'ellecleme' as const, label: t('nav.ellecleme', 'إليجلمه'), icon: WrenchScrewdriverIcon, count: elleclemeDashboard?.summary?.active_requests || 0 },
     { id: 'activity' as const, label: t('antrepo.activityLog', 'سجل النشاط'), icon: ClockIcon },
   ];
 
@@ -163,53 +182,87 @@ export default function AntrepoDashboardPage() {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {/* Total in Stock */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
+      {/* Summary Cards - Dual Stock Display */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        {/* Customs Stock (Paperwork) */}
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 shadow-sm border border-amber-200">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-indigo-100 rounded-lg">
-              <CubeIcon className="h-5 w-5 text-indigo-600" />
+            <div className="p-2 bg-amber-100 rounded-lg">
+              <DocumentTextIcon className="h-5 w-5 text-amber-600" />
             </div>
-            <span className="text-sm text-slate-600">{t('antrepo.totalInStock', 'إجمالي المخزون')}</span>
+            <span className="text-sm text-amber-700 font-medium">{t('antrepo.customsStock', 'المخزون الجمركي')}</span>
           </div>
-          <div className="text-2xl font-bold text-slate-800">
-            {dashboardLoading ? '...' : formatNumber(dashboardData?.summary.total_quantity_mt)} <span className="text-sm font-normal text-slate-500">MT</span>
+          <div className="text-2xl font-bold text-amber-800">
+            {dashboardLoading ? '...' : formatNumber(dashboardData?.summary.total_customs_mt || dashboardData?.summary.total_quantity_mt)} <span className="text-sm font-normal text-amber-600">MT</span>
+          </div>
+          <div className="text-xs text-amber-600 mt-1">
+            {formatNumber(dashboardData?.summary.total_customs_bags || 0, 0)} {t('antrepo.bags', 'كيس')}
+          </div>
+        </div>
+
+        {/* Actual Stock (Physical) */}
+        <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl p-4 shadow-sm border border-emerald-200">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-emerald-100 rounded-lg">
+              <CubeIcon className="h-5 w-5 text-emerald-600" />
+            </div>
+            <span className="text-sm text-emerald-700 font-medium">{t('antrepo.actualStock', 'المخزون الفعلي')}</span>
+          </div>
+          <div className="text-2xl font-bold text-emerald-800">
+            {dashboardLoading ? '...' : formatNumber(dashboardData?.summary.total_actual_mt || dashboardData?.summary.total_quantity_mt)} <span className="text-sm font-normal text-emerald-600">MT</span>
+          </div>
+          <div className="text-xs text-emerald-600 mt-1">
+            {formatNumber(dashboardData?.summary.total_actual_bags || 0, 0)} {t('antrepo.bags', 'كيس')}
+          </div>
+        </div>
+
+        {/* Discrepancy */}
+        <div className={`rounded-xl p-4 shadow-sm border ${
+          (dashboardData?.summary.total_discrepancy_mt || 0) !== 0 
+            ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200' 
+            : 'bg-white border-slate-100'
+        }`}>
+          <div className="flex items-center gap-3 mb-2">
+            <div className={`p-2 rounded-lg ${
+              (dashboardData?.summary.total_discrepancy_mt || 0) !== 0 ? 'bg-red-100' : 'bg-slate-100'
+            }`}>
+              <ArrowRightOnRectangleIcon className={`h-5 w-5 ${
+                (dashboardData?.summary.total_discrepancy_mt || 0) !== 0 ? 'text-red-600' : 'text-slate-500'
+              }`} />
+            </div>
+            <span className={`text-sm font-medium ${
+              (dashboardData?.summary.total_discrepancy_mt || 0) !== 0 ? 'text-red-700' : 'text-slate-600'
+            }`}>{t('antrepo.discrepancy', 'الفرق')}</span>
+          </div>
+          <div className={`text-2xl font-bold ${
+            (dashboardData?.summary.total_discrepancy_mt || 0) > 0 ? 'text-red-700' :
+            (dashboardData?.summary.total_discrepancy_mt || 0) < 0 ? 'text-green-700' : 'text-slate-800'
+          }`}>
+            {dashboardLoading ? '...' : (
+              <>
+                {(dashboardData?.summary.total_discrepancy_mt || 0) > 0 ? '-' : '+'}
+                {formatNumber(Math.abs(dashboardData?.summary.total_discrepancy_mt || 0))}
+              </>
+            )} <span className="text-sm font-normal text-slate-500">MT</span>
           </div>
           <div className="text-xs text-slate-500 mt-1">
-            {dashboardData?.summary.total_items || 0} {t('antrepo.items', 'عنصر')}
+            {dashboardData?.summary.items_with_discrepancy || 0} {t('antrepo.itemsWithDiff', 'عنصر بفرق')}
           </div>
         </div>
 
         {/* Lots in Use */}
         <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <ArchiveBoxIcon className="h-5 w-5 text-emerald-600" />
+            <div className="p-2 bg-indigo-100 rounded-lg">
+              <ArchiveBoxIcon className="h-5 w-5 text-indigo-600" />
             </div>
-            <span className="text-sm text-slate-600">{t('antrepo.lotsInUse', 'الأقسام المستخدمة')}</span>
+            <span className="text-sm text-slate-600">{t('antrepo.lotsInUse', 'الأقسام')}</span>
           </div>
           <div className="text-2xl font-bold text-slate-800">
             {dashboardLoading ? '...' : dashboardData?.summary.lots_in_use || 0}
           </div>
           <div className="text-xs text-slate-500 mt-1">
-            {lots?.length || 0} {t('antrepo.totalLots', 'إجمالي الأقسام')}
-          </div>
-        </div>
-
-        {/* Third Party */}
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-amber-100 rounded-lg">
-              <UserGroupIcon className="h-5 w-5 text-amber-600" />
-            </div>
-            <span className="text-sm text-slate-600">{t('antrepo.thirdParty', 'بضائع بالأمانة')}</span>
-          </div>
-          <div className="text-2xl font-bold text-slate-800">
-            {dashboardLoading ? '...' : formatNumber(dashboardData?.summary.third_party_quantity_mt)} <span className="text-sm font-normal text-slate-500">MT</span>
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            {dashboardData?.summary.third_party_items || 0} {t('antrepo.items', 'عنصر')}
+            {dashboardData?.summary.total_items || 0} {t('antrepo.items', 'عنصر')}
           </div>
         </div>
 
@@ -267,6 +320,11 @@ export default function AntrepoDashboardPage() {
             >
               <tab.icon className="h-5 w-5" />
               <span className="hidden md:inline">{tab.label}</span>
+              {'count' in tab && tab.count > 0 && (
+                <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full text-xs font-semibold">
+                  {tab.count}
+                </span>
+              )}
             </button>
           ))}
           
@@ -308,80 +366,104 @@ export default function AntrepoDashboardPage() {
                       <tr className="border-b border-slate-200">
                         <th className="text-start py-3 px-2 font-semibold text-slate-700">{t('antrepo.lot', 'القسم')}</th>
                         <th className="text-start py-3 px-2 font-semibold text-slate-700">{t('common.product', 'المنتج')}</th>
-                        <th className="text-start py-3 px-2 font-semibold text-slate-700">{t('antrepo.quantity', 'الكمية')}</th>
-                        <th className="text-start py-3 px-2 font-semibold text-slate-700">{t('antrepo.entryDate', 'تاريخ الدخول')}</th>
-                        <th className="text-start py-3 px-2 font-semibold text-slate-700">{t('antrepo.daysInAntrepo', 'الأيام')}</th>
+                        <th className="text-start py-3 px-2 font-semibold text-amber-700 bg-amber-50">{t('antrepo.customsQty', 'جمركي')}</th>
+                        <th className="text-start py-3 px-2 font-semibold text-emerald-700 bg-emerald-50">{t('antrepo.actualQty', 'فعلي')}</th>
+                        <th className="text-start py-3 px-2 font-semibold text-slate-700">{t('antrepo.entryDate', 'الدخول')}</th>
                         <th className="text-start py-3 px-2 font-semibold text-slate-700">{t('common.status', 'الحالة')}</th>
                         <th className="text-start py-3 px-2 font-semibold text-slate-700">{t('common.actions', 'إجراءات')}</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {inventoryData?.data.map((item) => (
-                        <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="py-3 px-2">
-                            <span className="font-mono font-semibold text-indigo-600">{item.lot_code}</span>
-                          </td>
-                          <td className="py-3 px-2">
-                            <div>
-                              <span className="font-medium text-slate-800">{item.product_text || '-'}</span>
-                              {item.shipment_sn && (
-                                <span className="block text-xs text-slate-500">{item.shipment_sn}</span>
+                      {inventoryData?.data.map((item) => {
+                        const customsMt = item.customs_quantity_mt ?? item.original_quantity_mt;
+                        const actualMt = item.actual_quantity_mt ?? item.current_quantity_mt;
+                        const hasDiscrepancy = (item.weight_discrepancy_mt ?? 0) !== 0;
+                        
+                        return (
+                          <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50">
+                            <td className="py-3 px-2">
+                              <span className="font-mono font-semibold text-indigo-600">{item.lot_code}</span>
+                            </td>
+                            <td className="py-3 px-2">
+                              <div>
+                                <span className="font-medium text-slate-800">{item.product_text || '-'}</span>
+                                {item.shipment_sn && (
+                                  <span className="block text-xs text-slate-500">{item.shipment_sn}</span>
+                                )}
+                              </div>
+                            </td>
+                            {/* Customs Stock (Paperwork) */}
+                            <td className="py-3 px-2 bg-amber-50/50">
+                              <span className="font-semibold text-amber-800">{formatNumber(customsMt)}</span>
+                              <span className="text-amber-600 text-xs"> MT</span>
+                              {item.customs_bags && (
+                                <span className="block text-xs text-amber-600">
+                                  {formatNumber(item.customs_bags, 0)} {t('antrepo.bags', 'كيس')}
+                                </span>
                               )}
-                            </div>
-                          </td>
-                          <td className="py-3 px-2">
-                            <span className="font-semibold">{formatNumber(item.current_quantity_mt)}</span>
-                            <span className="text-slate-500"> MT</span>
-                            {item.original_quantity_mt !== item.current_quantity_mt && (
-                              <span className="text-xs text-slate-400 block">
-                                / {formatNumber(item.original_quantity_mt)} {t('antrepo.original', 'أصلي')}
+                            </td>
+                            {/* Actual Stock (Physical) */}
+                            <td className="py-3 px-2 bg-emerald-50/50">
+                              <span className="font-semibold text-emerald-800">{formatNumber(actualMt)}</span>
+                              <span className="text-emerald-600 text-xs"> MT</span>
+                              {hasDiscrepancy && (
+                                <span className={`block text-xs font-medium ${
+                                  (item.weight_discrepancy_mt || 0) > 0 ? 'text-red-600' : 'text-green-600'
+                                }`}>
+                                  {(item.weight_discrepancy_mt || 0) > 0 ? '▼' : '▲'} {Math.abs(item.weight_discrepancy_mt || 0).toFixed(2)}
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-2 text-slate-600 text-xs">
+                              {item.entry_date ? new Date(item.entry_date).toLocaleDateString('en-GB') : '-'}
+                              <span className={`block ${
+                                (item.days_in_antrepo || 0) > 30 ? 'text-amber-600 font-semibold' : 'text-slate-400'
+                              }`}>
+                                {item.days_in_antrepo || 0} {t('antrepo.days', 'يوم')}
                               </span>
-                            )}
-                          </td>
-                          <td className="py-3 px-2 text-slate-600">
-                            {item.entry_date ? new Date(item.entry_date).toLocaleDateString('en-GB') : '-'}
-                          </td>
-                          <td className="py-3 px-2">
-                            <span className={`font-semibold ${
-                              (item.days_in_antrepo || 0) > 30 ? 'text-amber-600' : 'text-slate-600'
-                            }`}>
-                              {item.days_in_antrepo || 0}
-                            </span>
-                          </td>
-                          <td className="py-3 px-2">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              item.status === 'in_stock' ? 'bg-emerald-100 text-emerald-700' :
-                              item.status === 'partial_exit' ? 'bg-amber-100 text-amber-700' :
-                              'bg-slate-100 text-slate-700'
-                            }`}>
-                              {getStatusLabel(item.status, lang)}
-                            </span>
-                            {item.is_third_party && (
-                              <span className="ml-2 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                                {t('antrepo.thirdPartyBadge', 'أمانة')}
+                            </td>
+                            <td className="py-3 px-2">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                item.status === 'in_stock' ? 'bg-emerald-100 text-emerald-700' :
+                                item.status === 'partial_exit' ? 'bg-amber-100 text-amber-700' :
+                                'bg-slate-100 text-slate-700'
+                              }`}>
+                                {getStatusLabel(item.status, lang)}
                               </span>
-                            )}
-                          </td>
-                          <td className="py-3 px-2">
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => handleRecordExit(item)}
-                                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              >
-                                <ArrowRightOnRectangleIcon className="h-4 w-4" />
-                                {t('antrepo.exit', 'خروج')}
-                              </button>
-                              <button
-                                onClick={() => handleArchiveClick(item)}
-                                className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                                title={t('antrepo.archive', 'أرشفة')}
-                              >
-                                <ArchiveBoxIcon className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                              {item.is_third_party && (
+                                <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700">
+                                  {t('antrepo.thirdPartyBadge', 'أمانة')}
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-2">
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleRecordExit(item)}
+                                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                >
+                                  <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                                  {t('antrepo.exit', 'خروج')}
+                                </button>
+                                <button
+                                  onClick={() => handleEllecleme(item)}
+                                  className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                  title={t('nav.ellecleme', 'Elleçleme')}
+                                >
+                                  <WrenchScrewdriverIcon className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleArchiveClick(item)}
+                                  className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                                  title={t('antrepo.archive', 'أرشفة')}
+                                >
+                                  <ArchiveBoxIcon className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -526,6 +608,81 @@ export default function AntrepoDashboardPage() {
               )}
             </div>
           )}
+
+          {/* Elleçleme Tab - Hamza sees his requests */}
+          {activeTab === 'ellecleme' && (
+            <div>
+              {elleclemeLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                </div>
+              ) : !elleclemeData?.data || elleclemeData.data.length === 0 ? (
+                <div className="text-center py-12 text-slate-500">
+                  <WrenchScrewdriverIcon className="h-12 w-12 mx-auto mb-3 text-slate-300" />
+                  <p>{t('ellecleme.empty.noRequests', 'لا توجد طلبات إليجلمه')}</p>
+                  <p className="text-xs mt-1">{t('ellecleme.empty.noRequestsHint', 'أنشئ طلباً من قائمة المخزون')}</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {elleclemeData.data.map((request: ElleclemeRequest) => (
+                    <Link
+                      key={request.id}
+                      to={`/ellecleme/requests/${request.id}`}
+                      className="block p-4 bg-white border border-slate-200 rounded-lg hover:shadow-md hover:border-blue-300 transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="font-mono font-bold text-blue-600">{request.request_number}</span>
+                            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${getStatusColor(request.status)}`}>
+                              {t(`ellecleme.statuses.${request.status}`, request.status)}
+                            </span>
+                            {request.priority !== 'normal' && (
+                              <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                                request.priority === 'urgent' ? 'bg-red-100 text-red-700' :
+                                request.priority === 'high' ? 'bg-amber-100 text-amber-700' :
+                                'bg-slate-100 text-slate-600'
+                              }`}>
+                                {t(`ellecleme.priorities.${request.priority}`, request.priority)}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-slate-800 font-medium mb-1">
+                            {request.activity_code} - {lang === 'ar' ? request.activity_name_ar : lang === 'tr' ? request.activity_name_tr : request.activity_name}
+                          </p>
+                          <p className="text-sm text-slate-600">{request.product_text}</p>
+                          <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                            <span>{request.lot_code}</span>
+                            {request.quantity_mt && <span>{formatNumber(request.quantity_mt)} MT</span>}
+                            {request.processed_by_name && (
+                              <span className="text-blue-600">
+                                {t('ellecleme.workflow.processedBy', 'يعالج بواسطة')}: {request.processed_by_name}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          {request.requested_date && new Date(request.requested_date).toLocaleDateString('en-GB')}
+                        </div>
+                      </div>
+                      
+                      {/* Status hint for Hamza */}
+                      {request.status === 'draft' && (
+                        <div className="mt-2 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                          {t('ellecleme.workflow.awaitingPickup', 'في انتظار استلام فريق التخليص')}
+                        </div>
+                      )}
+                      {request.status === 'pending_confirmation' && (
+                        <div className="mt-2 text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                          {t('ellecleme.workflow.awaitingConfirmation', 'في انتظار تأكيدك')} - {t('common.clickToReview', 'انقر للمراجعة')}
+                        </div>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -549,6 +706,21 @@ export default function AntrepoDashboardPage() {
             setSelectedInventory(null);
           }}
           inventory={selectedInventory}
+        />
+      )}
+
+      {/* Elleçleme Request Modal */}
+      {elleclemeModalOpen && selectedInventory && (
+        <ElleclemeRequestModal
+          isOpen={elleclemeModalOpen}
+          onClose={() => {
+            setElleclemeModalOpen(false);
+            setSelectedInventory(null);
+          }}
+          inventory={selectedInventory}
+          onSuccess={() => {
+            // Optionally refetch data or show success message
+          }}
         />
       )}
 

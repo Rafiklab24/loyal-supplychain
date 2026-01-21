@@ -44,6 +44,7 @@ export const MODULES = [
   'cafe',
   'cashbox',
   'antrepo',
+  'ellecleme',
 ] as const;
 
 export type Module = typeof MODULES[number];
@@ -67,6 +68,7 @@ export const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>>
     cafe: 'full',
     cashbox: 'full',
     antrepo: 'full',
+    ellecleme: 'full',
   },
   Exec: {
     users: 'none',
@@ -83,6 +85,7 @@ export const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>>
     audit_logs: 'read',
     cafe: 'read',
     antrepo: 'read',
+    ellecleme: 'read',
   },
   Correspondence: {
     users: 'none',
@@ -160,6 +163,7 @@ export const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>>
     audit_logs: 'none',
     cafe: 'read',
     antrepo: 'read', // Can view antrepo for customs purposes
+    ellecleme: 'full', // Full access to Elleçleme for permit management
   },
   Accounting: {
     users: 'none',
@@ -225,6 +229,7 @@ export const PERMISSIONS: Record<Role, Partial<Record<Module, PermissionLevel>>>
     cafe: 'read',
     cashbox: 'none',
     antrepo: 'full', // Full access to antrepo management
+    ellecleme: 'full', // Full access to Elleçleme handling operations
   },
 };
 

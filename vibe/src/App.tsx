@@ -47,6 +47,9 @@ const CafeDashboardPage = lazy(() => import('./pages/CafeDashboardPage'));
 const CashBoxPage = lazy(() => import('./pages/CashBoxPage'));
 const AntrepoDashboardPage = lazy(() => import('./pages/AntrepoDashboardPage'));
 const AntrepoLotsPage = lazy(() => import('./pages/AntrepoLotsPage'));
+const ElleclemeDashboardPage = lazy(() => import('./pages/ElleclemeDashboardPage'));
+const ElleclemeRequestDetailPage = lazy(() => import('./pages/ElleclemeRequestDetailPage'));
+const StockDashboardPage = lazy(() => import('./pages/StockDashboardPage'));
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -433,7 +436,17 @@ function App() {
                 }
               />
 
-              {/* Antrepo - Customs Warehouse Management */}
+              {/* Stock Dashboard - Global Stock Management */}
+              <Route
+                path="/stock"
+                element={
+                    <ProtectedModuleRoute module="antrepo">
+                    <StockDashboardPage />
+                    </ProtectedModuleRoute>
+                }
+              />
+
+              {/* Antrepo - Customs Warehouse Management (legacy routes) */}
               <Route
                 path="/antrepo"
                 element={
@@ -447,6 +460,24 @@ function App() {
                 element={
                     <ProtectedModuleRoute module="antrepo" requireWrite>
                     <AntrepoLotsPage />
+                    </ProtectedModuleRoute>
+                }
+              />
+
+              {/* Elleçleme - Handling Operations Management */}
+              <Route
+                path="/ellecleme"
+                element={
+                    <ProtectedModuleRoute module="ellecleme">
+                    <ElleclemeDashboardPage />
+                    </ProtectedModuleRoute>
+                }
+              />
+              <Route
+                path="/ellecleme/requests/:id"
+                element={
+                    <ProtectedModuleRoute module="ellecleme">
+                    <ElleclemeRequestDetailPage />
                     </ProtectedModuleRoute>
                 }
               />

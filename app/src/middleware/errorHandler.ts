@@ -26,9 +26,20 @@ export function errorHandler(
   if (err.code) {
     switch (err.code) {
       case '23505': // unique_violation
+        // Extract more specific error message based on constraint
+        let conflictMessage = 'A record with this value already exists';
+        if (err.detail) {
+          if (err.detail.includes('contract_no')) {
+            conflictMessage = 'A contract with this number already exists. Please use a different contract number or edit the existing contract.';
+          } else if (err.detail.includes('username')) {
+            conflictMessage = 'This username is already taken.';
+          } else if (err.detail.includes('name')) {
+            conflictMessage = 'A record with this name already exists.';
+          }
+        }
         return res.status(409).json({
           error: 'Conflict',
-          message: 'A record with this value already exists',
+          message: conflictMessage,
           details: err.detail,
         });
       case '23503': // foreign_key_violation

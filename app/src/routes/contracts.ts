@@ -929,6 +929,20 @@ router.post('/', validateBody(ContractCreateSchema), async (req, res, next) => {
       throw new Error('Buyer and seller cannot be the same company');
     }
 
+    // ========== PRE-CHECK: Verify contract_no is unique ==========
+    if (contract_no) {
+      const existingContract = await client.query(
+        `SELECT id, contract_no FROM logistics.contracts 
+         WHERE contract_no = $1 AND is_deleted = false LIMIT 1`,
+        [contract_no]
+      );
+      if (existingContract.rows.length > 0) {
+        const error: any = new Error(`Contract number "${contract_no}" already exists. Please use a different contract number or edit the existing contract.`);
+        error.statusCode = 409;
+        throw error;
+      }
+    }
+
     // ========== 1. INSERT INTO contracts (core table) ==========
     const contractResult = await client.query(
       `INSERT INTO logistics.contracts (

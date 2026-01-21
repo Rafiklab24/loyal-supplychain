@@ -42,10 +42,24 @@ export interface AntrepoInventory {
   entry_date: string;
   expected_exit_date?: string;
   entry_declaration_no?: string;
+  // Legacy fields (for backward compatibility)
   original_quantity_mt: number;
   current_quantity_mt: number;
   quantity_bags?: number;
   quantity_containers?: number;
+  // Dual Stock: Customs (paperwork values)
+  customs_quantity_mt?: number;
+  customs_bags?: number;
+  // Dual Stock: Actual (physical values)
+  actual_quantity_mt?: number;
+  actual_bags?: number;
+  original_actual_quantity_mt?: number;
+  original_actual_bags?: number;
+  // Discrepancy tracking
+  weight_discrepancy_mt?: number;
+  bags_discrepancy?: number;
+  discrepancy_notes?: string;
+  // Product info
   product_text?: string;
   product_gtip?: string;
   origin_country?: string;
@@ -72,8 +86,12 @@ export interface AntrepoExit {
   id: string;
   inventory_id: string;
   exit_date: string;
+  // Actual exit quantities (physical amount being moved)
   quantity_mt: number;
   quantity_bags?: number;
+  // Customs exit quantities (declared amount on exit paperwork)
+  customs_quantity_mt?: number;
+  customs_quantity_bags?: number;
   exit_type: ExitType;
   // Transit fields
   border_crossing_id?: string;
@@ -235,6 +253,16 @@ export interface ActivityLogEntry {
 export interface DashboardSummary {
   total_items: number;
   total_quantity_mt: number;
+  // Dual Stock totals
+  total_customs_mt: number;
+  total_customs_bags: number;
+  total_actual_mt: number;
+  total_actual_bags: number;
+  // Discrepancy totals
+  total_discrepancy_mt: number;
+  total_discrepancy_bags: number;
+  items_with_discrepancy: number;
+  // Third party
   third_party_items: number;
   third_party_quantity_mt: number;
   lots_in_use: number;
@@ -291,9 +319,19 @@ export interface CreateInventoryInput {
   entry_date?: string;
   expected_exit_date?: string;
   entry_declaration_no?: string;
-  original_quantity_mt: number;
+  // Legacy field (for backward compatibility)
+  original_quantity_mt?: number;
   quantity_bags?: number;
   quantity_containers?: number;
+  // Dual Stock: Customs (paperwork values)
+  customs_quantity_mt?: number;
+  customs_bags?: number;
+  // Dual Stock: Actual (physical values)
+  actual_quantity_mt?: number;
+  actual_bags?: number;
+  // Discrepancy notes
+  discrepancy_notes?: string;
+  // Product info
   product_text?: string;
   product_gtip?: string;
   origin_country?: string;
@@ -325,8 +363,13 @@ export interface TransferInventoryInput {
 interface BaseExitInput {
   inventory_id: string;
   exit_date?: string;
+  // Actual exit quantities (physical amount being moved)
   quantity_mt: number;
   quantity_bags?: number;
+  // Customs exit quantities (declared amount on exit paperwork)
+  // If not provided, defaults to same as actual quantities
+  customs_quantity_mt?: number;
+  customs_quantity_bags?: number;
   declaration_no?: string;
   declaration_date?: string;
   notes?: string;
@@ -434,7 +477,7 @@ export interface ActivityLogFilters {
 // API FUNCTIONS
 // ============================================================
 
-const BASE_URL = '/antrepo';
+const BASE_URL = '/v1/antrepo';
 
 // Dashboard
 export const getDashboard = async (antrepo_id?: string): Promise<DashboardData> => {
@@ -626,5 +669,173 @@ export interface UserWarehousesResponse {
 
 export const getMyWarehouses = async (): Promise<UserWarehousesResponse> => {
   const response = await apiClient.get(`${BASE_URL}/my-warehouses`);
+  return response.data;
+};
+
+// ============================================================
+// DUAL STOCK REPORTS
+// ============================================================
+
+export interface StockReportFilters {
+  antrepo_id?: string;
+  lot_id?: string;
+  group_by?: 'lot' | 'product';
+}
+
+export interface CustomsStockItem {
+  id?: string;
+  lot_id?: string;
+  lot_code?: string;
+  lot_name?: string;
+  antrepo_name?: string;
+  shipment_sn?: string;
+  entry_date?: string;
+  entry_declaration_no?: string;
+  product_text?: string;
+  product_gtip?: string;
+  origin_country?: string;
+  customs_quantity_mt: number;
+  customs_bags?: number;
+  quantity_containers?: number;
+  is_third_party?: boolean;
+  third_party_owner?: string;
+  status?: string;
+  supplier_name?: string;
+  // For grouped results
+  item_count?: number;
+  total_customs_mt?: number;
+  total_customs_bags?: number;
+}
+
+export interface ActualStockItem {
+  id?: string;
+  lot_id?: string;
+  lot_code?: string;
+  lot_name?: string;
+  antrepo_name?: string;
+  shipment_sn?: string;
+  entry_date?: string;
+  entry_declaration_no?: string;
+  product_text?: string;
+  product_gtip?: string;
+  origin_country?: string;
+  actual_quantity_mt: number;
+  actual_bags?: number;
+  original_actual_quantity_mt?: number;
+  original_actual_bags?: number;
+  quantity_containers?: number;
+  is_third_party?: boolean;
+  third_party_owner?: string;
+  status?: string;
+  days_in_antrepo?: number;
+  supplier_name?: string;
+  total_exited_mt?: number;
+  exit_count?: number;
+  // For grouped results
+  item_count?: number;
+  total_actual_mt?: number;
+  total_actual_bags?: number;
+  total_original_actual_mt?: number;
+  capacity_utilization_pct?: number;
+}
+
+export interface DiscrepancyItem {
+  id: string;
+  shipment_id?: string;
+  shipment_sn?: string;
+  lot_id: string;
+  lot_code?: string;
+  lot_name?: string;
+  antrepo_name?: string;
+  entry_date: string;
+  entry_declaration_no?: string;
+  product_text?: string;
+  origin_country?: string;
+  customs_quantity_mt: number;
+  customs_bags?: number;
+  original_actual_quantity_mt: number;
+  original_actual_bags?: number;
+  weight_discrepancy_mt: number;
+  bags_discrepancy: number;
+  discrepancy_notes?: string;
+  weight_discrepancy_pct: number;
+  bags_discrepancy_pct: number;
+  status: string;
+  supplier_name?: string;
+}
+
+export interface DiscrepancyReportFilters extends StockReportFilters {
+  min_discrepancy_pct?: number;
+  include_zero?: boolean;
+}
+
+export interface DiscrepancySummary {
+  total_items: number;
+  total_weight_discrepancy_mt: number;
+  total_bags_discrepancy: number;
+  items_with_shortage: number;
+  items_with_surplus: number;
+}
+
+export interface LotOccupancyItem {
+  lot_id: string;
+  lot_code: string;
+  lot_name: string;
+  lot_name_ar?: string;
+  lot_type: string;
+  capacity_mt?: number;
+  antrepo_id: string;
+  antrepo_name: string;
+  antrepo_name_ar?: string;
+  item_count: number;
+  actual_stock_mt: number;
+  actual_stock_bags: number;
+  customs_stock_mt: number;
+  customs_stock_bags: number;
+  utilization_pct?: number;
+  available_capacity_mt?: number;
+  third_party_items: number;
+  third_party_stock_mt: number;
+}
+
+export interface LotOccupancyTotals {
+  total_lots: number;
+  total_capacity_mt: number;
+  total_actual_stock_mt: number;
+  total_customs_stock_mt: number;
+  total_items: number;
+}
+
+// Report API functions
+export const getCustomsStockReport = async (filters: StockReportFilters = {}): Promise<{
+  data: CustomsStockItem[];
+  group_by?: string;
+}> => {
+  const response = await apiClient.get(`${BASE_URL}/reports/customs-stock`, { params: filters });
+  return response.data;
+};
+
+export const getActualStockReport = async (filters: StockReportFilters = {}): Promise<{
+  data: ActualStockItem[];
+  group_by?: string;
+}> => {
+  const response = await apiClient.get(`${BASE_URL}/reports/actual-stock`, { params: filters });
+  return response.data;
+};
+
+export const getDiscrepancyReport = async (filters: DiscrepancyReportFilters = {}): Promise<{
+  data: DiscrepancyItem[];
+  summary: DiscrepancySummary;
+}> => {
+  const response = await apiClient.get(`${BASE_URL}/reports/discrepancies`, { params: filters });
+  return response.data;
+};
+
+export const getLotOccupancyReport = async (antrepo_id?: string): Promise<{
+  data: LotOccupancyItem[];
+  totals: LotOccupancyTotals;
+}> => {
+  const params = antrepo_id ? { antrepo_id } : {};
+  const response = await apiClient.get(`${BASE_URL}/reports/lot-occupancy`, { params });
   return response.data;
 };
