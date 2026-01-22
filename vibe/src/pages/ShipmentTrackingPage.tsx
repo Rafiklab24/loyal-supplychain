@@ -42,6 +42,15 @@ export function ShipmentTrackingPage() {
   // Status override modal state
   const [overrideModalShipment, setOverrideModalShipment] = useState<Shipment | null>(null);
   
+  // Edit Mode state - allows batch editing without immediate re-sorting
+  const [editMode, setEditMode] = useState(false);
+  const [pendingChanges, setPendingChanges] = useState<Map<string, {
+    eta?: string;
+    customs_clearance_date?: string;
+    paperwork_status?: string;
+  }>>(new Map());
+  const [isApplyingChanges, setIsApplyingChanges] = useState(false);
+  
   // Tab state - active (uncleared) or cleared shipments
   const [activeTab, setActiveTab] = useState<TrackingTab>('active');
   
@@ -106,6 +115,26 @@ export function ShipmentTrackingPage() {
   const data = rawData ? (() => {
     // Select which shipments to show based on active tab
     let shipmentsToShow = activeTab === 'cleared' ? clearedShipments : unclearedShipments;
+
+    // Skip sorting when edit mode is active to keep rows in place during editing
+    if (editMode) {
+      // Apply client-side pagination without sorting
+      const totalItems = shipmentsToShow.length;
+      const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+      const startIndex = (page - 1) * PAGE_SIZE;
+      const paginatedData = shipmentsToShow.slice(startIndex, startIndex + PAGE_SIZE);
+
+      return {
+        ...rawData,
+        data: paginatedData,
+        pagination: {
+          total: totalItems,
+          totalPages: totalPages,
+          page: page,
+          limit: PAGE_SIZE,
+        }
+      };
+    }
 
     // Apply client-side sorting for all columns
     shipmentsToShow = [...shipmentsToShow].sort((a, b) => {
@@ -315,6 +344,7 @@ export function ShipmentTrackingPage() {
   // Start editing ETA
   const handleEditETA = (shipmentId: string, currentETA: string | null, e: React.MouseEvent) => {
     e.stopPropagation();
+    setEditMode(true); // Auto-enable edit mode when editing starts
     setEditingETA(shipmentId);
     setEtaValue(currentETA || '');
   };
@@ -323,7 +353,19 @@ export function ShipmentTrackingPage() {
   const handleSaveETA = (shipmentId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (etaValue) {
-      updateETAMutation.mutate({ id: shipmentId, eta: etaValue });
+      if (editMode) {
+        // Store in pending changes instead of immediately saving
+        setPendingChanges(prev => {
+          const newMap = new Map(prev);
+          const existing = newMap.get(shipmentId) || {};
+          newMap.set(shipmentId, { ...existing, eta: etaValue });
+          return newMap;
+        });
+        setEditingETA(null);
+        setEtaValue('');
+      } else {
+        updateETAMutation.mutate({ id: shipmentId, eta: etaValue });
+      }
     } else {
       alert(i18n.language === 'ar' ? 'الرجاء إدخال تاريخ صالح' : 'Please enter a valid date');
     }
@@ -339,6 +381,7 @@ export function ShipmentTrackingPage() {
   // Start editing document status
   const handleEditDocStatus = (shipmentId: string, currentStatus: string | null, e: React.MouseEvent) => {
     e.stopPropagation();
+    setEditMode(true); // Auto-enable edit mode when editing starts
     setEditingDocStatus(shipmentId);
     setDocStatusValue(currentStatus || '');
   };
@@ -346,7 +389,19 @@ export function ShipmentTrackingPage() {
   // Save document status (allow empty to clear the status)
   const handleSaveDocStatus = (shipmentId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    updateDocStatusMutation.mutate({ id: shipmentId, paperwork_status: docStatusValue || '' });
+    if (editMode) {
+      // Store in pending changes instead of immediately saving
+      setPendingChanges(prev => {
+        const newMap = new Map(prev);
+        const existing = newMap.get(shipmentId) || {};
+        newMap.set(shipmentId, { ...existing, paperwork_status: docStatusValue || '' });
+        return newMap;
+      });
+      setEditingDocStatus(null);
+      setDocStatusValue('');
+    } else {
+      updateDocStatusMutation.mutate({ id: shipmentId, paperwork_status: docStatusValue || '' });
+    }
   };
 
   // Cancel document status editing
@@ -365,6 +420,7 @@ export function ShipmentTrackingPage() {
   // Start editing clearance date
   const handleEditClearanceDate = (shipmentId: string, currentDate: string | null, e: React.MouseEvent) => {
     e.stopPropagation();
+    setEditMode(true); // Auto-enable edit mode when editing starts
     setEditingClearanceDate(shipmentId);
     setClearanceDateValue(currentDate || '');
   };
@@ -372,11 +428,23 @@ export function ShipmentTrackingPage() {
   // Save clearance date
   const handleSaveClearanceDate = (shipmentId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (clearanceDateValue) {
-      updateClearanceDateMutation.mutate({ id: shipmentId, customs_clearance_date: clearanceDateValue });
+    if (editMode) {
+      // Store in pending changes instead of immediately saving
+      setPendingChanges(prev => {
+        const newMap = new Map(prev);
+        const existing = newMap.get(shipmentId) || {};
+        newMap.set(shipmentId, { ...existing, customs_clearance_date: clearanceDateValue || '' });
+        return newMap;
+      });
+      setEditingClearanceDate(null);
+      setClearanceDateValue('');
     } else {
-      // Allow clearing the date
-      updateClearanceDateMutation.mutate({ id: shipmentId, customs_clearance_date: '' });
+      if (clearanceDateValue) {
+        updateClearanceDateMutation.mutate({ id: shipmentId, customs_clearance_date: clearanceDateValue });
+      } else {
+        // Allow clearing the date
+        updateClearanceDateMutation.mutate({ id: shipmentId, customs_clearance_date: '' });
+      }
     }
   };
 
@@ -385,6 +453,85 @@ export function ShipmentTrackingPage() {
     e.stopPropagation();
     setEditingClearanceDate(null);
     setClearanceDateValue('');
+  };
+
+  // Apply all pending changes in batch
+  const handleApplyAllChanges = async () => {
+    if (pendingChanges.size === 0) return;
+    
+    setIsApplyingChanges(true);
+    const failedUpdates: string[] = [];
+    
+    try {
+      // Process all pending changes in parallel
+      const updatePromises = Array.from(pendingChanges.entries()).map(async ([shipmentId, changes]) => {
+        try {
+          const updateData: Record<string, string> = {};
+          if (changes.eta !== undefined) updateData.eta = changes.eta;
+          if (changes.customs_clearance_date !== undefined) updateData.customs_clearance_date = changes.customs_clearance_date;
+          if (changes.paperwork_status !== undefined) updateData.paperwork_status = changes.paperwork_status;
+          
+          if (Object.keys(updateData).length > 0) {
+            await shipmentsService.update(shipmentId, updateData);
+          }
+          return { shipmentId, success: true };
+        } catch (error) {
+          console.error(`Failed to update shipment ${shipmentId}:`, error);
+          return { shipmentId, success: false };
+        }
+      });
+      
+      const results = await Promise.all(updatePromises);
+      
+      // Check for failures
+      results.forEach(result => {
+        if (!result.success) {
+          failedUpdates.push(result.shipmentId);
+        }
+      });
+      
+      if (failedUpdates.length > 0) {
+        // Keep failed updates in pending changes
+        setPendingChanges(prev => {
+          const newMap = new Map();
+          failedUpdates.forEach(id => {
+            if (prev.has(id)) {
+              newMap.set(id, prev.get(id));
+            }
+          });
+          return newMap;
+        });
+        alert(i18n.language === 'ar' 
+          ? `فشل تحديث ${failedUpdates.length} شحنة(شحنات). يرجى المحاولة مرة أخرى.`
+          : `Failed to update ${failedUpdates.length} shipment(s). Please try again.`);
+      } else {
+        // All succeeded - clear pending changes and exit edit mode
+        setPendingChanges(new Map());
+        setEditMode(false);
+      }
+      
+      // Refresh the data
+      queryClient.invalidateQueries({ queryKey: ['shipments'] });
+    } catch (error) {
+      console.error('Error applying changes:', error);
+      alert(i18n.language === 'ar' ? 'حدث خطأ أثناء حفظ التغييرات' : 'Error saving changes');
+    } finally {
+      setIsApplyingChanges(false);
+    }
+  };
+
+  // Cancel edit mode and discard pending changes
+  const handleCancelEditMode = () => {
+    if (pendingChanges.size > 0) {
+      const confirmDiscard = window.confirm(
+        i18n.language === 'ar' 
+          ? `لديك ${pendingChanges.size} تغيير(ات) غير محفوظة. هل تريد تجاهلها؟`
+          : `You have ${pendingChanges.size} unsaved change(s). Discard them?`
+      );
+      if (!confirmDiscard) return;
+    }
+    setPendingChanges(new Map());
+    setEditMode(false);
   };
 
   // Document status options (Paper Status)
@@ -547,7 +694,46 @@ export function ShipmentTrackingPage() {
             </p>
           )}
         </div>
-        <div className="flex gap-3 flex-shrink-0">
+        <div className="flex gap-3 flex-shrink-0 items-center">
+          {/* Edit Mode Toggle */}
+          <button
+            onClick={() => editMode ? handleCancelEditMode() : setEditMode(true)}
+            className={`
+              flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all
+              ${editMode 
+                ? 'bg-amber-100 text-amber-800 border-2 border-amber-400 shadow-md' 
+                : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+              }
+            `}
+          >
+            <PencilIcon className="w-4 h-4" />
+            {editMode 
+              ? (i18n.language === 'ar' 
+                  ? `وضع التعديل (${pendingChanges.size} معلق)` 
+                  : `Edit Mode (${pendingChanges.size} pending)`)
+              : (i18n.language === 'ar' ? 'وضع التعديل' : 'Edit Mode')
+            }
+          </button>
+
+          {/* Apply All Changes Button - only visible in edit mode */}
+          {editMode && pendingChanges.size > 0 && (
+            <Button
+              variant="primary"
+              onClick={handleApplyAllChanges}
+              disabled={isApplyingChanges}
+              className="bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-lg"
+            >
+              {isApplyingChanges ? (
+                <Spinner className="w-5 h-5 me-2" />
+              ) : (
+                <CheckCircleIcon className="w-5 h-5 me-2" />
+              )}
+              {i18n.language === 'ar' 
+                ? `تطبيق التغييرات (${pendingChanges.size})` 
+                : `Apply All Changes (${pendingChanges.size})`}
+            </Button>
+          )}
+
           <Button
             variant="secondary"
             onClick={() => navigate('/shipments')}
@@ -1132,11 +1318,18 @@ export function ShipmentTrackingPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {data.data.map((shipment) => (
+                  {data.data.map((shipment) => {
+                    const hasPendingChanges = pendingChanges.has(shipment.id);
+                    const shipmentPendingChanges = pendingChanges.get(shipment.id);
+                    return (
                     <tr
                       key={shipment.id}
                       onClick={() => handleRowClick(shipment.id)}
-                      className={`transition-colors cursor-pointer ${activeTab === 'cleared' ? 'hover:bg-emerald-50' : 'hover:bg-blue-50'}`}
+                      className={`transition-colors cursor-pointer ${
+                        hasPendingChanges 
+                          ? 'bg-amber-50 hover:bg-amber-100 border-l-4 border-amber-400' 
+                          : activeTab === 'cleared' ? 'hover:bg-emerald-50' : 'hover:bg-blue-50'
+                      }`}
                     >
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-primary-600">
                         {shipment.sn || '—'}
@@ -1265,15 +1458,24 @@ export function ShipmentTrackingPage() {
                             </button>
                           </div>
                         ) : (
-                          <button
-                            onClick={(e) => handleEditETA(shipment.id, shipment.eta, e)}
-                            className="flex items-center gap-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors group"
-                            title={i18n.language === 'ar' ? 'انقر للتعديل' : 'Click to edit'}
-                          >
-                            <CalendarIcon className="w-4 h-4 text-gray-400 group-hover:text-blue-500" />
-                            <span>{formatDateString(shipment.eta)}</span>
-                            <PencilIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-blue-500" />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => handleEditETA(shipment.id, shipmentPendingChanges?.eta || shipment.eta, e)}
+                              className={`flex items-center gap-2 hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors group ${
+                                shipmentPendingChanges?.eta ? 'text-amber-700 font-medium' : 'text-gray-700'
+                              }`}
+                              title={i18n.language === 'ar' ? 'انقر للتعديل' : 'Click to edit'}
+                            >
+                              <CalendarIcon className={`w-4 h-4 group-hover:text-blue-500 ${shipmentPendingChanges?.eta ? 'text-amber-500' : 'text-gray-400'}`} />
+                              <span>{formatDateString(shipmentPendingChanges?.eta || shipment.eta)}</span>
+                              <PencilIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-blue-500" />
+                            </button>
+                            {shipmentPendingChanges?.eta && (
+                              <span className="px-1.5 py-0.5 text-xs font-medium bg-amber-200 text-amber-800 rounded">
+                                {i18n.language === 'ar' ? 'معلق' : 'Pending'}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </td>
                       <td className="px-2 py-3 text-sm text-center w-24">
@@ -1352,15 +1554,28 @@ export function ShipmentTrackingPage() {
                             </button>
                           </div>
                         ) : (
-                          <button
-                            onClick={(e) => handleEditClearanceDate(shipment.id, shipment.customs_clearance_date, e)}
-                            className="flex items-center gap-2 text-gray-700 hover:text-green-600 hover:bg-green-50 px-2 py-1 rounded transition-colors group"
-                            title={i18n.language === 'ar' ? 'انقر للتعديل' : 'Click to edit'}
-                          >
-                            <CalendarIcon className="w-4 h-4 text-gray-400 group-hover:text-green-500" />
-                            <span>{shipment.customs_clearance_date ? formatDateString(shipment.customs_clearance_date) : (i18n.language === 'ar' ? 'غير محدد' : 'Not set')}</span>
-                            <PencilIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-green-500" />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => handleEditClearanceDate(shipment.id, shipmentPendingChanges?.customs_clearance_date || shipment.customs_clearance_date, e)}
+                              className={`flex items-center gap-2 hover:text-green-600 hover:bg-green-50 px-2 py-1 rounded transition-colors group ${
+                                shipmentPendingChanges?.customs_clearance_date !== undefined ? 'text-amber-700 font-medium' : 'text-gray-700'
+                              }`}
+                              title={i18n.language === 'ar' ? 'انقر للتعديل' : 'Click to edit'}
+                            >
+                              <CalendarIcon className={`w-4 h-4 group-hover:text-green-500 ${shipmentPendingChanges?.customs_clearance_date !== undefined ? 'text-amber-500' : 'text-gray-400'}`} />
+                              <span>
+                                {shipmentPendingChanges?.customs_clearance_date !== undefined
+                                  ? (shipmentPendingChanges.customs_clearance_date ? formatDateString(shipmentPendingChanges.customs_clearance_date) : (i18n.language === 'ar' ? 'غير محدد' : 'Not set'))
+                                  : (shipment.customs_clearance_date ? formatDateString(shipment.customs_clearance_date) : (i18n.language === 'ar' ? 'غير محدد' : 'Not set'))}
+                              </span>
+                              <PencilIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-green-500" />
+                            </button>
+                            {shipmentPendingChanges?.customs_clearance_date !== undefined && (
+                              <span className="px-1.5 py-0.5 text-xs font-medium bg-amber-200 text-amber-800 rounded">
+                                {i18n.language === 'ar' ? 'معلق' : 'Pending'}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </td>
                       <td 
@@ -1410,21 +1625,34 @@ export function ShipmentTrackingPage() {
                             </button>
                           </div>
                         ) : (
-                          <button
-                            onClick={(e) => handleEditDocStatus(shipment.id, shipment.paperwork_status, e)}
-                            className="flex items-center gap-2 text-gray-700 hover:text-purple-600 hover:bg-purple-50 px-2 py-1 rounded transition-colors group w-full"
-                            title={i18n.language === 'ar' ? 'انقر للتعديل' : 'Click to edit'}
-                          >
-                            <DocumentTextIcon className="w-4 h-4 text-gray-400 group-hover:text-purple-500" />
-                            <span className="flex-1 text-start">
-                              {shipment.paperwork_status ? (
-                                docStatusOptions.find(opt => opt.value === shipment.paperwork_status)?.label || shipment.paperwork_status
-                              ) : (
-                                <span className="text-gray-400 italic">{i18n.language === 'ar' ? 'غير محدد' : 'Not set'}</span>
-                              )}
-                            </span>
-                            <PencilIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-purple-500" />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => handleEditDocStatus(shipment.id, shipmentPendingChanges?.paperwork_status ?? shipment.paperwork_status, e)}
+                              className={`flex items-center gap-2 hover:text-purple-600 hover:bg-purple-50 px-2 py-1 rounded transition-colors group w-full ${
+                                shipmentPendingChanges?.paperwork_status !== undefined ? 'text-amber-700 font-medium' : 'text-gray-700'
+                              }`}
+                              title={i18n.language === 'ar' ? 'انقر للتعديل' : 'Click to edit'}
+                            >
+                              <DocumentTextIcon className={`w-4 h-4 group-hover:text-purple-500 ${shipmentPendingChanges?.paperwork_status !== undefined ? 'text-amber-500' : 'text-gray-400'}`} />
+                              <span className="flex-1 text-start">
+                                {(() => {
+                                  const statusValue = shipmentPendingChanges?.paperwork_status !== undefined 
+                                    ? shipmentPendingChanges.paperwork_status 
+                                    : shipment.paperwork_status;
+                                  if (statusValue) {
+                                    return docStatusOptions.find(opt => opt.value === statusValue)?.label || statusValue;
+                                  }
+                                  return <span className="text-gray-400 italic">{i18n.language === 'ar' ? 'غير محدد' : 'Not set'}</span>;
+                                })()}
+                              </span>
+                              <PencilIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-purple-500" />
+                            </button>
+                            {shipmentPendingChanges?.paperwork_status !== undefined && (
+                              <span className="px-1.5 py-0.5 text-xs font-medium bg-amber-200 text-amber-800 rounded">
+                                {i18n.language === 'ar' ? 'معلق' : 'Pending'}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </td>
                       <td 
@@ -1480,7 +1708,8 @@ export function ShipmentTrackingPage() {
                         )}
                       </td>
                     </tr>
-                  ))}
+                  );
+                  })}
                 </tbody>
               </table>
             </div>
