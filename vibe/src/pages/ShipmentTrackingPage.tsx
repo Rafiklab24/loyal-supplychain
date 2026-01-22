@@ -448,6 +448,7 @@ export function ShipmentTrackingPage() {
       i18n.language === 'ar' ? 'عدد الحاويات' : 'Containers',
       i18n.language === 'ar' ? 'الوزن (طن)' : 'Weight (tons)',
       i18n.language === 'ar' ? 'الوجهة' : 'POD',
+      i18n.language === 'ar' ? 'الوجهة النهائية' : 'Final Destination',
       i18n.language === 'ar' ? 'موعد الوصول' : 'ETA',
       i18n.language === 'ar' ? 'الأيام المتبقية (Demurrage)' : 'Days Remaining (Demurrage)',
       i18n.language === 'ar' ? 'تاريخ التخليص' : 'Customs Date',
@@ -456,37 +457,41 @@ export function ShipmentTrackingPage() {
       i18n.language === 'ar' ? 'رقم التتبع' : 'Tracking No.'
     ];
 
-    const rows = data.data.map(shipment => [
-      shipment.sn || '',
-      shipment.product_text || '',
-      shipment.status || '',
-      shipment.container_count || '',
-      shipment.weight_ton || '',
-      shipment.pod_name || '',
-      shipment.eta ? formatDateString(shipment.eta) : '',
-      (() => {
-        if (!shipment.eta || !shipment.free_time_days) return '';
-        const etaDate = new Date(shipment.eta);
-        const deadlineDate = new Date(etaDate);
-        const freeTimeDays = typeof shipment.free_time_days === 'string' 
-          ? parseInt(shipment.free_time_days, 10) 
-          : shipment.free_time_days;
-        deadlineDate.setDate(deadlineDate.getDate() + freeTimeDays);
-        const comparisonDate = shipment.customs_clearance_date 
-          ? new Date(shipment.customs_clearance_date)
-          : new Date();
-        comparisonDate.setHours(0, 0, 0, 0);
-        deadlineDate.setHours(0, 0, 0, 0);
-        const diffMs = deadlineDate.getTime() - comparisonDate.getTime();
-        const daysRemaining = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        if (daysRemaining < 0) return `${Math.abs(daysRemaining)} days overdue`;
-        return `${daysRemaining} days left`;
-      })(),
-      shipment.customs_clearance_date ? formatDateString(shipment.customs_clearance_date) : '',
-      shipment.paperwork_status || (i18n.language === 'ar' ? 'غير محدد' : 'Not specified'),
-      shipment.shipping_line_name || '',
-      shipment.bl_no || shipment.booking_no || ''
-    ]);
+    const rows = data.data.map(shipment => {
+      const destInfo = getFinalDestinationDisplay(shipment.final_destination as any, branchesData?.branches, isArabic);
+      return [
+        shipment.sn || '',
+        shipment.product_text || '',
+        shipment.status || '',
+        shipment.container_count || '',
+        shipment.weight_ton || '',
+        shipment.pod_name || '',
+        destInfo.deliveryPlace || '',
+        shipment.eta ? formatDateString(shipment.eta) : '',
+        (() => {
+          if (!shipment.eta || !shipment.free_time_days) return '';
+          const etaDate = new Date(shipment.eta);
+          const deadlineDate = new Date(etaDate);
+          const freeTimeDays = typeof shipment.free_time_days === 'string' 
+            ? parseInt(shipment.free_time_days, 10) 
+            : shipment.free_time_days;
+          deadlineDate.setDate(deadlineDate.getDate() + freeTimeDays);
+          const comparisonDate = shipment.customs_clearance_date 
+            ? new Date(shipment.customs_clearance_date)
+            : new Date();
+          comparisonDate.setHours(0, 0, 0, 0);
+          deadlineDate.setHours(0, 0, 0, 0);
+          const diffMs = deadlineDate.getTime() - comparisonDate.getTime();
+          const daysRemaining = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          if (daysRemaining < 0) return `${Math.abs(daysRemaining)} days overdue`;
+          return `${daysRemaining} days left`;
+        })(),
+        shipment.customs_clearance_date ? formatDateString(shipment.customs_clearance_date) : '',
+        shipment.paperwork_status || (i18n.language === 'ar' ? 'غير محدد' : 'Not specified'),
+        shipment.shipping_line_name || '',
+        shipment.bl_no || shipment.booking_no || ''
+      ];
+    });
 
     const csvContent = [
       headers.join(','),
@@ -1068,6 +1073,12 @@ export function ShipmentTrackingPage() {
                     <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                       {i18n.language === 'ar' ? 'الوجهة' : 'POD'}
                     </th>
+                    <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                      <div className="flex items-center gap-1">
+                        <BuildingOffice2Icon className="w-4 h-4" />
+                        {i18n.language === 'ar' ? 'الوجهة النهائية' : 'Final Destination'}
+                      </div>
+                    </th>
                     <th
                       onClick={() => handleSort('eta')}
                       className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
@@ -1184,6 +1195,23 @@ export function ShipmentTrackingPage() {
                           <MapPinIcon className="w-4 h-4 text-gray-400" />
                           {shipment.pod_name || '—'}
                         </div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                        {(() => {
+                          const destInfo = getFinalDestinationDisplay(shipment.final_destination as any, branchesData?.branches, isArabic);
+                          // Only show the delivery place (final destination), not the owner
+                          const destination = destInfo.deliveryPlace;
+                          return destination ? (
+                            <div className="flex items-center gap-1">
+                              <BuildingOffice2Icon className="w-4 h-4 text-emerald-500" />
+                              <span className="text-emerald-700 font-medium max-w-[150px] truncate" title={destination}>
+                                {destination}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          );
+                        })()}
                       </td>
                       <td 
                         className="px-4 py-3 whitespace-nowrap text-sm"
