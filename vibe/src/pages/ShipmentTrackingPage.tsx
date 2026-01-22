@@ -1218,9 +1218,9 @@ export function ShipmentTrackingPage() {
           </div>
         ) : (
           <>
-            {/* Pagination at top left */}
+            {/* Pagination at top - always on visual left side */}
             {data.pagination && (
-              <div className="mb-3 flex justify-start">
+              <div className="mb-3 flex ltr:justify-start rtl:justify-end">
                 <Pagination
                   currentPage={page}
                   totalPages={data.pagination.totalPages || Math.ceil(data.pagination.total / data.pagination.limit)}
@@ -1654,6 +1654,16 @@ export function ShipmentTrackingPage() {
                 </tbody>
               </table>
             </div>
+            {/* Pagination at bottom - always on visual left side */}
+            {data.pagination && (
+              <div className="mt-3 flex ltr:justify-start rtl:justify-end">
+                <Pagination
+                  currentPage={page}
+                  totalPages={data.pagination.totalPages || Math.ceil(data.pagination.total / data.pagination.limit)}
+                  onPageChange={setPage}
+                />
+              </div>
+            )}
           </>
         )}
       </Card>
