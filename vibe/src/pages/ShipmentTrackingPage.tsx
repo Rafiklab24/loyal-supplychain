@@ -64,20 +64,15 @@ export function ShipmentTrackingPage() {
     { value: 'consignment', label: isArabic ? 'بضائع بالأمانة' : 'Goods in Custody' },
   ];
 
-  // For client-side sorting of calculated fields
-  const [clientSortColumn, setClientSortColumn] = useState<'days_remaining' | null>(null);
-  const [clientSortDir, setClientSortDir] = useState<'asc' | 'desc'>('asc');
-
   // Always fetch all data to properly support tab filtering (cleared vs uncleared)
-  // Client-side pagination will be applied after filtering
+  // Client-side pagination and sorting will be applied after filtering
   const { data: rawData, isLoading, error } = useShipments({
     page: 1, // Always fetch from beginning
     limit: 1000, // Fetch all data for client-side filtering
     search: search || undefined,
     status: statusFilter || undefined,
     destinationType: destinationTypeFilter || undefined,
-    sortBy: clientSortColumn ? undefined : sortBy, // Disable server sort if client sorting
-    sortDir: clientSortColumn ? undefined : sortDir,
+    // No server-side sorting - we do all sorting client-side after tab filtering
   });
 
   // Calculate days remaining for each shipment and apply client-side sorting if needed
@@ -112,19 +107,61 @@ export function ShipmentTrackingPage() {
     // Select which shipments to show based on active tab
     let shipmentsToShow = activeTab === 'cleared' ? clearedShipments : unclearedShipments;
 
-    // Apply client-side sorting if days_remaining is selected
-    if (clientSortColumn === 'days_remaining') {
-      shipmentsToShow = [...shipmentsToShow].sort((a, b) => {
-        // Put shipments with data first, then those without
-        if (a.calculated_days_remaining === null && b.calculated_days_remaining === null) return 0;
-        if (a.calculated_days_remaining === null) return 1;
-        if (b.calculated_days_remaining === null) return -1;
-        
-        return clientSortDir === 'asc' 
-          ? a.calculated_days_remaining - b.calculated_days_remaining 
-          : b.calculated_days_remaining - a.calculated_days_remaining;
-      });
-    }
+    // Apply client-side sorting for all columns
+    shipmentsToShow = [...shipmentsToShow].sort((a, b) => {
+      let aVal: any;
+      let bVal: any;
+      
+      switch (sortBy) {
+        case 'sn':
+          aVal = a.sn || '';
+          bVal = b.sn || '';
+          break;
+        case 'product_text':
+          aVal = a.product_text || '';
+          bVal = b.product_text || '';
+          break;
+        case 'status':
+          aVal = a.status || '';
+          bVal = b.status || '';
+          break;
+        case 'container_count':
+          aVal = Number(a.container_count) || 0;
+          bVal = Number(b.container_count) || 0;
+          break;
+        case 'weight_ton':
+          aVal = Number(a.weight_ton) || 0;
+          bVal = Number(b.weight_ton) || 0;
+          break;
+        case 'eta':
+          aVal = a.eta || '';
+          bVal = b.eta || '';
+          break;
+        case 'customs_clearance_date':
+          aVal = a.customs_clearance_date || '';
+          bVal = b.customs_clearance_date || '';
+          break;
+        case 'days_remaining':
+          // Special handling for calculated field - nulls go last
+          if (a.calculated_days_remaining === null && b.calculated_days_remaining === null) return 0;
+          if (a.calculated_days_remaining === null) return 1;
+          if (b.calculated_days_remaining === null) return -1;
+          aVal = a.calculated_days_remaining;
+          bVal = b.calculated_days_remaining;
+          break;
+        default:
+          return 0;
+      }
+      
+      // For numeric values
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortDir === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+      
+      // For string values
+      const comparison = String(aVal).localeCompare(String(bVal));
+      return sortDir === 'asc' ? comparison : -comparison;
+    });
 
     // Apply client-side pagination
     const totalItems = shipmentsToShow.length;
@@ -154,28 +191,13 @@ export function ShipmentTrackingPage() {
     setDestinationTypeFilter('');
     setSortBy('eta');
     setSortDir('asc');
-    setClientSortColumn(null);
-    setClientSortDir('asc');
     setPage(1);
   };
 
   const activeFiltersCount = [search, statusFilter, destinationTypeFilter].filter(Boolean).length;
 
   const handleSort = (column: SortColumn) => {
-    // Handle client-side sorting for calculated fields
-    if (column === 'days_remaining') {
-      if (clientSortColumn === 'days_remaining') {
-        setClientSortDir(clientSortDir === 'asc' ? 'desc' : 'asc');
-      } else {
-        setClientSortColumn('days_remaining');
-        setClientSortDir('asc');
-      }
-      setPage(1);
-      return;
-    }
-
-    // Server-side sorting for regular fields
-    setClientSortColumn(null); // Clear client sorting
+    // All sorting is now client-side
     if (sortBy === column) {
       setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
     } else {
@@ -186,17 +208,6 @@ export function ShipmentTrackingPage() {
   };
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
-    // Handle client-sorted columns
-    if (column === 'days_remaining') {
-      if (clientSortColumn !== 'days_remaining') {
-        return <ArrowsUpDownIcon className="w-4 h-4 opacity-30" />;
-      }
-      return clientSortDir === 'asc' ? 
-        <ChevronUpIcon className="w-4 h-4 text-primary-600" /> : 
-        <ChevronDownIcon className="w-4 h-4 text-primary-600" />;
-    }
-
-    // Handle server-sorted columns
     if (sortBy !== column) {
       return <ArrowsUpDownIcon className="w-4 h-4 opacity-30" />;
     }
@@ -1474,24 +1485,7 @@ export function ShipmentTrackingPage() {
               </table>
             </div>
 
-            {clientSortColumn ? (
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-600">
-                  {i18n.language === 'ar' 
-                    ? `عرض جميع الشحنات (${data.data.length}) مرتبة حسب الأيام المتبقية`
-                    : `Showing all shipments (${data.data.length}) sorted by days remaining`}
-                </p>
-                <button
-                  onClick={() => {
-                    setClientSortColumn(null);
-                    setPage(1);
-                  }}
-                  className="mt-2 text-sm text-primary-600 hover:text-primary-700 underline"
-                >
-                  {i18n.language === 'ar' ? 'العودة إلى الترتيب العادي' : 'Return to normal view'}
-                </button>
-              </div>
-            ) : data.pagination && (
+            {data.pagination && (
               <div className="mt-4">
                 <Pagination
                   currentPage={page}
