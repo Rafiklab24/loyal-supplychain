@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { MagnifyingGlassIcon, TruckIcon, DocumentTextIcon, MapPinIcon, CalendarIcon, ClockIcon, XMarkIcon, ArrowsUpDownIcon, ChevronUpIcon, ChevronDownIcon, ArrowDownTrayIcon, ClipboardDocumentIcon, CheckIcon, PencilIcon, ArrowTopRightOnSquareIcon, BuildingOffice2Icon, ExclamationTriangleIcon, GlobeAltIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
@@ -26,10 +26,16 @@ export function ShipmentTrackingPage() {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === 'ar';
   const navigate = useNavigate();
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [destinationTypeFilter, setDestinationTypeFilter] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Initialize state from URL params for browser back button support
+  const [page, setPage] = useState(() => {
+    const p = searchParams.get('page');
+    return p ? parseInt(p, 10) : 1;
+  });
+  const [search, setSearch] = useState(() => searchParams.get('search') || '');
+  const [statusFilter, setStatusFilter] = useState(() => searchParams.get('status') || '');
+  const [destinationTypeFilter, setDestinationTypeFilter] = useState(() => searchParams.get('dest') || '');
   const [sortBy, setSortBy] = useState<SortColumn>('eta');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [copiedTracking, setCopiedTracking] = useState<string | null>(null);
@@ -52,7 +58,22 @@ export function ShipmentTrackingPage() {
   const [isApplyingChanges, setIsApplyingChanges] = useState(false);
   
   // Tab state - active (uncleared) or cleared shipments
-  const [activeTab, setActiveTab] = useState<TrackingTab>('active');
+  const [activeTab, setActiveTab] = useState<TrackingTab>(() => {
+    const tab = searchParams.get('tab');
+    return tab === 'cleared' ? 'cleared' : 'active';
+  });
+
+  // Sync state to URL for browser back button support
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (page > 1) params.set('page', page.toString());
+    if (activeTab !== 'active') params.set('tab', activeTab);
+    if (search) params.set('search', search);
+    if (statusFilter) params.set('status', statusFilter);
+    if (destinationTypeFilter) params.set('dest', destinationTypeFilter);
+    
+    setSearchParams(params, { replace: true });
+  }, [page, activeTab, search, statusFilter, destinationTypeFilter, setSearchParams]);
   
   // ETA Verification Modal state
   const [verificationModalOpen, setVerificationModalOpen] = useState(false);
