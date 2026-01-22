@@ -1233,7 +1233,7 @@ export function ShipmentTrackingPage() {
                     </th>
                     <th
                       onClick={() => handleSort('product_text')}
-                      className="px-2 py-1.5 text-start text-[10px] font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none max-w-[140px]"
+                      className="px-2 py-1.5 text-start text-[10px] font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none max-w-[180px]"
                     >
                       <div className="flex items-center gap-1">
                         {i18n.language === 'ar' ? 'البضاعة' : 'Product'}
@@ -1328,8 +1328,11 @@ export function ShipmentTrackingPage() {
                       <td className="px-2 py-1 whitespace-nowrap text-xs font-medium text-primary-600">
                         {shipment.sn || '—'}
                       </td>
-                      <td className="px-2 py-1 text-xs text-gray-900 max-w-[140px]">
-                        <div className="line-clamp-1 truncate">
+                      <td 
+                        className="px-2 py-1 text-xs text-gray-900 max-w-[180px]"
+                        title={shipment.product_text || ''}
+                      >
+                        <div className="line-clamp-2">
                           <TranslatedProductText text={shipment.product_text} />
                         </div>
                       </td>
