@@ -1218,6 +1218,16 @@ export function ShipmentTrackingPage() {
           </div>
         ) : (
           <>
+            {/* Pagination at top left */}
+            {data.pagination && (
+              <div className="mb-3 flex justify-start">
+                <Pagination
+                  currentPage={page}
+                  totalPages={data.pagination.totalPages || Math.ceil(data.pagination.total / data.pagination.limit)}
+                  onPageChange={setPage}
+                />
+              </div>
+            )}
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className={activeTab === 'cleared' ? 'bg-emerald-50' : 'bg-gray-50'}>
@@ -1644,16 +1654,6 @@ export function ShipmentTrackingPage() {
                 </tbody>
               </table>
             </div>
-
-            {data.pagination && (
-              <div className="mt-4">
-                <Pagination
-                  currentPage={page}
-                  totalPages={data.pagination.totalPages || Math.ceil(data.pagination.total / data.pagination.limit)}
-                  onPageChange={setPage}
-                />
-              </div>
-            )}
           </>
         )}
       </Card>
