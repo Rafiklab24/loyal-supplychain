@@ -238,11 +238,11 @@ export function ShipmentTrackingPage() {
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
     if (sortBy !== column) {
-      return <ArrowsUpDownIcon className="w-4 h-4 opacity-30" />;
+      return <ArrowsUpDownIcon className="w-3 h-3 opacity-30" />;
     }
     return sortDir === 'asc' ? 
-      <ChevronUpIcon className="w-4 h-4 text-primary-600" /> : 
-      <ChevronDownIcon className="w-4 h-4 text-primary-600" />;
+      <ChevronUpIcon className="w-3 h-3 text-primary-600" /> : 
+      <ChevronDownIcon className="w-3 h-3 text-primary-600" />;
   };
 
   // Copy tracking number to clipboard (with fallback for non-secure contexts)
@@ -1224,96 +1224,90 @@ export function ShipmentTrackingPage() {
                   <tr>
                     <th
                       onClick={() => handleSort('sn')}
-                      className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                      className="px-2 py-1.5 text-start text-[10px] font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
                     >
-                      <div className="flex items-center gap-2">
-                        {i18n.language === 'ar' ? 'رقم العقد' : 'Contract No.'}
+                      <div className="flex items-center gap-1">
+                        {i18n.language === 'ar' ? 'العقد' : 'Contract'}
                         <SortIcon column="sn" />
                       </div>
                     </th>
                     <th
                       onClick={() => handleSort('product_text')}
-                      className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none min-w-[200px]"
+                      className="px-2 py-1.5 text-start text-[10px] font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none max-w-[140px]"
                     >
-                      <div className="flex items-center gap-2">
-                        {i18n.language === 'ar' ? 'نوع البضاعة' : 'Type of Goods'}
+                      <div className="flex items-center gap-1">
+                        {i18n.language === 'ar' ? 'البضاعة' : 'Product'}
                         <SortIcon column="product_text" />
                       </div>
                     </th>
                     <th
                       onClick={() => handleSort('status')}
-                      className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                      className="px-2 py-1.5 text-start text-[10px] font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         {i18n.language === 'ar' ? 'الحالة' : 'Status'}
                         <SortIcon column="status" />
                       </div>
                     </th>
                     <th
                       onClick={() => handleSort('container_count')}
-                      className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                      className="px-1 py-1.5 text-center text-[10px] font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none"
                     >
-                      <div className="flex items-center justify-center gap-2">
-                        {i18n.language === 'ar' ? 'الحاويات' : 'Containers'}
+                      <div className="flex items-center justify-center gap-0.5">
+                        {i18n.language === 'ar' ? 'حاوية' : 'Cnt'}
                         <SortIcon column="container_count" />
                       </div>
                     </th>
                     <th
                       onClick={() => handleSort('weight_ton')}
-                      className="px-4 py-3 text-end text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                      className="px-1 py-1.5 text-end text-[10px] font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none"
                     >
-                      <div className="flex items-center justify-end gap-2">
-                        {i18n.language === 'ar' ? 'الوزن (طن)' : 'Weight (tons)'}
+                      <div className="flex items-center justify-end gap-0.5">
+                        {i18n.language === 'ar' ? 'طن' : 'Tons'}
                         <SortIcon column="weight_ton" />
                       </div>
                     </th>
-                    <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {i18n.language === 'ar' ? 'الوجهة' : 'POD'}
+                    <th className="px-2 py-1.5 text-start text-[10px] font-medium text-gray-500 uppercase whitespace-nowrap">
+                      {i18n.language === 'ar' ? 'الميناء' : 'POD'}
                     </th>
-                    <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      <div className="flex items-center gap-1">
-                        <BuildingOffice2Icon className="w-4 h-4" />
-                        {i18n.language === 'ar' ? 'الوجهة النهائية' : 'Final Destination'}
-                      </div>
+                    <th className="px-2 py-1.5 text-start text-[10px] font-medium text-gray-500 uppercase whitespace-nowrap">
+                      {i18n.language === 'ar' ? 'الوجهة' : 'Dest.'}
                     </th>
                     <th
                       onClick={() => handleSort('eta')}
-                      className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                      className="px-2 py-1.5 text-start text-[10px] font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
                     >
-                      <div className="flex items-center gap-2">
-                        <CalendarIcon className="w-4 h-4" />
-                        {i18n.language === 'ar' ? 'موعد الوصول' : 'ETA'}
+                      <div className="flex items-center gap-1">
+                        {i18n.language === 'ar' ? 'الوصول' : 'ETA'}
                         <SortIcon column="eta" />
                       </div>
                     </th>
                     <th
                       onClick={() => handleSort('days_remaining')}
-                      className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none w-24"
+                      className="px-1 py-1.5 text-center text-[10px] font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none"
                     >
-                      <div className="flex items-center justify-center gap-1">
-                        <ClockIcon className="w-4 h-4" />
-                        <span className="whitespace-normal leading-tight">{i18n.language === 'ar' ? 'الأيام المتبقية' : 'Days Left'}</span>
+                      <div className="flex items-center justify-center gap-0.5">
+                        {i18n.language === 'ar' ? 'متبقي' : 'Left'}
                         <SortIcon column="days_remaining" />
                       </div>
                     </th>
                     <th
                       onClick={() => handleSort('customs_clearance_date')}
-                      className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+                      className="px-2 py-1.5 text-start text-[10px] font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
                     >
-                      <div className="flex items-center gap-2">
-                        {i18n.language === 'ar' ? 'تاريخ التخليص' : 'Customs Date'}
+                      <div className="flex items-center gap-1">
+                        {i18n.language === 'ar' ? 'التخليص' : 'CC Date'}
                         <SortIcon column="customs_clearance_date" />
                       </div>
                     </th>
-                    <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      <DocumentTextIcon className="w-4 h-4 inline me-1" />
-                      {i18n.language === 'ar' ? 'حالة الأوراق' : 'Document Status'}
+                    <th className="px-2 py-1.5 text-start text-[10px] font-medium text-gray-500 uppercase whitespace-nowrap">
+                      {i18n.language === 'ar' ? 'الأوراق' : 'Docs'}
                     </th>
-                    <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {i18n.language === 'ar' ? 'شركة الشحن' : 'Shipping Company'}
+                    <th className="px-2 py-1.5 text-start text-[10px] font-medium text-gray-500 uppercase whitespace-nowrap">
+                      {i18n.language === 'ar' ? 'الناقل' : 'Carrier'}
                     </th>
-                    <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                      {i18n.language === 'ar' ? 'رقم التتبع' : 'Tracking No.'}
+                    <th className="px-2 py-1.5 text-start text-[10px] font-medium text-gray-500 uppercase whitespace-nowrap">
+                      {i18n.language === 'ar' ? 'BL/AWB' : 'BL/AWB'}
                     </th>
                   </tr>
                 </thead>
@@ -1331,102 +1325,92 @@ export function ShipmentTrackingPage() {
                           : activeTab === 'cleared' ? 'hover:bg-emerald-50' : 'hover:bg-blue-50'
                       }`}
                     >
-                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-primary-600">
+                      <td className="px-2 py-1 whitespace-nowrap text-xs font-medium text-primary-600">
                         {shipment.sn || '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900 min-w-[200px] max-w-[280px]">
-                        <div className="line-clamp-2">
+                      <td className="px-2 py-1 text-xs text-gray-900 max-w-[140px]">
+                        <div className="line-clamp-1 truncate">
                           <TranslatedProductText text={shipment.product_text} />
                         </div>
                       </td>
                       {/* Status column - click to override */}
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-2 py-1 whitespace-nowrap">
                         <div 
                           className="group relative cursor-pointer"
                           onClick={() => setOverrideModalShipment(shipment)}
                           title={isArabic ? 'انقر لتغيير الحالة' : 'Click to override status'}
                         >
-                          <div className="flex items-center gap-2">
-                            <Badge color={getStatusColor(shipment.status) as any}>
+                          <div className="flex items-center gap-1">
+                            <Badge color={getStatusColor(shipment.status) as any} className="text-[10px] px-1.5 py-0.5">
                               {(() => {
-                                // Map status to display label
+                                // Map status to display label - using shorter labels
                                 const statusLabels: Record<string, { en: string; ar: string }> = {
-                                  planning: { en: 'Planning', ar: 'تخطيط' },
-                                  delayed: { en: 'Delayed', ar: 'متأخر' },
+                                  planning: { en: 'Plan', ar: 'تخطيط' },
+                                  delayed: { en: 'Delay', ar: 'متأخر' },
                                   sailed: { en: 'Sailed', ar: 'أبحرت' },
-                                  awaiting_clearance: { en: 'Awaiting Clearance', ar: 'في انتظار التخليص' },
-                                  pending_transport: { en: 'Pending Transport', ar: 'في انتظار تعيين النقل' },
-                                  loaded_to_final: { en: 'On Way to Destination', ar: 'في الطريق للوجهة' },
-                                  received: { en: 'Received', ar: 'تم الاستلام' },
-                                  quality_issue: { en: 'Quality Issue', ar: 'مشكلة جودة' },
+                                  awaiting_clearance: { en: 'Await CC', ar: 'انتظار' },
+                                  pending_transport: { en: 'Pend. Trans', ar: 'نقل' },
+                                  loaded_to_final: { en: 'In Transit', ar: 'طريق' },
+                                  received: { en: 'Received', ar: 'استلام' },
+                                  quality_issue: { en: 'Quality', ar: 'جودة' },
                                   // Legacy status mappings
-                                  booked: { en: 'Planning', ar: 'تخطيط' },
-                                  gate_in: { en: 'Planning', ar: 'تخطيط' },
+                                  booked: { en: 'Plan', ar: 'تخطيط' },
+                                  gate_in: { en: 'Plan', ar: 'تخطيط' },
                                   loaded: { en: 'Sailed', ar: 'أبحرت' },
-                                  arrived: { en: 'Awaiting Clearance', ar: 'في انتظار التخليص' },
-                                  delivered: { en: 'Received', ar: 'تم الاستلام' },
-                                  invoiced: { en: 'Received', ar: 'تم الاستلام' },
+                                  arrived: { en: 'Await CC', ar: 'انتظار' },
+                                  delivered: { en: 'Received', ar: 'استلام' },
+                                  invoiced: { en: 'Received', ar: 'استلام' },
                                 };
                                 const label = statusLabels[shipment.status || ''] || { en: shipment.status || '—', ar: shipment.status || '—' };
                                 return i18n.language === 'ar' ? label.ar : label.en;
                               })()}
                             </Badge>
-                            {/* Show edit icon on hover */}
-                            <PencilIcon className="w-3.5 h-3.5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <PencilIcon className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
-                          {/* Override indicator */}
                           {shipment.status_override_by && (
-                            <div className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
-                              {isArabic ? 'تم التجاوز يدوياً' : 'Manually overridden'}
+                            <div className="text-[9px] text-amber-600 mt-0.5">
+                              {isArabic ? 'يدوي' : 'Manual'}
                             </div>
                           )}
-                          {/* Tooltip showing status reason */}
                           {shipment.status_reason && (
-                            <div className="absolute z-10 invisible group-hover:visible bg-gray-900 text-white text-xs rounded py-1 px-2 -bottom-10 left-0 whitespace-nowrap max-w-[250px] truncate">
+                            <div className="absolute z-10 invisible group-hover:visible bg-gray-900 text-white text-[10px] rounded py-1 px-2 -bottom-8 left-0 whitespace-nowrap max-w-[200px] truncate">
                               {shipment.status_reason}
                             </div>
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-center">
+                      <td className="px-1 py-1 whitespace-nowrap text-xs text-gray-700 text-center">
                         {shipment.container_count ? formatNumber(shipment.container_count) : '—'}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-end">
+                      <td className="px-1 py-1 whitespace-nowrap text-xs text-gray-700 text-end">
                         {shipment.weight_ton ? formatNumber(shipment.weight_ton) : '—'}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-                        <div className="flex items-center gap-1">
-                          <MapPinIcon className="w-4 h-4 text-gray-400" />
-                          {shipment.pod_name || '—'}
-                        </div>
+                      <td className="px-2 py-1 whitespace-nowrap text-xs text-gray-700 max-w-[80px] truncate" title={shipment.pod_name || ''}>
+                        {shipment.pod_name || '—'}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                      <td className="px-2 py-1 whitespace-nowrap text-xs text-gray-700">
                         {(() => {
                           const destInfo = getFinalDestinationDisplay(shipment.final_destination as any, branchesData?.branches, isArabic);
-                          // Only show the delivery place (final destination), not the owner
                           const destination = destInfo.deliveryPlace;
                           return destination ? (
-                            <div className="flex items-center gap-1">
-                              <BuildingOffice2Icon className="w-4 h-4 text-emerald-500" />
-                              <span className="text-emerald-700 font-medium max-w-[150px] truncate" title={destination}>
-                                {destination}
-                              </span>
-                            </div>
+                            <span className="text-emerald-700 font-medium max-w-[90px] truncate block" title={destination}>
+                              {destination}
+                            </span>
                           ) : (
                             <span className="text-gray-400">—</span>
                           );
                         })()}
                       </td>
                       <td 
-                        className="px-4 py-3 whitespace-nowrap text-sm"
+                        className="px-2 py-1 whitespace-nowrap text-xs"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {editingETA === shipment.id ? (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-0.5">
                             <DateInput
                               value={etaValue}
                               onChange={(val) => setEtaValue(val)}
-                              className="border-blue-300 focus:ring-blue-500 focus:border-blue-500"
+                              className="border-blue-300 focus:ring-blue-500 focus:border-blue-500 text-xs py-0.5 w-24"
                               autoFocus
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
@@ -1439,90 +1423,61 @@ export function ShipmentTrackingPage() {
                             <button
                               onClick={(e) => handleSaveETA(shipment.id, e)}
                               disabled={updateETAMutation.isPending}
-                              className="p-1 text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
-                              title={i18n.language === 'ar' ? 'حفظ' : 'Save'}
+                              className="p-0.5 text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
                             >
-                              {updateETAMutation.isPending ? (
-                                <Spinner size="sm" />
-                              ) : (
-                                <CheckIcon className="w-4 h-4" />
-                              )}
+                              {updateETAMutation.isPending ? <Spinner size="sm" /> : <CheckIcon className="w-3 h-3" />}
                             </button>
                             <button
                               onClick={handleCancelEdit}
                               disabled={updateETAMutation.isPending}
-                              className="p-1 text-gray-500 hover:bg-gray-50 rounded disabled:opacity-50"
-                              title={i18n.language === 'ar' ? 'إلغاء' : 'Cancel'}
+                              className="p-0.5 text-gray-500 hover:bg-gray-50 rounded disabled:opacity-50"
                             >
-                              <XMarkIcon className="w-4 h-4" />
+                              <XMarkIcon className="w-3 h-3" />
                             </button>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-0.5">
                             <button
                               onClick={(e) => handleEditETA(shipment.id, shipmentPendingChanges?.eta || shipment.eta, e)}
-                              className={`flex items-center gap-2 hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors group ${
+                              className={`flex items-center gap-1 hover:text-blue-600 hover:bg-blue-50 px-1 py-0.5 rounded transition-colors group ${
                                 shipmentPendingChanges?.eta ? 'text-amber-700 font-medium' : 'text-gray-700'
                               }`}
                               title={i18n.language === 'ar' ? 'انقر للتعديل' : 'Click to edit'}
                             >
-                              <CalendarIcon className={`w-4 h-4 group-hover:text-blue-500 ${shipmentPendingChanges?.eta ? 'text-amber-500' : 'text-gray-400'}`} />
-                              <span>{formatDateString(shipmentPendingChanges?.eta || shipment.eta)}</span>
-                              <PencilIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-blue-500" />
+                              <span className="text-xs">{formatDateString(shipmentPendingChanges?.eta || shipment.eta)}</span>
+                              <PencilIcon className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 text-blue-500" />
                             </button>
                             {shipmentPendingChanges?.eta && (
-                              <span className="px-1.5 py-0.5 text-xs font-medium bg-amber-200 text-amber-800 rounded">
-                                {i18n.language === 'ar' ? 'معلق' : 'Pending'}
-                              </span>
+                              <span className="px-1 py-0 text-[9px] font-medium bg-amber-200 text-amber-800 rounded">!</span>
                             )}
                           </div>
                         )}
                       </td>
-                      <td className="px-2 py-3 text-sm text-center w-24">
+                      <td className="px-1 py-1 text-xs text-center">
                         {(() => {
-                          // Use pre-calculated days remaining
                           const daysRemaining = shipment.calculated_days_remaining;
-                          
                           if (daysRemaining === null || daysRemaining === undefined) {
                             return <span className="text-gray-400">—</span>;
                           }
-                          
-                          // If already exceeded (negative)
                           if (daysRemaining < 0) {
-                            return (
-                              <span className="text-red-700 font-bold text-xs leading-tight block">
-                                {Math.abs(daysRemaining)} {i18n.language === 'ar' ? 'يوم' : 'd'} ⛔
-                              </span>
-                            );
+                            return <span className="text-red-700 font-bold text-[10px]">{Math.abs(daysRemaining)}d ⛔</span>;
                           }
-                          
-                          // If 7 days or less: RED ALERT
                           if (daysRemaining <= 7) {
-                            return (
-                              <span className="text-red-600 font-bold text-sm">
-                                {daysRemaining} {i18n.language === 'ar' ? 'يوم' : 'd'} ⚠️
-                              </span>
-                            );
+                            return <span className="text-red-600 font-bold text-xs">{daysRemaining}d ⚠️</span>;
                           }
-                          
-                          // Normal display (more than 7 days)
-                          return (
-                            <span className="text-gray-700 text-sm">
-                              {daysRemaining} {i18n.language === 'ar' ? 'يوم' : 'd'}
-                            </span>
-                          );
+                          return <span className="text-gray-700 text-xs">{daysRemaining}d</span>;
                         })()}
                       </td>
                       <td 
-                        className="px-4 py-3 whitespace-nowrap text-sm"
+                        className="px-2 py-1 whitespace-nowrap text-xs"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {editingClearanceDate === shipment.id ? (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-0.5">
                             <DateInput
                               value={clearanceDateValue}
                               onChange={(val) => setClearanceDateValue(val)}
-                              className="border-green-300 focus:ring-green-500 focus:border-green-500"
+                              className="border-green-300 focus:ring-green-500 focus:border-green-500 text-xs py-0.5 w-24"
                               autoFocus
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
@@ -1535,59 +1490,50 @@ export function ShipmentTrackingPage() {
                             <button
                               onClick={(e) => handleSaveClearanceDate(shipment.id, e)}
                               disabled={updateClearanceDateMutation.isPending}
-                              className="p-1 text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
-                              title={i18n.language === 'ar' ? 'حفظ' : 'Save'}
+                              className="p-0.5 text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
                             >
-                              {updateClearanceDateMutation.isPending ? (
-                                <Spinner size="sm" />
-                              ) : (
-                                <CheckIcon className="w-4 h-4" />
-                              )}
+                              {updateClearanceDateMutation.isPending ? <Spinner size="sm" /> : <CheckIcon className="w-3 h-3" />}
                             </button>
                             <button
                               onClick={handleCancelClearanceDateEdit}
                               disabled={updateClearanceDateMutation.isPending}
-                              className="p-1 text-gray-500 hover:bg-gray-50 rounded disabled:opacity-50"
-                              title={i18n.language === 'ar' ? 'إلغاء' : 'Cancel'}
+                              className="p-0.5 text-gray-500 hover:bg-gray-50 rounded disabled:opacity-50"
                             >
-                              <XMarkIcon className="w-4 h-4" />
+                              <XMarkIcon className="w-3 h-3" />
                             </button>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-0.5">
                             <button
                               onClick={(e) => handleEditClearanceDate(shipment.id, shipmentPendingChanges?.customs_clearance_date || shipment.customs_clearance_date, e)}
-                              className={`flex items-center gap-2 hover:text-green-600 hover:bg-green-50 px-2 py-1 rounded transition-colors group ${
+                              className={`flex items-center gap-1 hover:text-green-600 hover:bg-green-50 px-1 py-0.5 rounded transition-colors group ${
                                 shipmentPendingChanges?.customs_clearance_date !== undefined ? 'text-amber-700 font-medium' : 'text-gray-700'
                               }`}
                               title={i18n.language === 'ar' ? 'انقر للتعديل' : 'Click to edit'}
                             >
-                              <CalendarIcon className={`w-4 h-4 group-hover:text-green-500 ${shipmentPendingChanges?.customs_clearance_date !== undefined ? 'text-amber-500' : 'text-gray-400'}`} />
-                              <span>
+                              <span className="text-xs">
                                 {shipmentPendingChanges?.customs_clearance_date !== undefined
-                                  ? (shipmentPendingChanges.customs_clearance_date ? formatDateString(shipmentPendingChanges.customs_clearance_date) : (i18n.language === 'ar' ? 'غير محدد' : 'Not set'))
-                                  : (shipment.customs_clearance_date ? formatDateString(shipment.customs_clearance_date) : (i18n.language === 'ar' ? 'غير محدد' : 'Not set'))}
+                                  ? (shipmentPendingChanges.customs_clearance_date ? formatDateString(shipmentPendingChanges.customs_clearance_date) : '—')
+                                  : (shipment.customs_clearance_date ? formatDateString(shipment.customs_clearance_date) : '—')}
                               </span>
-                              <PencilIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-green-500" />
+                              <PencilIcon className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 text-green-500" />
                             </button>
                             {shipmentPendingChanges?.customs_clearance_date !== undefined && (
-                              <span className="px-1.5 py-0.5 text-xs font-medium bg-amber-200 text-amber-800 rounded">
-                                {i18n.language === 'ar' ? 'معلق' : 'Pending'}
-                              </span>
+                              <span className="px-1 py-0 text-[9px] font-medium bg-amber-200 text-amber-800 rounded">!</span>
                             )}
                           </div>
                         )}
                       </td>
                       <td 
-                        className="px-4 py-3 whitespace-nowrap text-sm"
+                        className="px-2 py-1 whitespace-nowrap text-xs"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {editingDocStatus === shipment.id ? (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-0.5">
                             <select
                               value={docStatusValue}
                               onChange={(e) => setDocStatusValue(e.target.value)}
-                              className="px-2 py-1 border border-purple-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 min-w-[140px]"
+                              className="px-1 py-0.5 border border-purple-300 rounded text-xs focus:ring-1 focus:ring-purple-500 focus:border-purple-500 w-24"
                               autoFocus
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
@@ -1606,35 +1552,28 @@ export function ShipmentTrackingPage() {
                             <button
                               onClick={(e) => handleSaveDocStatus(shipment.id, e)}
                               disabled={updateDocStatusMutation.isPending}
-                              className="p-1 text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
-                              title={i18n.language === 'ar' ? 'حفظ' : 'Save'}
+                              className="p-0.5 text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
                             >
-                              {updateDocStatusMutation.isPending ? (
-                                <Spinner size="sm" />
-                              ) : (
-                                <CheckIcon className="w-4 h-4" />
-                              )}
+                              {updateDocStatusMutation.isPending ? <Spinner size="sm" /> : <CheckIcon className="w-3 h-3" />}
                             </button>
                             <button
                               onClick={handleCancelDocStatusEdit}
                               disabled={updateDocStatusMutation.isPending}
-                              className="p-1 text-gray-500 hover:bg-gray-50 rounded disabled:opacity-50"
-                              title={i18n.language === 'ar' ? 'إلغاء' : 'Cancel'}
+                              className="p-0.5 text-gray-500 hover:bg-gray-50 rounded disabled:opacity-50"
                             >
-                              <XMarkIcon className="w-4 h-4" />
+                              <XMarkIcon className="w-3 h-3" />
                             </button>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-0.5">
                             <button
                               onClick={(e) => handleEditDocStatus(shipment.id, shipmentPendingChanges?.paperwork_status ?? shipment.paperwork_status, e)}
-                              className={`flex items-center gap-2 hover:text-purple-600 hover:bg-purple-50 px-2 py-1 rounded transition-colors group w-full ${
+                              className={`flex items-center gap-1 hover:text-purple-600 hover:bg-purple-50 px-1 py-0.5 rounded transition-colors group ${
                                 shipmentPendingChanges?.paperwork_status !== undefined ? 'text-amber-700 font-medium' : 'text-gray-700'
                               }`}
                               title={i18n.language === 'ar' ? 'انقر للتعديل' : 'Click to edit'}
                             >
-                              <DocumentTextIcon className={`w-4 h-4 group-hover:text-purple-500 ${shipmentPendingChanges?.paperwork_status !== undefined ? 'text-amber-500' : 'text-gray-400'}`} />
-                              <span className="flex-1 text-start">
+                              <span className="text-xs max-w-[70px] truncate">
                                 {(() => {
                                   const statusValue = shipmentPendingChanges?.paperwork_status !== undefined 
                                     ? shipmentPendingChanges.paperwork_status 
@@ -1642,64 +1581,53 @@ export function ShipmentTrackingPage() {
                                   if (statusValue) {
                                     return docStatusOptions.find(opt => opt.value === statusValue)?.label || statusValue;
                                   }
-                                  return <span className="text-gray-400 italic">{i18n.language === 'ar' ? 'غير محدد' : 'Not set'}</span>;
+                                  return '—';
                                 })()}
                               </span>
-                              <PencilIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-purple-500" />
+                              <PencilIcon className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 text-purple-500" />
                             </button>
                             {shipmentPendingChanges?.paperwork_status !== undefined && (
-                              <span className="px-1.5 py-0.5 text-xs font-medium bg-amber-200 text-amber-800 rounded">
-                                {i18n.language === 'ar' ? 'معلق' : 'Pending'}
-                              </span>
+                              <span className="px-1 py-0 text-[9px] font-medium bg-amber-200 text-amber-800 rounded">!</span>
                             )}
                           </div>
                         )}
                       </td>
                       <td 
-                        className="px-4 py-3 whitespace-nowrap text-sm"
+                        className="px-2 py-1 whitespace-nowrap text-xs"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {shipment.shipping_line_name ? (
                           <button
                             onClick={(e) => handleOpenTrackingWebsite(shipment.shipping_line_name!, e)}
-                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline font-medium"
-                            title={i18n.language === 'ar' ? 'فتح موقع التتبع' : 'Open tracking website'}
+                            className="text-blue-600 hover:text-blue-800 hover:underline text-xs max-w-[80px] truncate block"
+                            title={shipment.shipping_line_name}
                           >
-                            <span>{shipment.shipping_line_name}</span>
-                            <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+                            {shipment.shipping_line_name}
                           </button>
                         ) : (
                           <span className="text-gray-400">—</span>
                         )}
                       </td>
                       <td 
-                        className="px-4 py-3 whitespace-nowrap text-sm"
+                        className="px-2 py-1 whitespace-nowrap text-xs"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {(shipment.bl_no || shipment.booking_no) ? (
                           <button
                             onClick={(e) => handleCopyTracking(shipment.bl_no || shipment.booking_no || '', shipment.id, e)}
-                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md transition-all font-mono text-xs border ${
+                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded transition-all font-mono text-[10px] border ${
                               copiedTracking === shipment.id 
-                                ? 'bg-green-100 border-green-300 text-green-700 scale-105' 
-                                : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 hover:border-blue-300 hover:shadow-sm'
+                                ? 'bg-green-100 border-green-300 text-green-700' 
+                                : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
                             }`}
                             title={i18n.language === 'ar' ? '📋 انقر للنسخ' : '📋 Click to copy'}
                           >
                             {copiedTracking === shipment.id ? (
-                              <>
-                                <CheckIcon className="w-4 h-4 text-green-600 animate-pulse" />
-                                <span className="text-green-700 font-semibold">
-                                  {i18n.language === 'ar' ? '✓ تم النسخ!' : '✓ Copied!'}
-                                </span>
-                              </>
+                              <CheckIcon className="w-3 h-3 text-green-600" />
                             ) : (
                               <>
-                                <ClipboardDocumentIcon className="w-4 h-4 flex-shrink-0" />
-                                <span className="truncate max-w-[150px]">{shipment.bl_no || shipment.booking_no}</span>
-                                <span className="text-[10px] bg-blue-200 text-blue-800 px-1 rounded hidden sm:inline">
-                                  {i18n.language === 'ar' ? 'نسخ' : 'COPY'}
-                                </span>
+                                <ClipboardDocumentIcon className="w-3 h-3" />
+                                <span className="truncate max-w-[80px]">{shipment.bl_no || shipment.booking_no}</span>
                               </>
                             )}
                           </button>
