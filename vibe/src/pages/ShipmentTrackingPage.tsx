@@ -1343,23 +1343,23 @@ export function ShipmentTrackingPage() {
                           <div className="flex items-center gap-1">
                             <Badge color={getStatusColor(shipment.status) as any} className="text-[10px] px-1.5 py-0.5">
                               {(() => {
-                                // Map status to display label - using shorter labels
+                                // Map status to display label - full wording
                                 const statusLabels: Record<string, { en: string; ar: string }> = {
-                                  planning: { en: 'Plan', ar: 'تخطيط' },
-                                  delayed: { en: 'Delay', ar: 'متأخر' },
+                                  planning: { en: 'Planning', ar: 'تخطيط' },
+                                  delayed: { en: 'Delayed', ar: 'متأخر' },
                                   sailed: { en: 'Sailed', ar: 'أبحرت' },
-                                  awaiting_clearance: { en: 'Await CC', ar: 'انتظار' },
-                                  pending_transport: { en: 'Pend. Trans', ar: 'نقل' },
-                                  loaded_to_final: { en: 'In Transit', ar: 'طريق' },
-                                  received: { en: 'Received', ar: 'استلام' },
-                                  quality_issue: { en: 'Quality', ar: 'جودة' },
+                                  awaiting_clearance: { en: 'Awaiting Clearance', ar: 'في انتظار التخليص' },
+                                  pending_transport: { en: 'Pending Transport', ar: 'في انتظار تعيين النقل' },
+                                  loaded_to_final: { en: 'On Way to Destination', ar: 'في الطريق للوجهة' },
+                                  received: { en: 'Received', ar: 'تم الاستلام' },
+                                  quality_issue: { en: 'Quality Issue', ar: 'مشكلة جودة' },
                                   // Legacy status mappings
-                                  booked: { en: 'Plan', ar: 'تخطيط' },
-                                  gate_in: { en: 'Plan', ar: 'تخطيط' },
+                                  booked: { en: 'Planning', ar: 'تخطيط' },
+                                  gate_in: { en: 'Planning', ar: 'تخطيط' },
                                   loaded: { en: 'Sailed', ar: 'أبحرت' },
-                                  arrived: { en: 'Await CC', ar: 'انتظار' },
-                                  delivered: { en: 'Received', ar: 'استلام' },
-                                  invoiced: { en: 'Received', ar: 'استلام' },
+                                  arrived: { en: 'Awaiting Clearance', ar: 'في انتظار التخليص' },
+                                  delivered: { en: 'Received', ar: 'تم الاستلام' },
+                                  invoiced: { en: 'Received', ar: 'تم الاستلام' },
                                 };
                                 const label = statusLabels[shipment.status || ''] || { en: shipment.status || '—', ar: shipment.status || '—' };
                                 return i18n.language === 'ar' ? label.ar : label.en;
