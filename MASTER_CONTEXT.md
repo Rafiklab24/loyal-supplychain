@@ -3855,6 +3855,49 @@ Changed from role-based global access to conditional global access:
 
 ---
 
+### January 23, 2026 - Session: Contract Wizard 409 Error Message Fix
+**Agent:** Claude Opus 4.5
+**Work Done:**
+
+Fixed unhelpful error message when creating a contract with a duplicate contract number.
+
+#### Problem
+When a user tried to create a contract with a contract number that already exists, the system returned a 409 Conflict error. However, the frontend was displaying just "Conflict" instead of the helpful message "A contract with this number already exists. Please use a different contract number or edit the existing contract."
+
+#### Root Cause
+The backend correctly returns:
+```json
+{
+  "error": "Conflict",
+  "message": "A contract with this number already exists. Please use a different contract number or edit the existing contract.",
+  "details": "..."
+}
+```
+
+But the frontend error extraction code in `ContractWizard.tsx` was prioritizing `responseData?.error` (which is "Conflict") over `responseData?.message` (which has the helpful description).
+
+#### Fix Applied (`vibe/src/components/contracts/wizard/ContractWizard.tsx`)
+Changed the error message extraction priority:
+
+```typescript
+// BEFORE (showed "Conflict"):
+const mainError = responseData?.error || error.message || 'Unknown error';
+
+// AFTER (shows helpful message):
+const mainError = responseData?.message || responseData?.error || error.message || 'Unknown error';
+```
+
+#### Files Modified
+| File | Changes |
+|------|---------|
+| `vibe/src/components/contracts/wizard/ContractWizard.tsx` | Prioritize `message` over `error` in error extraction |
+
+**Results:**
+- Users now see helpful error message when contract number already exists ✅
+- Consistent with shipment wizard which already uses `error.response?.data?.message` ✅
+
+---
+
 ## Next Steps for Fresh Agent
 
 ### All Major Normalization Complete ✅
