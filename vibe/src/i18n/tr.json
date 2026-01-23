@@ -80,6 +80,7 @@
     "total": "Toplam",
     "actions": "İşlemler",
     "add": "Ekle",
+    "filled": "Doldurulmuş",
     "refresh": "Yenile",
     "noData": "Veri yok",
     "creating": "Oluşturuluyor...",
@@ -550,12 +551,43 @@
     "execution": {
       "start": "Uygulamayı Başlat",
       "complete": "Tamamla",
+      "beforeHandling": "Elleçleme ÖNCESİ",
+      "afterHandling": "Elleçleme SONRASI",
       "beforeDescription": "Elleçleme Öncesi Durum",
       "beforePlaceholder": "Elleçleme öncesi malların durumunu açıklayın...",
       "afterDescription": "Elleçleme Sonrası Durum",
       "afterPlaceholder": "Elleçleme sonrası malların durumunu açıklayın...",
       "executedBy": "Uygulayan",
       "notes": "Uygulama Notları"
+    },
+    "packaging": {
+      "beforePackaging": "Önceki Paketleme Detayları",
+      "afterPackaging": "Sonraki Paketleme Detayları",
+      "type": "Paket Türü",
+      "weightPerPackage": "Paket Başı Ağırlık (kg)",
+      "piecesPerPackage": "Paket Başı Adet",
+      "packageCount": "Paket Sayısı",
+      "packagesPerPallet": "Palet Başı Paket",
+      "totalPallets": "Toplam Palet",
+      "totalWeight": "Toplam Ağırlık",
+      "totalPieces": "Toplam Adet",
+      "uploadBeforePhoto": "Önceki fotoğrafları Belgeler sekmesine yükleyin",
+      "uploadAfterPhoto": "Sonraki fotoğrafları Belgeler sekmesine yükleyin",
+      "types": {
+        "bag": "Çuval",
+        "box": "Kutu",
+        "bundle": "Balya",
+        "pallet": "Palet",
+        "bulk": "Dökme",
+        "container": "Konteyner",
+        "other": "Diğer"
+      }
+    },
+    "photos": {
+      "beforePhotos": "Önceki Fotoğraflar",
+      "afterPhotos": "Sonraki Fotoğraflar",
+      "count": "fotoğraf",
+      "clickToAdd": "Fotoğraf eklemek için + tıklayın"
     },
     "gtip": {
       "original": "Orijinal GTİP",

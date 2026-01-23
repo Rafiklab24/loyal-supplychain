@@ -45,6 +45,8 @@ export type DocumentType =
 
 export type Priority = 'low' | 'normal' | 'high' | 'urgent';
 
+export type PackageType = 'bag' | 'box' | 'bundle' | 'pallet' | 'bulk' | 'container' | 'other';
+
 export interface ElleclemeRequest {
   id: string;
   request_number: string;
@@ -70,6 +72,20 @@ export interface ElleclemeRequest {
   actual_completion_date?: string;
   before_description?: string;
   after_description?: string;
+  // BEFORE packaging details
+  before_package_type?: PackageType;
+  before_weight_per_package?: number;
+  before_pieces_per_package?: number;
+  before_package_count?: number;
+  before_packages_per_pallet?: number;
+  before_total_pallets?: number;
+  // AFTER packaging details
+  after_package_type?: PackageType;
+  after_weight_per_package?: number;
+  after_pieces_per_package?: number;
+  after_package_count?: number;
+  after_packages_per_pallet?: number;
+  after_total_pallets?: number;
   cancelled_reason?: string;
   rejected_reason?: string;
   executed_by_user_id?: string;
@@ -267,6 +283,26 @@ export interface CreateRequestInput {
   customer_requirement?: string;
   original_gtip?: string;
   planned_execution_date?: string;
+  // Before/After descriptions
+  before_description?: string;
+  after_description?: string;
+  // GTİP change tracking
+  new_gtip?: string;
+  gtip_changed?: boolean;
+  // BEFORE packaging details
+  before_package_type?: PackageType;
+  before_weight_per_package?: number;
+  before_pieces_per_package?: number;
+  before_package_count?: number;
+  before_packages_per_pallet?: number;
+  before_total_pallets?: number;
+  // AFTER packaging details
+  after_package_type?: PackageType;
+  after_weight_per_package?: number;
+  after_pieces_per_package?: number;
+  after_package_count?: number;
+  after_packages_per_pallet?: number;
+  after_total_pallets?: number;
 }
 
 export interface UpdateRequestInput {
@@ -299,6 +335,20 @@ export interface CompleteRequestInput {
   gtip_changed?: boolean;
   actual_completion_date?: string;
   execution_notes?: string;
+  // BEFORE packaging details
+  before_package_type?: PackageType;
+  before_weight_per_package?: number;
+  before_pieces_per_package?: number;
+  before_package_count?: number;
+  before_packages_per_pallet?: number;
+  before_total_pallets?: number;
+  // AFTER packaging details
+  after_package_type?: PackageType;
+  after_weight_per_package?: number;
+  after_pieces_per_package?: number;
+  after_package_count?: number;
+  after_packages_per_pallet?: number;
+  after_total_pallets?: number;
 }
 
 export interface ApprovePermitInput {
@@ -607,4 +657,27 @@ export interface TutanakData {
 export const fetchTutanak = async (requestId: string): Promise<TutanakData> => {
   const response = await apiClient.get(`/v1/ellecleme/reports/tutanak/${requestId}`);
   return response.data.data;
+};
+
+// ============================================================
+// PACKAGING CONSTANTS
+// ============================================================
+
+export const PACKAGE_TYPES: { value: PackageType; labelEn: string; labelAr: string; labelTr: string }[] = [
+  { value: 'bag', labelEn: 'Bag/Sack', labelAr: 'كيس', labelTr: 'Çuval' },
+  { value: 'box', labelEn: 'Box/Carton', labelAr: 'صندوق', labelTr: 'Kutu' },
+  { value: 'bundle', labelEn: 'Bundle', labelAr: 'رزمة', labelTr: 'Balya' },
+  { value: 'pallet', labelEn: 'Pallet', labelAr: 'منصة', labelTr: 'Palet' },
+  { value: 'bulk', labelEn: 'Bulk', labelAr: 'سائب', labelTr: 'Dökme' },
+  { value: 'container', labelEn: 'Container', labelAr: 'حاوية', labelTr: 'Konteyner' },
+  { value: 'other', labelEn: 'Other', labelAr: 'أخرى', labelTr: 'Diğer' },
+];
+
+export const getPackageTypeLabel = (type: PackageType | undefined, lang: 'en' | 'ar' | 'tr' = 'en'): string => {
+  if (!type) return '-';
+  const found = PACKAGE_TYPES.find(pt => pt.value === type);
+  if (!found) return type;
+  if (lang === 'ar') return found.labelAr;
+  if (lang === 'tr') return found.labelTr;
+  return found.labelEn;
 };

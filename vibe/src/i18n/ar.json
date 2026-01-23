@@ -719,6 +719,7 @@
     "total": "الإجمالي",
     "actions": "الإجراءات",
     "add": "إضافة",
+    "filled": "معبأ",
     "refresh": "تحديث",
     "share": "مشاركة",
     "informational": "معلوماتي",
@@ -2332,12 +2333,43 @@
     "execution": {
       "start": "بدء التنفيذ",
       "complete": "إكمال",
+      "beforeHandling": "قبل المناولة",
+      "afterHandling": "بعد المناولة",
       "beforeDescription": "حالة البضائع قبل المناولة",
       "beforePlaceholder": "صف حالة البضائع قبل المناولة...",
       "afterDescription": "حالة البضائع بعد المناولة",
       "afterPlaceholder": "صف حالة البضائع بعد المناولة...",
       "executedBy": "نفذ بواسطة",
       "notes": "ملاحظات التنفيذ"
+    },
+    "packaging": {
+      "beforePackaging": "تفاصيل التعبئة قبل المناولة",
+      "afterPackaging": "تفاصيل التعبئة بعد المناولة",
+      "type": "نوع العبوة",
+      "weightPerPackage": "الوزن/العبوة (كجم)",
+      "piecesPerPackage": "القطع/العبوة",
+      "packageCount": "عدد العبوات",
+      "packagesPerPallet": "العبوات/المنصة",
+      "totalPallets": "إجمالي المنصات",
+      "totalWeight": "الوزن الإجمالي",
+      "totalPieces": "إجمالي القطع",
+      "uploadBeforePhoto": "ارفع صور قبل في تبويب المستندات",
+      "uploadAfterPhoto": "ارفع صور بعد في تبويب المستندات",
+      "types": {
+        "bag": "كيس",
+        "box": "صندوق",
+        "bundle": "رزمة",
+        "pallet": "منصة",
+        "bulk": "سائب",
+        "container": "حاوية",
+        "other": "أخرى"
+      }
+    },
+    "photos": {
+      "beforePhotos": "صور قبل المناولة",
+      "afterPhotos": "صور بعد المناولة",
+      "count": "صورة",
+      "clickToAdd": "اضغط على + لإضافة صور"
     },
     "gtip": {
       "original": "GTİP الأصلي",

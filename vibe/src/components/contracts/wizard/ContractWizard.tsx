@@ -853,8 +853,10 @@ export function ContractWizard({ mode = 'create', existingContract, onSuccess, o
       console.error('❌ Error response:', error.response?.data);
       
       // Extract error message and details from axios response
+      // Backend returns: { error: "Conflict", message: "A contract with this number already exists...", details: "..." }
+      // We want to show the 'message' field which contains the helpful description
       const responseData = error.response?.data;
-      const mainError = responseData?.error || error.message || 'Unknown error';
+      const mainError = responseData?.message || responseData?.error || error.message || 'Unknown error';
       
       // If there are validation details, format them nicely
       const errors: string[] = [];

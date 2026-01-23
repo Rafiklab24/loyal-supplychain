@@ -11,9 +11,11 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   DocumentTextIcon,
+  CameraIcon,
 } from '@heroicons/react/24/outline';
 import { useCompleteRequest } from '../../hooks/useEllecleme';
-import type { ElleclemeRequest, CompleteRequestInput } from '../../services/ellecleme';
+import type { ElleclemeRequest, CompleteRequestInput, PackageType } from '../../services/ellecleme';
+import PackagingDetailsSection from './PackagingDetailsSection';
 
 interface ElleclemeExecutionFormProps {
   isOpen: boolean;
@@ -41,6 +43,20 @@ export default function ElleclemeExecutionForm({
     gtip_changed: request.gtip_changed || false,
     execution_notes: request.execution_notes || '',
     actual_completion_date: new Date().toISOString().split('T')[0],
+    // BEFORE packaging
+    before_package_type: request.before_package_type,
+    before_weight_per_package: request.before_weight_per_package,
+    before_pieces_per_package: request.before_pieces_per_package,
+    before_package_count: request.before_package_count,
+    before_packages_per_pallet: request.before_packages_per_pallet,
+    before_total_pallets: request.before_total_pallets,
+    // AFTER packaging
+    after_package_type: request.after_package_type,
+    after_weight_per_package: request.after_weight_per_package,
+    after_pieces_per_package: request.after_pieces_per_package,
+    after_package_count: request.after_package_count,
+    after_packages_per_pallet: request.after_packages_per_pallet,
+    after_total_pallets: request.after_total_pallets,
   });
 
   const handleChange = (field: keyof CompleteRequestInput, value: any) => {
@@ -68,7 +84,7 @@ export default function ElleclemeExecutionForm({
 
       {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className={`mx-auto max-w-2xl w-full bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto ${isRtl ? 'rtl' : 'ltr'}`}>
+        <Dialog.Panel className={`mx-auto max-w-3xl w-full bg-white rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto ${isRtl ? 'rtl' : 'ltr'}`}>
           {/* Header */}
           <div className="sticky top-0 bg-white flex items-center justify-between px-6 py-4 border-b border-slate-200 z-10">
             <Dialog.Title className="flex items-center gap-3 text-lg font-semibold text-slate-800">
@@ -98,33 +114,111 @@ export default function ElleclemeExecutionForm({
               <p className="text-sm text-slate-600">{request.product_text}</p>
             </div>
 
-            {/* Before Description */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                {t('ellecleme.execution.beforeDescription', 'State Before Handling')}
-              </label>
-              <textarea
-                value={formData.before_description || ''}
-                onChange={(e) => handleChange('before_description', e.target.value)}
-                rows={3}
-                placeholder={t('ellecleme.execution.beforePlaceholder', 'Describe the state of goods before handling...')}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+            {/* BEFORE HANDLING Section */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-amber-800 flex items-center gap-2 border-b border-amber-200 pb-2">
+                <span className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-xs font-bold text-amber-700">1</span>
+                {t('ellecleme.execution.beforeHandling', 'BEFORE Handling')}
+              </h3>
+              
+              {/* Before Description */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  {t('ellecleme.execution.beforeDescription', 'State Before Handling')}
+                </label>
+                <textarea
+                  value={formData.before_description || ''}
+                  onChange={(e) => handleChange('before_description', e.target.value)}
+                  rows={3}
+                  placeholder={t('ellecleme.execution.beforePlaceholder', 'Describe the state of goods before handling...')}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                />
+              </div>
+
+              {/* Before Packaging Details */}
+              <PackagingDetailsSection
+                title={t('ellecleme.packaging.beforePackaging', 'Before Packaging Details')}
+                variant="before"
+                data={{
+                  package_type: formData.before_package_type,
+                  weight_per_package: formData.before_weight_per_package,
+                  pieces_per_package: formData.before_pieces_per_package,
+                  package_count: formData.before_package_count,
+                  packages_per_pallet: formData.before_packages_per_pallet,
+                  total_pallets: formData.before_total_pallets,
+                }}
+                onChange={(data) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    before_package_type: data.package_type,
+                    before_weight_per_package: data.weight_per_package,
+                    before_pieces_per_package: data.pieces_per_package,
+                    before_package_count: data.package_count,
+                    before_packages_per_pallet: data.packages_per_pallet,
+                    before_total_pallets: data.total_pallets,
+                  }));
+                }}
               />
+
+              {/* Photo reminder for Before */}
+              <div className="flex items-center gap-2 p-2 bg-amber-50 rounded-lg border border-amber-100 text-sm text-amber-700">
+                <CameraIcon className="h-4 w-4 shrink-0" />
+                <span>{t('ellecleme.packaging.uploadBeforePhoto', 'Upload before photos in the Documents tab')}</span>
+              </div>
             </div>
 
-            {/* After Description */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                {t('ellecleme.execution.afterDescription', 'State After Handling')} *
-              </label>
-              <textarea
-                value={formData.after_description || ''}
-                onChange={(e) => handleChange('after_description', e.target.value)}
-                rows={3}
-                placeholder={t('ellecleme.execution.afterPlaceholder', 'Describe the state of goods after handling...')}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                required
+            {/* AFTER HANDLING Section */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-emerald-800 flex items-center gap-2 border-b border-emerald-200 pb-2">
+                <span className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center text-xs font-bold text-emerald-700">2</span>
+                {t('ellecleme.execution.afterHandling', 'AFTER Handling')}
+              </h3>
+
+              {/* After Description */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  {t('ellecleme.execution.afterDescription', 'State After Handling')} *
+                </label>
+                <textarea
+                  value={formData.after_description || ''}
+                  onChange={(e) => handleChange('after_description', e.target.value)}
+                  rows={3}
+                  placeholder={t('ellecleme.execution.afterPlaceholder', 'Describe the state of goods after handling...')}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  required
+                />
+              </div>
+
+              {/* After Packaging Details */}
+              <PackagingDetailsSection
+                title={t('ellecleme.packaging.afterPackaging', 'After Packaging Details')}
+                variant="after"
+                data={{
+                  package_type: formData.after_package_type,
+                  weight_per_package: formData.after_weight_per_package,
+                  pieces_per_package: formData.after_pieces_per_package,
+                  package_count: formData.after_package_count,
+                  packages_per_pallet: formData.after_packages_per_pallet,
+                  total_pallets: formData.after_total_pallets,
+                }}
+                onChange={(data) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    after_package_type: data.package_type,
+                    after_weight_per_package: data.weight_per_package,
+                    after_pieces_per_package: data.pieces_per_package,
+                    after_package_count: data.package_count,
+                    after_packages_per_pallet: data.packages_per_pallet,
+                    after_total_pallets: data.total_pallets,
+                  }));
+                }}
               />
+
+              {/* Photo reminder for After */}
+              <div className="flex items-center gap-2 p-2 bg-emerald-50 rounded-lg border border-emerald-100 text-sm text-emerald-700">
+                <CameraIcon className="h-4 w-4 shrink-0" />
+                <span>{t('ellecleme.packaging.uploadAfterPhoto', 'Upload after photos in the Documents tab')}</span>
+              </div>
             </div>
 
             {/* GTİP Change Section */}
@@ -209,14 +303,6 @@ export default function ElleclemeExecutionForm({
                 placeholder={t('common.notesPlaceholder', 'Additional notes...')}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
               />
-            </div>
-
-            {/* Reminder */}
-            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 flex items-start gap-2">
-              <DocumentTextIcon className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
-              <p className="text-sm text-blue-700">
-                {t('ellecleme.execution.reminder', 'Remember to upload before/after photos and any relevant documents in the Documents tab.')}
-              </p>
             </div>
 
             {/* Actions */}

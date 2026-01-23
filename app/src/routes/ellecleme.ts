@@ -344,15 +344,23 @@ router.post('/requests', validateBody(createRequestSchema), async (req: Request,
 
     const inventory = inventoryResult.rows[0];
 
-    // Create request
+    // Create request with packaging details
     const result = await pool.query(`
       INSERT INTO logistics.ellecleme_requests (
         inventory_id, activity_code, priority,
         quantity_mt, quantity_bags,
         reason, description, customer_requirement,
         original_gtip, planned_execution_date,
+        before_description, after_description,
+        new_gtip, gtip_changed,
+        -- BEFORE packaging
+        before_package_type, before_weight_per_package, before_pieces_per_package,
+        before_package_count, before_packages_per_pallet, before_total_pallets,
+        -- AFTER packaging
+        after_package_type, after_weight_per_package, after_pieces_per_package,
+        after_package_count, after_packages_per_pallet, after_total_pallets,
         created_by
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
       RETURNING *
     `, [
       data.inventory_id,
@@ -365,6 +373,24 @@ router.post('/requests', validateBody(createRequestSchema), async (req: Request,
       data.customer_requirement,
       data.original_gtip || inventory.product_gtip,
       data.planned_execution_date,
+      data.before_description,
+      data.after_description,
+      data.new_gtip,
+      data.gtip_changed || false,
+      // BEFORE packaging
+      data.before_package_type,
+      data.before_weight_per_package,
+      data.before_pieces_per_package,
+      data.before_package_count,
+      data.before_packages_per_pallet,
+      data.before_total_pallets,
+      // AFTER packaging
+      data.after_package_type,
+      data.after_weight_per_package,
+      data.after_pieces_per_package,
+      data.after_package_count,
+      data.after_packages_per_pallet,
+      data.after_total_pallets,
       user?.id,
     ]);
 
@@ -607,6 +633,20 @@ router.post('/requests/:id/complete', validateParams(requestIdSchema), validateB
           gtip_changed = $5,
           actual_completion_date = COALESCE($6, CURRENT_DATE),
           execution_notes = COALESCE($7, execution_notes),
+          -- BEFORE packaging fields
+          before_package_type = COALESCE($9, before_package_type),
+          before_weight_per_package = COALESCE($10, before_weight_per_package),
+          before_pieces_per_package = COALESCE($11, before_pieces_per_package),
+          before_package_count = COALESCE($12, before_package_count),
+          before_packages_per_pallet = COALESCE($13, before_packages_per_pallet),
+          before_total_pallets = COALESCE($14, before_total_pallets),
+          -- AFTER packaging fields
+          after_package_type = COALESCE($15, after_package_type),
+          after_weight_per_package = COALESCE($16, after_weight_per_package),
+          after_pieces_per_package = COALESCE($17, after_pieces_per_package),
+          after_package_count = COALESCE($18, after_package_count),
+          after_packages_per_pallet = COALESCE($19, after_packages_per_pallet),
+          after_total_pallets = COALESCE($20, after_total_pallets),
           updated_at = NOW(),
           updated_by = $8
         WHERE id = $1
@@ -620,6 +660,20 @@ router.post('/requests/:id/complete', validateParams(requestIdSchema), validateB
         data.actual_completion_date,
         data.execution_notes,
         user?.id,
+        // BEFORE packaging
+        data.before_package_type,
+        data.before_weight_per_package,
+        data.before_pieces_per_package,
+        data.before_package_count,
+        data.before_packages_per_pallet,
+        data.before_total_pallets,
+        // AFTER packaging
+        data.after_package_type,
+        data.after_weight_per_package,
+        data.after_pieces_per_package,
+        data.after_package_count,
+        data.after_packages_per_pallet,
+        data.after_total_pallets,
       ]);
 
       // Note: GTİP update happens only after Hamza confirms the result

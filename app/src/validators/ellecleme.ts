@@ -48,6 +48,9 @@ export const documentTypeEnum = z.enum([
 
 export const priorityEnum = z.enum(['low', 'normal', 'high', 'urgent']);
 
+// Package type enum for validation
+export const packageTypeEnum = z.enum(['bag', 'box', 'bundle', 'pallet', 'bulk', 'container', 'other']);
+
 // ============================================================
 // REQUEST SCHEMAS
 // ============================================================
@@ -63,6 +66,26 @@ export const createRequestSchema = z.object({
   customer_requirement: z.string().max(1000).optional(),
   original_gtip: z.string().max(20).optional(),
   planned_execution_date: z.string().optional(), // DATE string
+  // Before/After descriptions
+  before_description: z.string().max(2000).optional(),
+  after_description: z.string().max(2000).optional(),
+  // GTİP change tracking
+  new_gtip: z.string().max(20).optional(),
+  gtip_changed: z.boolean().default(false),
+  // BEFORE packaging details
+  before_package_type: packageTypeEnum.optional(),
+  before_weight_per_package: z.number().positive().optional(),
+  before_pieces_per_package: z.number().int().positive().optional(),
+  before_package_count: z.number().int().positive().optional(),
+  before_packages_per_pallet: z.number().int().positive().optional(),
+  before_total_pallets: z.number().int().nonnegative().optional(),
+  // AFTER packaging details
+  after_package_type: packageTypeEnum.optional(),
+  after_weight_per_package: z.number().positive().optional(),
+  after_pieces_per_package: z.number().int().positive().optional(),
+  after_package_count: z.number().int().positive().optional(),
+  after_packages_per_pallet: z.number().int().positive().optional(),
+  after_total_pallets: z.number().int().nonnegative().optional(),
 });
 
 export const updateRequestSchema = z.object({
@@ -95,6 +118,20 @@ export const completeRequestSchema = z.object({
   gtip_changed: z.boolean().default(false),
   actual_completion_date: z.string().optional(), // DATE string, defaults to today
   execution_notes: z.string().max(2000).optional(),
+  // BEFORE packaging details
+  before_package_type: packageTypeEnum.optional(),
+  before_weight_per_package: z.number().positive().optional(),
+  before_pieces_per_package: z.number().int().positive().optional(),
+  before_package_count: z.number().int().positive().optional(),
+  before_packages_per_pallet: z.number().int().positive().optional(),
+  before_total_pallets: z.number().int().nonnegative().optional(),
+  // AFTER packaging details
+  after_package_type: packageTypeEnum.optional(),
+  after_weight_per_package: z.number().positive().optional(),
+  after_pieces_per_package: z.number().int().positive().optional(),
+  after_package_count: z.number().int().positive().optional(),
+  after_packages_per_pallet: z.number().int().positive().optional(),
+  after_total_pallets: z.number().int().nonnegative().optional(),
 });
 
 export const cancelRequestSchema = z.object({
@@ -260,6 +297,7 @@ export type PermitStatus = z.infer<typeof permitStatusEnum>;
 export type CostType = z.infer<typeof costTypeEnum>;
 export type DocumentType = z.infer<typeof documentTypeEnum>;
 export type Priority = z.infer<typeof priorityEnum>;
+export type PackageType = z.infer<typeof packageTypeEnum>;
 
 export type CreateRequestInput = z.infer<typeof createRequestSchema>;
 export type UpdateRequestInput = z.infer<typeof updateRequestSchema>;

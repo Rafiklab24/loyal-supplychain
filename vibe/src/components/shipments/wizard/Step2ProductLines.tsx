@@ -803,16 +803,16 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                 <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 min-w-[140px]">
                   {t('contracts.countryOfOrigin', 'Country of Origin')} 🌍
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700">
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 min-w-[100px]">
                   {t('contracts.kindOfPackages', 'Kind')}
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700">
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 min-w-[100px]">
                   {t('contracts.numberOfPackages', '# Packages')}
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700">
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 min-w-[120px]">
                   {t('contracts.packageSize', 'Size (kg)')}
                 </th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700">
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 min-w-[160px]">
                   {t('contracts.quantityMT', 'Quantity (MT)')}
                 </th>
                 <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 min-w-[180px]">
@@ -862,7 +862,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                         }
                       }}
                       placeholder={t('contracts.typeOfGoodsPlaceholder', 'Enter or select product...')}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                      className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded"
                       data-field-name="type_of_goods"
                       data-field-product-id="product_id"
                       data-field-product-name="product_name"
@@ -880,7 +880,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                       }}
                       onCreateNew={(name) => handleCreateTrademark(name, index)}
                       placeholder={t('contracts.selectTrademark', 'Select trademark...')}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       allowCreate={true}
                       data-field-name="trademark"
                     />
@@ -903,7 +903,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                       displayValue={line.country_of_origin || ''}
                       onChange={(value) => updateLineField(index, 'country_of_origin', value)}
                       placeholder={t('contracts.selectCountry', 'Select country...')}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       data-field-name="country_of_origin"
                     />
                   </td>
@@ -937,7 +937,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                           updateLineField(index, 'kind_of_packages', newKind);
                         }
                       }}
-                      className={`w-full px-2 py-1 text-sm border rounded ${
+                      className={`w-full px-2 py-1 text-sm text-gray-900 border rounded ${
                         line.kind_of_packages === 'BULK' 
                           ? 'border-amber-400 bg-amber-50 font-medium' 
                           : 'border-gray-300'
@@ -965,7 +965,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                           const val = e.target.value.replace(/[^0-9]/g, '');
                           handlePackageChange(index, 'number_of_packages', val === '' ? 0 : parseInt(val, 10));
                         }}
-                        className="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-24 px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="0"
                       />
                     )}
@@ -987,14 +987,14 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                             const val = e.target.value.replace(/[^0-9.]/g, '');
                             handlePackageChange(index, 'package_size', val === '' ? 0 : parseFloat(val) || 0);
                           }}
-                          className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-20 px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="0"
                         />
                         <select
                           data-field-name="package_size_unit"
                           value={line.package_size_unit || 'KG'}
                           onChange={(e) => handlePackageChange(index, 'package_size_unit', e.target.value)}
-                          className="w-14 px-1 py-1 text-xs border border-gray-300 rounded bg-gray-50"
+                          className="w-14 px-1 py-1 text-xs text-gray-900 border border-gray-300 rounded bg-gray-50"
                           title="Unit"
                         >
                           {PACKAGE_SIZE_UNITS.map((unit) => (
@@ -1088,7 +1088,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                               const val = e.target.value.replace(/[^0-9.]/g, '');
                               handleQuantityMtChange(index, val === '' ? 0 : parseFloat(val) || 0);
                             }}
-                            className={`w-full px-2 py-1.5 text-sm border-2 rounded-lg font-medium focus:ring-2 focus:outline-none transition-colors ${
+                            className={`w-full px-2 py-1.5 text-sm text-gray-900 border-2 rounded-lg font-medium focus:ring-2 focus:outline-none transition-colors ${
                               exceedsPending
                                 ? 'border-red-400 bg-red-50 focus:ring-red-500 focus:border-red-500'
                                 : atLimit
@@ -1146,7 +1146,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                       data-field-name="pricing_method"
                       value={line.pricing_method || 'per_mt'}
                       onChange={(e) => handlePricingMethodChange(index, e.target.value as ProductLine['pricing_method'])}
-                      className="w-full px-2 py-1 text-sm border border-orange-300 rounded bg-orange-50 font-medium"
+                      className="w-full px-2 py-1 text-sm text-gray-900 border border-orange-300 rounded bg-orange-50 font-medium"
                     >
                       {PRICING_METHODS.map((method) => (
                         <option key={method.value} value={method.value}>
@@ -1164,7 +1164,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                         type="number"
                         value={(Number(line.quantity_mt) || 0).toFixed(3)}
                         readOnly
-                        className="w-full px-2 py-1 text-sm border border-blue-300 rounded bg-blue-50 font-medium"
+                        className="w-full px-2 py-1 text-sm text-gray-900 border border-blue-300 rounded bg-blue-50 font-medium"
                         title="Metric Tons (auto-calculated)"
                       />
                     )}
@@ -1173,7 +1173,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                         type="number"
                         value={((line.quantity_kg || Number(line.quantity_mt) * 1000) || 0).toFixed(2)}
                         readOnly
-                        className="w-full px-2 py-1 text-sm border border-blue-300 rounded bg-blue-50 font-medium"
+                        className="w-full px-2 py-1 text-sm text-gray-900 border border-blue-300 rounded bg-blue-50 font-medium"
                         title="Kilograms (auto-calculated)"
                       />
                     )}
@@ -1182,7 +1182,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                         type="number"
                         value={((line.quantity_lb || Number(line.quantity_mt) * 2204.62) || 0).toFixed(2)}
                         readOnly
-                        className="w-full px-2 py-1 text-sm border border-blue-300 rounded bg-blue-50 font-medium"
+                        className="w-full px-2 py-1 text-sm text-gray-900 border border-blue-300 rounded bg-blue-50 font-medium"
                         title="Pounds (auto-calculated)"
                       />
                     )}
@@ -1191,7 +1191,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                         type="number"
                         value={((line.quantity_ton || Number(line.quantity_mt) * 1.10231) || 0).toFixed(3)}
                         readOnly
-                        className="w-full px-2 py-1 text-sm border border-blue-300 rounded bg-blue-50 font-medium"
+                        className="w-full px-2 py-1 text-sm text-gray-900 border border-blue-300 rounded bg-blue-50 font-medium"
                         title="US Tons (auto-calculated)"
                       />
                     )}
@@ -1202,7 +1202,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                         type="number"
                         value={line.number_of_packages || 0}
                         readOnly
-                        className="w-full px-2 py-1 text-sm border border-blue-300 rounded bg-blue-50 font-medium"
+                        className="w-full px-2 py-1 text-sm text-gray-900 border border-blue-300 rounded bg-blue-50 font-medium"
                         title={line.pricing_method === 'per_piece' ? 'Pieces (from packaging)' : 'Packages (from packaging)'}
                       />
                     )}
@@ -1217,7 +1217,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                           const val = e.target.value.replace(/[^0-9]/g, '');
                           handlePalletsChange(index, val === '' ? 0 : parseInt(val, 10));
                         }}
-                        className="w-full px-2 py-1 text-sm border border-orange-300 rounded bg-orange-50 font-medium focus:ring-2 focus:ring-orange-500"
+                        className="w-full px-2 py-1 text-sm text-gray-900 border border-orange-300 rounded bg-orange-50 font-medium focus:ring-2 focus:ring-orange-500"
                         placeholder="# Pallets"
                         title="Enter number of pallets"
                       />
@@ -1233,7 +1233,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                           const val = e.target.value.replace(/[^0-9]/g, '');
                           handleContainersChange(index, val === '' ? 0 : parseInt(val, 10));
                         }}
-                        className="w-full px-2 py-1 text-sm border border-orange-300 rounded bg-orange-50 font-medium focus:ring-2 focus:ring-orange-500"
+                        className="w-full px-2 py-1 text-sm text-gray-900 border border-orange-300 rounded bg-orange-50 font-medium focus:ring-2 focus:ring-orange-500"
                         placeholder="# Containers"
                         title="Enter number of containers"
                       />
@@ -1250,7 +1250,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                           const val = e.target.value.replace(/[^0-9.]/g, '');
                           handleBarrelsChange(index, val === '' ? 0 : parseFloat(val) || 0);
                         }}
-                        className="w-full px-2 py-1 text-sm border border-amber-300 rounded bg-amber-50 font-medium focus:ring-2 focus:ring-amber-500"
+                        className="w-full px-2 py-1 text-sm text-gray-900 border border-amber-300 rounded bg-amber-50 font-medium focus:ring-2 focus:ring-amber-500"
                         placeholder="# Barrels"
                         title="Enter number of barrels"
                       />
@@ -1298,7 +1298,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                       data-field-name="currency_code"
                       value={line.currency_code || 'USD'}
                       onChange={(e) => handleCurrencyChange(index, e.target.value)}
-                      className="w-20 px-1 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-20 px-1 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       {CURRENCIES.map(curr => (
                         <option key={curr.code} value={curr.code}>
@@ -1341,7 +1341,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                           setUnitPriceInputs(prev => ({ ...prev, [index]: numVal ? String(numVal) : '' }));
                           handleUnitPriceChange(index, numVal);
                         }}
-                        className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-20 px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder={
                           line.pricing_method === 'per_mt' ? '/MT' :
                           line.pricing_method === 'per_kg' ? '/KG' :
@@ -1391,7 +1391,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                             setExchangeRateInputs(prev => ({ ...prev, [index]: numVal ? String(numVal) : '1' }));
                             handleExchangeRateChange(index, numVal);
                           }}
-                          className="w-20 px-2 py-1 text-sm border border-blue-300 bg-blue-50 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-20 px-2 py-1 text-sm text-gray-900 border border-blue-300 bg-blue-50 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="1.0000"
                           title={`1 ${line.currency_code} = X USD`}
                         />
@@ -1432,7 +1432,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                           const val = e.target.value.replace(/[^0-9.]/g, '');
                           handleAmountChange(index, val === '' ? 0 : parseFloat(val) || 0);
                         }}
-                        className="w-full px-2 py-1 text-sm border border-yellow-300 bg-yellow-50 rounded font-semibold focus:ring-2 focus:ring-yellow-500"
+                        className="w-full px-2 py-1 text-sm text-gray-900 border border-yellow-300 bg-yellow-50 rounded font-semibold focus:ring-2 focus:ring-yellow-500"
                         placeholder="Enter amount"
                         title={t('contracts.enterTotal', 'Enter total amount manually')}
                       />
@@ -1442,7 +1442,7 @@ export function Step2ProductLines({ formData, onChange, contractData }: Step2Pro
                         type="text"
                         value={(line.amount_usd || 0).toFixed(2)}
                         readOnly
-                        className="w-full px-2 py-1 text-sm border border-green-300 bg-green-50 rounded font-semibold"
+                        className="w-full px-2 py-1 text-sm text-gray-900 border border-green-300 bg-green-50 rounded font-semibold"
                         title={t('contracts.autoCalculated', 'Auto-calculated')}
                       />
                     )}

@@ -1794,6 +1794,7 @@
     "actions": "Actions",
     "save": "Save",
     "add": "Add",
+    "filled": "Filled",
     "edit": "Edit",
     "delete": "Delete",
     "search": "Search",
@@ -2298,12 +2299,43 @@
     "execution": {
       "start": "Start Execution",
       "complete": "Complete",
+      "beforeHandling": "BEFORE Handling",
+      "afterHandling": "AFTER Handling",
       "beforeDescription": "State Before Handling",
       "beforePlaceholder": "Describe the state of goods before handling...",
       "afterDescription": "State After Handling",
       "afterPlaceholder": "Describe the state of goods after handling...",
       "executedBy": "Executed By",
       "notes": "Execution Notes"
+    },
+    "packaging": {
+      "beforePackaging": "Before Packaging Details",
+      "afterPackaging": "After Packaging Details",
+      "type": "Package Type",
+      "weightPerPackage": "Weight/Package (kg)",
+      "piecesPerPackage": "Pieces/Package",
+      "packageCount": "Package Count",
+      "packagesPerPallet": "Packages/Pallet",
+      "totalPallets": "Total Pallets",
+      "totalWeight": "Total Weight",
+      "totalPieces": "Total Pieces",
+      "uploadBeforePhoto": "Upload before photos in the Documents tab",
+      "uploadAfterPhoto": "Upload after photos in the Documents tab",
+      "types": {
+        "bag": "Bag/Sack",
+        "box": "Box/Carton",
+        "bundle": "Bundle",
+        "pallet": "Pallet",
+        "bulk": "Bulk",
+        "container": "Container",
+        "other": "Other"
+      }
+    },
+    "photos": {
+      "beforePhotos": "Before Photos",
+      "afterPhotos": "After Photos",
+      "count": "photo(s)",
+      "clickToAdd": "Click + to add photos"
     },
     "gtip": {
       "original": "Original GTİP",
